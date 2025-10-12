@@ -27,7 +27,14 @@
       "Bash(cargo build:*)",
       "WebFetch(domain:ui.shadcn.com)",
       "Bash(timeout 10 npm run dev:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rm:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(npx --yes shadcn@latest add button)",
+      "Bash(cargo clippy:*)",
+      "Bash(npm run check:*)"
     ],
     "deny": [],
     "ask": []

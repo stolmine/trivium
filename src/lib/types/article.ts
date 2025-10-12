@@ -30,3 +30,35 @@ export interface ReadingPosition {
   characterOffset: number;
   lastUpdated: Date;
 }
+
+export interface Text {
+  id: number;
+  title: string;
+  source: string;
+  source_url?: string;
+  content: string;
+  content_length: number;
+  ingested_at: string;
+  updated_at: string;
+  metadata?: string;
+  author?: string;
+  publication_date?: string;
+  publisher?: string;
+  access_date?: string;
+  doi?: string;
+  isbn?: string;
+}
+
+export interface CreateTextRequest {
+  title: string;
+  source: string;
+  source_url?: string;
+  content: string;
+  metadata?: string;
+  author?: string;
+  publication_date?: string;
+  publisher?: string;
+  access_date?: string;
+  doi?: string;
+  isbn?: string;
+}
