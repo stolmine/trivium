@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npm --version)",
+      "Bash(test:*)",
+      "Bash(npm create:*)",
+      "Read(//private/tmp/**)",
+      "Bash(cargo install:*)",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(cargo check:*)",
+      "WebFetch(domain:docs.rs)",
+      "WebFetch(domain:crates.io)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(npm install)",
+      "Bash(npm install zustand)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm install:*)",
+      "Bash(npx --yes shadcn@latest init --defaults)",
+      "Bash(NPM_CONFIG_CACHE=/tmp/npm-cache npx --yes shadcn@latest init:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(NPM_CONFIG_CACHE=/tmp/npm-cache npx tailwindcss:*)",
+      "Bash(node:*)",
+      "Bash(cargo build:*)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

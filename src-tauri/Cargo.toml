@@ -1,0 +1,46 @@
+[package]
+name = "trivium"
+version = "0.1.0"
+description = "Trivium - Incremental Reading and Spaced Repetition"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "trivium_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "chrono", "migrate", "macros"], default-features = false }
+
+tokio = { version = "1", features = ["full"] }
+
+reqwest = { version = "0.12", features = ["json"] }
+
+# Note: fsrs dependency conflicts with sqlx due to sqlite3 linking
+# This will need to be resolved by either:
+# 1. Using a version of fsrs that doesn't link sqlite3
+# 2. Using rusqlite instead of sqlx
+# 3. Implementing FSRS algorithm manually
+# fsrs = { version = "1.0", default-features = false }
+
+chrono = { version = "0.4", features = ["serde"] }
+
+regex = "1.10"
+urlencoding = "2.1"
+
+thiserror = "1.0"
+anyhow = "1.0"
+
