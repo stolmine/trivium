@@ -4,7 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "tauri dev",
+    "clean-port": "lsof -ti:1420 | xargs kill -9 2>/dev/null || true",
+    "dev:vite": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"

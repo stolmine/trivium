@@ -34,7 +34,7 @@ export function IngestModal({ open, onOpenChange }: IngestModalProps) {
         content,
         source: 'paste',
         author: author || undefined,
-        publication_date: publicationDate || undefined,
+        publicationDate: publicationDate || undefined,
         publisher: publisher || undefined,
       })
 

@@ -13,5 +13,5 @@ export interface Paragraph {
   startPosition: number;
   endPosition: number;
   characterCount: number;
-  isRead: boolean;
+  createdAt: string;
 }

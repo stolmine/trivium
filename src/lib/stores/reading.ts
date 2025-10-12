@@ -39,6 +39,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       const texts = await api.texts.list();
       set({ texts, isLoading: false });
     } catch (error) {
+      console.error('Failed to load texts:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to load texts',
         isLoading: false
@@ -52,6 +53,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       const text = await api.texts.get(id);
       set({ currentText: text, isLoading: false });
     } catch (error) {
+      console.error('Failed to load text:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to load text',
         isLoading: false
@@ -69,6 +71,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       }));
       return text;
     } catch (error) {
+      console.error('Failed to create text:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to create text',
         isLoading: false
@@ -87,6 +90,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
     } catch (error) {
+      console.error('Failed to mark range as read:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to mark range as read'
       });
@@ -99,6 +103,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       const ranges = await api.reading.getReadRanges(textId);
       set({ readRanges: ranges });
     } catch (error) {
+      console.error('Failed to load read ranges:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to load read ranges'
       });
@@ -110,6 +115,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       const paragraphs = await api.reading.getParagraphs(textId);
       set({ paragraphs });
     } catch (error) {
+      console.error('Failed to load paragraphs:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to load paragraphs'
       });
@@ -121,6 +127,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       const progress = await api.reading.calculateProgress(textId);
       set({ totalProgress: progress });
     } catch (error) {
+      console.error('Failed to calculate progress:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to calculate progress'
       });

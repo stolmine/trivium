@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            paragraph_index as \"paragraph_index!\",\n            start_position as \"start_position!\",\n            end_position as \"end_position!\",\n            character_count as \"character_count!\",\n            created_at as \"created_at: _\"\n        FROM paragraphs\n        WHERE text_id = ? AND start_position < ?\n        ORDER BY paragraph_index DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "text_id!",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "paragraph_index!",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "start_position!",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "end_position!",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "character_count!",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at: _",
+        "ordinal": 6,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "32e1bdc191ab3ea3bb249508ee0d85d29c29a0ba9ea3ac4fb81bd1dd6619dce6"
+}

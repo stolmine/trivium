@@ -50,7 +50,7 @@ export function LibraryPage() {
                 <p className="text-sm text-gray-600 mb-1">by {text.author}</p>
               )}
               <p className="text-sm text-gray-500">
-                {text.content_length.toLocaleString()} characters
+                {text.contentLength.toLocaleString()} characters
               </p>
             </div>
           ))}

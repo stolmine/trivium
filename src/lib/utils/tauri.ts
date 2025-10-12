@@ -47,16 +47,20 @@ export const api = {
   },
   reading: {
     markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
-      return await invoke('mark_range_as_read', { textId, startPosition, endPosition });
+      return await invoke('mark_range_as_read', {
+        textId: textId,
+        startPos: startPosition,
+        endPos: endPosition
+      });
     },
     getReadRanges: async (textId: number): Promise<ReadRange[]> => {
-      return await invoke('get_read_ranges', { textId });
+      return await invoke('get_read_ranges', { textId: textId });
     },
     calculateProgress: async (textId: number): Promise<number> => {
-      return await invoke('calculate_text_progress', { textId });
+      return await invoke('calculate_text_progress', { textId: textId });
     },
     getParagraphs: async (textId: number): Promise<Paragraph[]> => {
-      return await invoke('get_paragraphs', { textId });
+      return await invoke('get_paragraphs', { textId: textId });
     },
   },
 };

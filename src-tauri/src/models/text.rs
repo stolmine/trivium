@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Text {
     pub id: i64,
     pub title: String,
@@ -38,6 +39,7 @@ pub struct Text {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTextRequest {
     pub title: String,
     pub source: String,

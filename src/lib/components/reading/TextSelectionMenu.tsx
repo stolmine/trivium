@@ -47,7 +47,7 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentText])
+  }, [currentText, markRangeAsRead])
 
   return (
     <ContextMenu>

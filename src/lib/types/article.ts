@@ -35,16 +35,16 @@ export interface Text {
   id: number;
   title: string;
   source: string;
-  source_url?: string;
+  sourceUrl?: string;
   content: string;
-  content_length: number;
-  ingested_at: string;
-  updated_at: string;
+  contentLength: number;
+  ingestedAt: string;
+  updatedAt: string;
   metadata?: string;
   author?: string;
-  publication_date?: string;
+  publicationDate?: string;
   publisher?: string;
-  access_date?: string;
+  accessDate?: string;
   doi?: string;
   isbn?: string;
 }
@@ -52,13 +52,13 @@ export interface Text {
 export interface CreateTextRequest {
   title: string;
   source: string;
-  source_url?: string;
+  sourceUrl?: string;
   content: string;
   metadata?: string;
   author?: string;
-  publication_date?: string;
+  publicationDate?: string;
   publisher?: string;
-  access_date?: string;
+  accessDate?: string;
   doi?: string;
   isbn?: string;
 }
