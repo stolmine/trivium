@@ -1,21 +1,35 @@
 import { create } from 'zustand';
-import type { Text, CreateTextRequest } from '../types';
+import type { Text, CreateTextRequest, ReadRange, Paragraph } from '../types';
 import { api } from '../utils/tauri';
 
 interface ReadingState {
   texts: Text[];
   currentText: Text | null;
+  readRanges: ReadRange[];
+  paragraphs: Paragraph[];
+  currentParagraphIndex: number;
+  totalProgress: number;
   isLoading: boolean;
   error: string | null;
   loadTexts: () => Promise<void>;
   loadText: (id: number) => Promise<void>;
   createText: (request: CreateTextRequest) => Promise<Text>;
   setCurrentText: (text: Text | null) => void;
+  markRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
+  getReadRanges: (textId: number) => Promise<void>;
+  getParagraphs: (textId: number) => Promise<void>;
+  calculateProgress: (textId: number) => Promise<void>;
+  navigateToNextParagraph: () => void;
+  navigateToPreviousParagraph: () => void;
 }
 
-export const useReadingStore = create<ReadingState>((set) => ({
+export const useReadingStore = create<ReadingState>((set, get) => ({
   texts: [],
   currentText: null,
+  readRanges: [],
+  paragraphs: [],
+  currentParagraphIndex: 0,
+  totalProgress: 0,
   isLoading: false,
   error: null,
 
@@ -65,5 +79,65 @@ export const useReadingStore = create<ReadingState>((set) => ({
 
   setCurrentText: (text: Text | null) => {
     set({ currentText: text });
+  },
+
+  markRangeAsRead: async (textId: number, startPosition: number, endPosition: number) => {
+    try {
+      await api.reading.markRangeAsRead(textId, startPosition, endPosition);
+      await get().getReadRanges(textId);
+      await get().calculateProgress(textId);
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to mark range as read'
+      });
+      throw error;
+    }
+  },
+
+  getReadRanges: async (textId: number) => {
+    try {
+      const ranges = await api.reading.getReadRanges(textId);
+      set({ readRanges: ranges });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to load read ranges'
+      });
+    }
+  },
+
+  getParagraphs: async (textId: number) => {
+    try {
+      const paragraphs = await api.reading.getParagraphs(textId);
+      set({ paragraphs });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to load paragraphs'
+      });
+    }
+  },
+
+  calculateProgress: async (textId: number) => {
+    try {
+      const progress = await api.reading.calculateProgress(textId);
+      set({ totalProgress: progress });
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to calculate progress'
+      });
+    }
+  },
+
+  navigateToNextParagraph: () => {
+    const { currentParagraphIndex, paragraphs } = get();
+    if (currentParagraphIndex < paragraphs.length - 1) {
+      set({ currentParagraphIndex: currentParagraphIndex + 1 });
+    }
+  },
+
+  navigateToPreviousParagraph: () => {
+    const { currentParagraphIndex } = get();
+    if (currentParagraphIndex > 0) {
+      set({ currentParagraphIndex: currentParagraphIndex - 1 });
+    }
   },
 }));

@@ -35,7 +35,9 @@
       "Bash(npx --yes shadcn@latest add button)",
       "Bash(cargo clippy:*)",
       "Bash(npm run check:*)",
-      "Read(//Users/why/Library/**)"
+      "Read(//Users/why/Library/**)",
+      "Bash(sudo chown:*)",
+      "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" cargo check)"
     ],
     "deny": [],
     "ask": []

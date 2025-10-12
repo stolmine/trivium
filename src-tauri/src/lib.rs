@@ -43,7 +43,14 @@ pub fn run() {
             greet,
             commands::texts::create_text,
             commands::texts::list_texts,
-            commands::texts::get_text
+            commands::texts::get_text,
+            commands::reading::mark_range_as_read,
+            commands::reading::get_read_ranges,
+            commands::reading::calculate_text_progress,
+            commands::reading::get_paragraphs,
+            commands::reading::get_next_unread_paragraph,
+            commands::reading::get_previous_paragraph,
+            commands::reading::get_most_recently_read_text
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

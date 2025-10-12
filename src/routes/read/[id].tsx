@@ -2,17 +2,33 @@ import { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { Button } from '../../lib/components/ui'
+import { TextSelectionMenu, ReadHighlighter } from '../../lib/components/reading'
 
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { currentText, isLoading, error, loadText } = useReadingStore()
+  const {
+    currentText,
+    isLoading,
+    error,
+    loadText,
+    readRanges,
+    totalProgress,
+    getReadRanges,
+    getParagraphs,
+    calculateProgress
+  } = useReadingStore()
 
   useEffect(() => {
     if (id) {
-      loadText(parseInt(id, 10))
+      const textId = parseInt(id, 10)
+      loadText(textId).then(() => {
+        getReadRanges(textId)
+        getParagraphs(textId)
+        calculateProgress(textId)
+      })
     }
-  }, [id, loadText])
+  }, [id, loadText, getReadRanges, getParagraphs, calculateProgress])
 
   if (isLoading) {
     return (
@@ -44,10 +60,13 @@ export function ReadPage() {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <div className="mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <Button variant="outline" onClick={() => navigate('/')}>
           Back to Library
         </Button>
+        <div className="text-sm text-gray-600">
+          Progress: {totalProgress.toFixed(1)}%
+        </div>
       </div>
 
       <article className="prose prose-lg max-w-none">
@@ -55,7 +74,12 @@ export function ReadPage() {
         {currentText.author && (
           <p className="text-lg text-gray-600 mb-6">by {currentText.author}</p>
         )}
-        <div className="whitespace-pre-wrap">{currentText.content}</div>
+        <TextSelectionMenu>
+          <ReadHighlighter
+            content={currentText.content}
+            readRanges={readRanges}
+          />
+        </TextSelectionMenu>
       </article>
     </div>
   )

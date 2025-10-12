@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Article, Flashcard, ReviewResult, Text, CreateTextRequest } from '../types';
+import type { Article, Flashcard, ReviewResult, Text, CreateTextRequest, ReadRange, Paragraph } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
   return await invoke('load_article', { id });
@@ -43,6 +43,20 @@ export const api = {
     },
     get: async (id: number): Promise<Text> => {
       return await invoke('get_text', { id });
+    },
+  },
+  reading: {
+    markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
+      return await invoke('mark_range_as_read', { textId, startPosition, endPosition });
+    },
+    getReadRanges: async (textId: number): Promise<ReadRange[]> => {
+      return await invoke('get_read_ranges', { textId });
+    },
+    calculateProgress: async (textId: number): Promise<number> => {
+      return await invoke('calculate_text_progress', { textId });
+    },
+    getParagraphs: async (textId: number): Promise<Paragraph[]> => {
+      return await invoke('get_paragraphs', { textId });
     },
   },
 };
