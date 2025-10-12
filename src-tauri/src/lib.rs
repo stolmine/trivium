@@ -18,24 +18,23 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
-            let app_handle = app.handle().clone();
+            let app_data_dir = app
+                .path()
+                .app_data_dir()
+                .expect("Failed to get app data directory");
 
-            tauri::async_runtime::spawn(async move {
-                let app_data_dir = app_handle
-                    .path()
-                    .app_data_dir()
-                    .expect("Failed to get app data directory");
+            std::fs::create_dir_all(&app_data_dir)
+                .expect("Failed to create app data directory");
 
-                std::fs::create_dir_all(&app_data_dir)
-                    .expect("Failed to create app data directory");
+            let db_path = app_data_dir.join("trivium.db");
 
-                let db_path = app_data_dir.join("trivium.db");
-
+            // Block setup until database is initialized
+            tauri::async_runtime::block_on(async move {
                 let database = Database::new(db_path)
                     .await
                     .expect("Failed to initialize database");
 
-                app_handle.manage(Arc::new(Mutex::new(database)));
+                app.manage(Arc::new(Mutex::new(database)));
             });
 
             Ok(())
