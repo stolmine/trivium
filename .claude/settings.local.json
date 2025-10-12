@@ -34,7 +34,8 @@
       "Bash(npx shadcn@latest add:*)",
       "Bash(npx --yes shadcn@latest add button)",
       "Bash(cargo clippy:*)",
-      "Bash(npm run check:*)"
+      "Bash(npm run check:*)",
+      "Read(//Users/why/Library/**)"
     ],
     "deny": [],
     "ask": []
