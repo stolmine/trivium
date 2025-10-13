@@ -50,7 +50,10 @@
       "Bash(sqlx migrate:*)",
       "Bash(rustc:*)",
       "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" cargo sqlx migrate run)",
-      "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" cargo sqlx prepare)"
+      "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" cargo sqlx prepare)",
+      "WebFetch(domain:docs.ankiweb.net)",
+      "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" sqlx migrate run)",
+      "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" cargo sqlx migrate run)"
     ],
     "deny": [],
     "ask": []

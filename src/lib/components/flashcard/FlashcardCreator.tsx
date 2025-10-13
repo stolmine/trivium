@@ -27,7 +27,7 @@ export function FlashcardCreator({
 }: FlashcardCreatorProps) {
   const [clozeText, setClozeText] = useState('')
   const [previewHtml, setPreviewHtml] = useState('')
-  const [previewClozeIndex, setPreviewClozeIndex] = useState(1)
+  const [previewClozeNumber, setPreviewClozeNumber] = useState(1)
   const [showPreview, setShowPreview] = useState(false)
   const { createFlashcard, getPreview, isLoading } = useFlashcardStore()
 
@@ -43,7 +43,7 @@ export function FlashcardCreator({
     if (!clozeText.trim()) return
 
     try {
-      const preview = await getPreview(clozeText, previewClozeIndex)
+      const preview = await getPreview(clozeText, previewClozeNumber)
       setPreviewHtml(preview.html)
       setShowPreview(true)
     } catch (error) {
@@ -61,7 +61,7 @@ export function FlashcardCreator({
       setClozeText('')
       setPreviewHtml('')
       setShowPreview(false)
-      setPreviewClozeIndex(1)
+      setPreviewClozeNumber(1)
       onOpenChange(false)
     } catch (error) {
       console.error('Failed to create flashcard:', error)
@@ -69,8 +69,8 @@ export function FlashcardCreator({
   }
 
   const handleClozeIndexChange = (increment: number) => {
-    const newIndex = Math.max(1, previewClozeIndex + increment)
-    setPreviewClozeIndex(newIndex)
+    const newIndex = Math.max(1, previewClozeNumber + increment)
+    setPreviewClozeNumber(newIndex)
     if (showPreview) {
       handlePreview()
     }
@@ -88,7 +88,7 @@ export function FlashcardCreator({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, clozeText, previewClozeIndex])
+  }, [open, clozeText, previewClozeNumber])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,14 +118,14 @@ export function FlashcardCreator({
           {showPreview && previewHtml && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Preview (Cloze {previewClozeIndex})</Label>
+                <Label>Preview (Cloze {previewClozeNumber})</Label>
                 <div className="flex gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => handleClozeIndexChange(-1)}
-                    disabled={previewClozeIndex <= 1}
+                    disabled={previewClozeNumber <= 1}
                   >
                     Previous
                   </Button>

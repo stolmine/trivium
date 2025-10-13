@@ -12,7 +12,7 @@ use tokio::sync::Mutex;
 #[serde(rename_all = "camelCase")]
 pub struct FlashcardPreview {
     pub html: String,
-    pub cloze_index: u32,
+    pub cloze_number: u32,
 }
 
 #[tauri::command]
@@ -61,6 +61,16 @@ pub async fn create_flashcard_from_cloze(
 
     let cloze_note_id = cloze_note_result.last_insert_rowid();
 
+    let max_display_result = sqlx::query!(
+        "SELECT COALESCE(MAX(display_index), 0) as max_idx FROM flashcards WHERE text_id = ?",
+        text_id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Failed to get max display_index: {}", e))?;
+
+    let mut next_display_index = max_display_result.max_idx + 1;
+
     let mut flashcards = Vec::new();
 
     for cloze_number in cloze_numbers {
@@ -69,17 +79,20 @@ pub async fn create_flashcard_from_cloze(
             r#"
             INSERT INTO flashcards (
                 text_id, user_id, original_text, cloze_text, cloze_index,
-                cloze_note_id, created_at, updated_at, due,
+                display_index, cloze_number, cloze_note_id,
+                created_at, updated_at, due,
                 stability, difficulty, elapsed_days, scheduled_days,
                 reps, lapses, state, last_review
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
             text_id,
             user_id,
             selected_text,
             cloze_text,
             cloze_index,
+            next_display_index,
+            cloze_number,
             cloze_note_id,
             now,
             now,
@@ -109,6 +122,8 @@ pub async fn create_flashcard_from_cloze(
                 original_text,
                 cloze_text,
                 cloze_index as "cloze_index!",
+                display_index as "display_index!",
+                cloze_number as "cloze_number!",
                 created_at as "created_at: _",
                 updated_at as "updated_at: _",
                 cloze_note_id,
@@ -131,6 +146,7 @@ pub async fn create_flashcard_from_cloze(
         .map_err(|e| format!("Failed to fetch created flashcard: {}", e))?;
 
         flashcards.push(flashcard);
+        next_display_index += 1;
     }
 
     Ok(flashcards)
@@ -154,6 +170,8 @@ pub async fn get_flashcards_by_text(
             original_text,
             cloze_text,
             cloze_index as "cloze_index!",
+            display_index as "display_index!",
+            cloze_number as "cloze_number!",
             created_at as "created_at: _",
             updated_at as "updated_at: _",
             cloze_note_id,
@@ -168,7 +186,7 @@ pub async fn get_flashcards_by_text(
             last_review as "last_review: _"
         FROM flashcards
         WHERE text_id = ?
-        ORDER BY created_at DESC
+        ORDER BY display_index ASC
         "#,
         text_id
     )
@@ -204,13 +222,13 @@ pub async fn delete_flashcard(
 #[tauri::command]
 pub async fn get_flashcard_preview(
     cloze_text: String,
-    cloze_index: u32,
+    cloze_number: u32,
 ) -> Result<FlashcardPreview, String> {
-    let rendered = ClozeRenderer::render(&cloze_text, cloze_index)
+    let rendered = ClozeRenderer::render(&cloze_text, cloze_number)
         .map_err(|e| format!("Failed to render cloze: {}", e))?;
 
     Ok(FlashcardPreview {
         html: rendered.html,
-        cloze_index,
+        cloze_number,
     })
 }

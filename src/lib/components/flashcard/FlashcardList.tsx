@@ -22,7 +22,7 @@ export function FlashcardList({ textId }: FlashcardListProps) {
       const newPreviews: Record<number, string> = {}
       for (const flashcard of currentTextFlashcards) {
         try {
-          const preview = await getPreview(flashcard.clozeText, flashcard.clozeIndex)
+          const preview = await getPreview(flashcard.clozeText, flashcard.clozeNumber)
           newPreviews[flashcard.id] = preview.html
         } catch (error) {
           console.error('Failed to load preview:', error)
@@ -69,7 +69,7 @@ export function FlashcardList({ textId }: FlashcardListProps) {
         <div key={flashcard.id} className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="text-xs text-muted-foreground">
-              Cloze {flashcard.clozeIndex}
+              Card #{flashcard.displayIndex} (Cloze {flashcard.clozeNumber})
             </div>
             <Button
               variant="ghost"

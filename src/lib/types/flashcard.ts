@@ -5,6 +5,8 @@ export interface Flashcard {
   originalText: string;
   clozeText: string;
   clozeIndex: number;
+  displayIndex: number;
+  clozeNumber: number;
   createdAt: string;
   updatedAt: string;
   clozeNoteId: number | null;
@@ -64,5 +66,5 @@ export type ReviewQuality = 0 | 1 | 2 | 3 | 4 | 5;
 
 export interface FlashcardPreview {
   html: string;
-  clozeIndex: number;
+  clozeNumber: number;
 }

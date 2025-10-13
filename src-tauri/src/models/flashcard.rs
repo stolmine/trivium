@@ -11,6 +11,8 @@ pub struct Flashcard {
     pub original_text: String,
     pub cloze_text: String,
     pub cloze_index: i64,
+    pub display_index: i64,
+    pub cloze_number: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub cloze_note_id: Option<i64>,

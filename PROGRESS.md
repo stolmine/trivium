@@ -170,6 +170,7 @@
 
 **Commits**:
 - `a78dc2b` - Implement Phase 2: Flashcard Creation with cloze deletion support
+- `a551e28` - Fix flashcard sidebar rendering and delete dialog issues
 
 ---
 

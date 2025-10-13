@@ -11,7 +11,7 @@ interface FlashcardState {
   loadFlashcards: (textId: number) => Promise<void>;
   createFlashcard: (textId: number, selectedText: string, clozeText: string) => Promise<Flashcard[]>;
   deleteFlashcard: (flashcardId: number) => Promise<void>;
-  getPreview: (clozeText: string, clozeIndex: number) => Promise<FlashcardPreview>;
+  getPreview: (clozeText: string, clozeNumber: number) => Promise<FlashcardPreview>;
   setMostRecentlyReadTextId: (textId: number | null) => void;
 }
 
@@ -79,9 +79,9 @@ export const useFlashcardStore = create<FlashcardState>((set) => ({
     }
   },
 
-  getPreview: async (clozeText: string, clozeIndex: number) => {
+  getPreview: async (clozeText: string, clozeNumber: number) => {
     try {
-      const preview = await api.flashcards.getPreview(clozeText, clozeIndex);
+      const preview = await api.flashcards.getPreview(clozeText, clozeNumber);
       return preview;
     } catch (error) {
       console.error('Failed to get preview:', error);

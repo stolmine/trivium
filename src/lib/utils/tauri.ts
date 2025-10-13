@@ -93,10 +93,10 @@ export const api = {
     delete: async (flashcardId: number): Promise<void> => {
       return await invoke('delete_flashcard', { flashcardId: flashcardId });
     },
-    getPreview: async (clozeText: string, clozeIndex: number): Promise<FlashcardPreview> => {
+    getPreview: async (clozeText: string, clozeNumber: number): Promise<FlashcardPreview> => {
       return await invoke('get_flashcard_preview', {
         clozeText: clozeText,
-        clozeIndex: clozeIndex
+        clozeNumber: clozeNumber
       });
     },
   },

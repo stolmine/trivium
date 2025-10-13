@@ -52,7 +52,7 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     return parts.map((part, idx) => {
       const match = part.match(/\{\{c(\d+)::([^}]+)\}\}/)
       if (match) {
-        if (parseInt(match[1]) === flashcard.clozeIndex) {
+        if (parseInt(match[1]) === flashcard.clozeNumber) {
           return (
             <span key={idx} className="bg-blue-100 text-blue-800 px-1 rounded">
               [{match[2]}]
@@ -126,7 +126,7 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
               >
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="text-xs text-gray-500">
-                    Card #{flashcard.clozeIndex}
+                    Card #{flashcard.displayIndex}
                   </div>
                   <Button
                     variant="ghost"

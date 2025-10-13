@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT\n                id as \"id!\",\n                text_id as \"text_id!\",\n                user_id as \"user_id!\",\n                original_text,\n                cloze_text,\n                cloze_index as \"cloze_index!\",\n                created_at as \"created_at: _\",\n                updated_at as \"updated_at: _\",\n                cloze_note_id,\n                due as \"due: _\",\n                stability as \"stability!\",\n                difficulty as \"difficulty!\",\n                elapsed_days as \"elapsed_days!\",\n                scheduled_days as \"scheduled_days!\",\n                reps as \"reps!\",\n                lapses as \"lapses!\",\n                state as \"state!\",\n                last_review as \"last_review: _\"\n            FROM flashcards\n            WHERE id = ?\n            ",
+  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            original_text,\n            cloze_text,\n            cloze_index as \"cloze_index!\",\n            display_index as \"display_index!\",\n            cloze_number as \"cloze_number!\",\n            created_at as \"created_at: _\",\n            updated_at as \"updated_at: _\",\n            cloze_note_id,\n            due as \"due: _\",\n            stability as \"stability!\",\n            difficulty as \"difficulty!\",\n            elapsed_days as \"elapsed_days!\",\n            scheduled_days as \"scheduled_days!\",\n            reps as \"reps!\",\n            lapses as \"lapses!\",\n            state as \"state!\",\n            last_review as \"last_review: _\"\n        FROM flashcards\n        WHERE text_id = ?\n        ORDER BY display_index ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -34,63 +34,73 @@
         "type_info": "Integer"
       },
       {
-        "name": "created_at: _",
+        "name": "display_index!",
         "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "cloze_number!",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "created_at: _",
+        "ordinal": 8,
         "type_info": "Datetime"
       },
       {
         "name": "updated_at: _",
-        "ordinal": 7,
-        "type_info": "Datetime"
-      },
-      {
-        "name": "cloze_note_id",
-        "ordinal": 8,
-        "type_info": "Integer"
-      },
-      {
-        "name": "due: _",
         "ordinal": 9,
         "type_info": "Datetime"
       },
       {
-        "name": "stability!",
+        "name": "cloze_note_id",
         "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "due: _",
+        "ordinal": 11,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "stability!",
+        "ordinal": 12,
         "type_info": "Float"
       },
       {
         "name": "difficulty!",
-        "ordinal": 11,
+        "ordinal": 13,
         "type_info": "Float"
       },
       {
         "name": "elapsed_days!",
-        "ordinal": 12,
-        "type_info": "Integer"
-      },
-      {
-        "name": "scheduled_days!",
-        "ordinal": 13,
-        "type_info": "Integer"
-      },
-      {
-        "name": "reps!",
         "ordinal": 14,
         "type_info": "Integer"
       },
       {
-        "name": "lapses!",
+        "name": "scheduled_days!",
         "ordinal": 15,
         "type_info": "Integer"
       },
       {
-        "name": "state!",
+        "name": "reps!",
         "ordinal": 16,
         "type_info": "Integer"
       },
       {
-        "name": "last_review: _",
+        "name": "lapses!",
         "ordinal": 17,
+        "type_info": "Integer"
+      },
+      {
+        "name": "state!",
+        "ordinal": 18,
+        "type_info": "Integer"
+      },
+      {
+        "name": "last_review: _",
+        "ordinal": 19,
         "type_info": "Datetime"
       }
     ],
@@ -98,9 +108,11 @@
       "Right": 1
     },
     "nullable": [
-      false,
+      true,
       false,
       true,
+      false,
+      false,
       false,
       false,
       false,
@@ -118,5 +130,5 @@
       true
     ]
   },
-  "hash": "9d9264883756684c2cd3ea351fc8438bfb024b1574a807c3a4f0aed8279ec266"
+  "hash": "e21d5d6475d076efc589be1901698a19247ebc55477f1edf6e790d43ace40fed"
 }
