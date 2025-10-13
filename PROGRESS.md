@@ -3,7 +3,7 @@
 ## Current Status: Phase 1 Complete ✅
 
 **Branch**: `0_readingUI`
-**Last Updated**: 2025-10-12
+**Last Updated**: 2025-10-13
 
 ---
 
@@ -46,13 +46,14 @@
 ---
 
 ### ✅ Phase 1: Core Reading Experience (Week 2) - COMPLETE
-**Completed**: 2025-10-12
+**Completed**: 2025-10-13
 
 **Backend**:
 - ✅ ReadRange model for tracking read sections
 - ✅ Paragraph model for detected boundaries
 - ✅ RangeCalculator service with merge/calculation logic
 - ✅ `mark_range_as_read` command
+- ✅ `unmark_range_as_read` command (toggle functionality)
 - ✅ `get_read_ranges` command
 - ✅ `calculate_text_progress` command (percentage)
 - ✅ `get_paragraphs` command
@@ -62,26 +63,33 @@
 
 **Frontend**:
 - ✅ ReadRange and Paragraph type definitions
-- ✅ Reading API wrappers in Tauri utils
+- ✅ Reading API wrappers in Tauri utils (with camelCase parameter naming)
 - ✅ Updated Zustand store with read range state/actions
-- ✅ Custom context menu component
+- ✅ `isRangeRead` helper for checking read status
+- ✅ Right-click context menu component (shadcn/ui)
 - ✅ TextSelectionMenu with right-click and Ctrl+M
-- ✅ ReadHighlighter component with visual styling
+- ✅ Toggle read/unmark functionality
+- ✅ ReadHighlighter component with inverse styling
 - ✅ Progress percentage display in header
 - ✅ Automatic range merging on overlap
+- ✅ Clean, optimized code (removed debug logging)
 
 **Success Criteria Met**:
-- ✅ Right-click text to mark as read
-- ✅ Ctrl+M keyboard shortcut functional
-- ✅ Visual highlighting (read=gray, unread=normal)
+- ✅ Right-click text to mark/unmark as read
+- ✅ Ctrl+M keyboard shortcut toggles read status
+- ✅ Visual highlighting (read=white on black, unread=normal)
 - ✅ Progress percentage calculation accurate
 - ✅ Range merging for correct tracking
-- ✅ Backend compiles (1 unused API warning)
+- ✅ Toggle functionality works correctly
+- ✅ Backend compiles without errors
 - ✅ Frontend TypeScript passes
+- ✅ Production-ready optimized code
 
 **Commits**:
 - `0c091f0` - Implement Phase 1: Read range tracking and visual highlighting
 - `b7d8661` - Update .env to point to correct database location
+- `8801bfd` - Fix Tauri API parameter naming and add development tooling
+- `c6bab68` - Add read text toggle, inverse styling, and code cleanup
 
 ---
 
@@ -91,9 +99,10 @@
 1. **Import Text**: Paste or type text with metadata (title, author, publisher, etc.)
 2. **Browse Library**: View all imported texts in a list
 3. **Read Content**: Open and read full text articles
-4. **Mark as Read**: Select text and mark sections as read (right-click or Ctrl+M)
-5. **Track Progress**: See visual highlighting and percentage progress
-6. **Persistent State**: All data saved to database, persists across sessions
+4. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+5. **Visual Feedback**: Read text appears as white on black (inverse styling)
+6. **Track Progress**: See visual highlighting and percentage progress
+7. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -286,12 +295,14 @@
   - **Timeline**: Must resolve in Phase 3
 
 ### Frontend
-- ℹ️ Some placeholder components have unused parameter warnings (not in implemented code)
-- ℹ️ Context menu uses custom implementation (not Radix UI) due to npm issues
+- ✅ No significant issues - production ready
+- ✅ Context menu implemented with shadcn/ui components
+- ✅ Clean, optimized code with debug logging removed
 
 ### Backend
 - ℹ️ One unused public API method warning (`get_unread_ranges` in RangeCalculator)
   - This is part of public API for future use - expected warning
+- ✅ All commands working correctly with proper parameter naming
 
 ---
 
@@ -320,8 +331,12 @@
 - ✅ Library list view
 - ✅ Reading view navigation
 - ✅ Database persistence across launches
-- ✅ Text selection and marking as read (Phase 1)
-- ✅ Progress percentage calculation (Phase 1)
+- ✅ Text selection and marking as read
+- ✅ Toggle functionality (mark/unmark with Ctrl+M)
+- ✅ Right-click context menu
+- ✅ Inverse visual styling (white on black)
+- ✅ Progress percentage calculation
+- ✅ Range merging for overlapping selections
 
 ### Not Yet Tested:
 - [ ] Large text performance (10,000+ paragraphs)
@@ -355,14 +370,16 @@
 ## Next Actions
 
 ### Immediate (Now):
-1. ✅ Test Phase 1 features manually
-2. ✅ Verify read tracking works end-to-end
-3. Document any bugs or UX issues
+1. ✅ Test Phase 1 features manually - COMPLETE
+2. ✅ Verify read tracking works end-to-end - COMPLETE
+3. ✅ Implement toggle functionality - COMPLETE
+4. ✅ Add inverse styling - COMPLETE
+5. ✅ Optimize and clean up code - COMPLETE
 
-### Short Term (This Week):
-1. Decide on Phase 2 vs enhancements
-2. If Phase 2: Start flashcard sidebar UI
-3. If enhancements: Add paragraph navigation keyboard controls (Ctrl+J/K)
+### Short Term (Next):
+1. **Ready to start Phase 2** (Flashcard Creation)
+2. Begin flashcard sidebar UI
+3. Implement cloze deletion editor
 
 ### Medium Term (Next 2 Weeks):
 1. Complete Phase 2 (Flashcard creation)
