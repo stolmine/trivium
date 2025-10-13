@@ -53,6 +53,13 @@ export const api = {
         endPos: endPosition
       });
     },
+    unmarkRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
+      return await invoke('unmark_range_as_read', {
+        textId: textId,
+        startPos: startPosition,
+        endPos: endPosition
+      });
+    },
     getReadRanges: async (textId: number): Promise<ReadRange[]> => {
       return await invoke('get_read_ranges', { textId: textId });
     },

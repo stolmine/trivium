@@ -45,6 +45,7 @@ pub fn run() {
             commands::texts::list_texts,
             commands::texts::get_text,
             commands::reading::mark_range_as_read,
+            commands::reading::unmark_range_as_read,
             commands::reading::get_read_ranges,
             commands::reading::calculate_text_progress,
             commands::reading::get_paragraphs,

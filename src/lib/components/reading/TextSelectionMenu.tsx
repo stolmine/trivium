@@ -14,9 +14,9 @@ interface TextSelectionMenuProps {
 }
 
 export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
-  const { currentText, markRangeAsRead } = useReadingStore()
+  const { currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead } = useReadingStore()
 
-  const handleMarkAsRead = () => {
+  const handleToggleRead = () => {
     if (!currentText) return
 
     const selection = window.getSelection()
@@ -33,7 +33,13 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
 
     const endPosition = startPosition + selection.toString().length
 
-    markRangeAsRead(currentText.id, startPosition, endPosition)
+    // Check if the range is already marked as read
+    if (isRangeRead(startPosition, endPosition)) {
+      unmarkRangeAsRead(currentText.id, startPosition, endPosition)
+    } else {
+      markRangeAsRead(currentText.id, startPosition, endPosition)
+    }
+
     selection.removeAllRanges()
   }
 
@@ -41,13 +47,13 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
         e.preventDefault()
-        handleMarkAsRead()
+        handleToggleRead()
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentText, markRangeAsRead])
+  }, [currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead])
 
   return (
     <ContextMenu>
@@ -55,8 +61,8 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent className="w-64">
-        <ContextMenuItem onClick={handleMarkAsRead}>
-          Mark as Read
+        <ContextMenuItem onClick={handleToggleRead}>
+          Toggle Read
           <ContextMenuShortcut>Ctrl+M</ContextMenuShortcut>
         </ContextMenuItem>
         <ContextMenuSeparator />

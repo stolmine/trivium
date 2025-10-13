@@ -276,3 +276,36 @@ pub async fn get_most_recently_read_text(
 
     Ok(result.map(|r| r.text_id))
 }
+
+#[tauri::command]
+pub async fn unmark_range_as_read(
+    text_id: i64,
+    start_pos: i64,
+    end_pos: i64,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let user_id = 1;
+
+    // Delete all read ranges that overlap with the selection
+    // A range overlaps if: range.start < end_pos AND range.end > start_pos
+    sqlx::query!(
+        r#"
+        DELETE FROM read_ranges
+        WHERE text_id = ?
+        AND user_id = ?
+        AND start_position < ?
+        AND end_position > ?
+        "#,
+        text_id,
+        user_id,
+        end_pos,
+        start_pos
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to unmark read range: {}", e))?;
+
+    Ok(())
+}

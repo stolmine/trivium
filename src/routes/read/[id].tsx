@@ -69,7 +69,7 @@ export function ReadPage() {
         </div>
       </div>
 
-      <article className="prose prose-lg max-w-none">
+      <article className="max-w-none">
         <h1 className="text-4xl font-bold mb-4">{currentText.title}</h1>
         {currentText.author && (
           <p className="text-lg text-gray-600 mb-6">by {currentText.author}</p>

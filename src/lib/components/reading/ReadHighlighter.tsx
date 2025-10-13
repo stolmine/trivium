@@ -1,5 +1,4 @@
 import { useMemo } from 'react'
-import { cn } from '../../utils'
 import type { ReadRange } from '../../types'
 
 interface ReadHighlighterProps {
@@ -20,6 +19,7 @@ export function ReadHighlighter({ content, readRanges, className }: ReadHighligh
     }
 
     const sortedRanges = [...readRanges].sort((a, b) => a.startPosition - b.startPosition)
+
     const mergedRanges: Array<{ start: number; end: number }> = []
 
     for (const range of sortedRanges) {
@@ -65,15 +65,11 @@ export function ReadHighlighter({ content, readRanges, className }: ReadHighligh
   }, [content, readRanges])
 
   return (
-    <div id="article-content" className={cn("whitespace-pre-wrap", className)}>
+    <div id="article-content" className={`whitespace-pre-wrap not-prose ${className || ''}`}>
       {segments.map((segment, idx) => (
         <span
           key={idx}
-          className={cn(
-            segment.isRead
-              ? "text-gray-400 dark:text-gray-600"
-              : "text-gray-900 dark:text-gray-100"
-          )}
+          style={segment.isRead ? { backgroundColor: 'black', color: 'white' } : {}}
         >
           {segment.text}
         </span>

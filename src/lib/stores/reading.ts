@@ -16,6 +16,8 @@ interface ReadingState {
   createText: (request: CreateTextRequest) => Promise<Text>;
   setCurrentText: (text: Text | null) => void;
   markRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
+  unmarkRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
+  isRangeRead: (startPosition: number, endPosition: number) => boolean;
   getReadRanges: (textId: number) => Promise<void>;
   getParagraphs: (textId: number) => Promise<void>;
   calculateProgress: (textId: number) => Promise<void>;
@@ -96,6 +98,31 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       });
       throw error;
     }
+  },
+
+  unmarkRangeAsRead: async (textId: number, startPosition: number, endPosition: number) => {
+    try {
+      await api.reading.unmarkRangeAsRead(textId, startPosition, endPosition);
+      await get().getReadRanges(textId);
+      await get().calculateProgress(textId);
+    } catch (error) {
+      console.error('Failed to unmark range as read:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to unmark range as read'
+      });
+      throw error;
+    }
+  },
+
+  isRangeRead: (startPosition: number, endPosition: number) => {
+    const { readRanges } = get();
+    // Check if the entire selection is covered by read ranges
+    for (const range of readRanges) {
+      if (range.startPosition <= startPosition && range.endPosition >= endPosition) {
+        return true;
+      }
+    }
+    return false;
   },
 
   getReadRanges: async (textId: number) => {
