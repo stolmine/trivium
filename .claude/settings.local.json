@@ -39,7 +39,18 @@
       "Bash(sudo chown:*)",
       "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" cargo check)",
       "Bash(DATABASE_URL=sqlite:trivium_dev.db cargo sqlx database create:*)",
-      "Bash(DATABASE_URL=sqlite:src-tauri/trivium_dev.db cargo sqlx database create:*)"
+      "Bash(DATABASE_URL=sqlite:src-tauri/trivium_dev.db cargo sqlx database create:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:open-spaced-repetition.github.io)",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:borretti.me)",
+      "Bash(find:*)",
+      "Bash(source .env)",
+      "Bash(export DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\")",
+      "Bash(sqlx migrate:*)",
+      "Bash(rustc:*)",
+      "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" cargo sqlx migrate run)",
+      "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" cargo sqlx prepare)"
     ],
     "deny": [],
     "ask": []

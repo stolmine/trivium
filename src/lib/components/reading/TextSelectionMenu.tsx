@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -8,13 +8,17 @@ import {
   ContextMenuTrigger,
 } from '../ui'
 import { useReadingStore } from '../../stores/reading'
+import { FlashcardCreator } from '../flashcard/FlashcardCreator'
 
 interface TextSelectionMenuProps {
   children: React.ReactNode
+  textId: number
 }
 
-export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
+export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) {
   const { currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead } = useReadingStore()
+  const [showFlashcardCreator, setShowFlashcardCreator] = useState(false)
+  const [selectedText, setSelectedText] = useState('')
 
   const handleToggleRead = () => {
     if (!currentText) return
@@ -33,7 +37,6 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
 
     const endPosition = startPosition + selection.toString().length
 
-    // Check if the range is already marked as read
     if (isRangeRead(startPosition, endPosition)) {
       unmarkRangeAsRead(currentText.id, startPosition, endPosition)
     } else {
@@ -43,11 +46,27 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
     selection.removeAllRanges()
   }
 
+  const handleCreateFlashcard = () => {
+    const selection = window.getSelection()
+    if (!selection || selection.isCollapsed) return
+
+    const text = selection.toString().trim()
+    if (!text) return
+
+    setSelectedText(text)
+    setShowFlashcardCreator(true)
+    selection.removeAllRanges()
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
         e.preventDefault()
         handleToggleRead()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault()
+        handleCreateFlashcard()
       }
     }
 
@@ -56,21 +75,30 @@ export function TextSelectionMenu({ children }: TextSelectionMenuProps) {
   }, [currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead])
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        {children}
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-64">
-        <ContextMenuItem onClick={handleToggleRead}>
-          Toggle Read
-          <ContextMenuShortcut>Ctrl+M</ContextMenuShortcut>
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem disabled>
-          Create Flashcard
-          <ContextMenuShortcut>Ctrl+N</ContextMenuShortcut>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          {children}
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-64">
+          <ContextMenuItem onClick={handleToggleRead}>
+            Toggle Read
+            <ContextMenuShortcut>Ctrl+M</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={handleCreateFlashcard}>
+            Create Flashcard
+            <ContextMenuShortcut>Ctrl+N</ContextMenuShortcut>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <FlashcardCreator
+        open={showFlashcardCreator}
+        onOpenChange={setShowFlashcardCreator}
+        textId={textId}
+        selectedText={selectedText}
+      />
+    </>
   )
 }

@@ -1,5 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Article, Flashcard, ReviewResult, Text, CreateTextRequest, ReadRange, Paragraph } from '../types';
+import type {
+  Article,
+  Flashcard,
+  FlashcardPreview,
+  ReviewResult,
+  Text,
+  CreateTextRequest,
+  ReadRange,
+  Paragraph
+} from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
   return await invoke('load_article', { id });
@@ -68,6 +77,35 @@ export const api = {
     },
     getParagraphs: async (textId: number): Promise<Paragraph[]> => {
       return await invoke('get_paragraphs', { textId: textId });
+    },
+  },
+  flashcards: {
+    createFromCloze: async (textId: number, selectedText: string, clozeText: string): Promise<Flashcard[]> => {
+      return await invoke('create_flashcard_from_cloze', {
+        textId: textId,
+        selectedText: selectedText,
+        clozeText: clozeText
+      });
+    },
+    getByText: async (textId: number): Promise<Flashcard[]> => {
+      return await invoke('get_flashcards_by_text', { textId: textId });
+    },
+    delete: async (flashcardId: number): Promise<void> => {
+      console.log('[API] delete called with flashcardId:', flashcardId);
+      try {
+        const result = await invoke('delete_flashcard', { flashcardId: flashcardId });
+        console.log('[API] delete_flashcard result:', result);
+        return result;
+      } catch (error) {
+        console.error('[API] delete_flashcard error:', error);
+        throw error;
+      }
+    },
+    getPreview: async (clozeText: string, clozeIndex: number): Promise<FlashcardPreview> => {
+      return await invoke('get_flashcard_preview', {
+        clozeText: clozeText,
+        clozeIndex: clozeIndex
+      });
     },
   },
 };
