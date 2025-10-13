@@ -38,7 +38,7 @@
 ## Database Schema
 
 ### Texts Table
-Stores ingested articles and content.
+Stores ingested articles and content with MLA bibliography metadata.
 
 ```sql
 CREATE TABLE texts (
@@ -50,24 +50,92 @@ CREATE TABLE texts (
     content_length INTEGER NOT NULL,
     ingested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    metadata JSON
+    metadata JSON,
+
+    -- MLA Bibliography Fields
+    author TEXT,
+    publication_date TEXT,
+    publisher TEXT,
+    access_date TEXT,
+    doi TEXT,
+    isbn TEXT
+);
+```
+
+### Folders Table
+Hierarchical folder structure for organizing texts.
+
+```sql
+CREATE TABLE folders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    parent_id INTEGER,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES folders(id) ON DELETE CASCADE
+);
+```
+
+### Text Folders Table
+Many-to-many relationship between texts and folders.
+
+```sql
+CREATE TABLE text_folders (
+    text_id INTEGER NOT NULL,
+    folder_id INTEGER NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (text_id, folder_id),
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE,
+    FOREIGN KEY (folder_id) REFERENCES folders(id) ON DELETE CASCADE
 );
 ```
 
 ### Reading Progress Table
-Tracks incremental reading progress.
+Tracks incremental reading session metadata.
 
 ```sql
 CREATE TABLE reading_progress (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     text_id INTEGER NOT NULL,
     user_id INTEGER DEFAULT 1,
-    current_position INTEGER NOT NULL DEFAULT 0,  -- Character offset
+    current_position INTEGER NOT NULL DEFAULT 0,  -- Character offset (deprecated, use read_ranges)
     last_read_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     total_time_seconds INTEGER NOT NULL DEFAULT 0,
     completion_percentage REAL NOT NULL DEFAULT 0.0,
     FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE,
     UNIQUE(text_id, user_id)
+);
+```
+
+### Read Ranges Table
+Tracks multiple read/unread sections per text for nonlinear reading.
+
+```sql
+CREATE TABLE read_ranges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text_id INTEGER NOT NULL,
+    user_id INTEGER DEFAULT 1,
+    start_position INTEGER NOT NULL,
+    end_position INTEGER NOT NULL,
+    marked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE
+);
+```
+
+### Paragraphs Table
+Detected paragraph boundaries for navigation and progress tracking.
+
+```sql
+CREATE TABLE paragraphs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text_id INTEGER NOT NULL,
+    paragraph_index INTEGER NOT NULL,
+    start_position INTEGER NOT NULL,
+    end_position INTEGER NOT NULL,
+    character_count INTEGER NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE,
+    UNIQUE(text_id, paragraph_index)
 );
 ```
 
@@ -118,6 +186,20 @@ CREATE TABLE review_history (
     state_before INTEGER NOT NULL,
     state_after INTEGER NOT NULL,
     FOREIGN KEY (flashcard_id) REFERENCES flashcards(id) ON DELETE CASCADE
+);
+```
+
+### Study Limits Table
+Daily limits for new cards and reviews per user.
+
+```sql
+CREATE TABLE study_limits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER DEFAULT 1,
+    daily_new_cards INTEGER NOT NULL DEFAULT 20,
+    daily_reviews INTEGER NOT NULL DEFAULT 200,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id)
 );
 ```
 
@@ -211,54 +293,422 @@ src-tauri/src/
 ├── commands/
 │   ├── mod.rs
 │   ├── texts.rs          # Text ingestion commands
-│   ├── reading.rs        # Reading progress commands
+│   ├── reading.rs        # Reading progress, ranges, paragraphs
 │   ├── flashcards.rs     # Flashcard commands
-│   └── review.rs         # Review/SRS commands
+│   ├── review.rs         # Review/SRS commands with filtering
+│   ├── folders.rs        # Folder management (NEW)
+│   └── stats.rs          # Statistics aggregation (NEW)
 ├── models/
 │   ├── mod.rs
 │   ├── text.rs
 │   ├── flashcard.rs
-│   └── progress.rs
+│   ├── progress.rs
+│   ├── folder.rs         # Folder and FolderNode (NEW)
+│   ├── read_range.rs     # ReadRange model (NEW)
+│   ├── paragraph.rs      # Paragraph model (NEW)
+│   └── stats.rs          # Stats models (NEW)
 ├── services/
 │   ├── mod.rs
 │   ├── srs.rs            # FSRS logic
 │   ├── wikipedia.rs      # Wikipedia API
-│   └── parser.rs         # Text parsing
+│   ├── parser.rs         # Text parsing, paragraph detection, MLA parsing
+│   └── range_calculator.rs  # Read range merging and calculation (NEW)
 └── db/
     ├── mod.rs
     └── migrations/
 ```
 
+## Command Modules
+
+### commands/folders.rs
+Manages hierarchical folder organization.
+
+```rust
+#[tauri::command]
+async fn create_folder(name: String, parent_id: Option<i64>, db: State<Database>) -> Result<Folder, String>
+
+#[tauri::command]
+async fn get_folder_tree(db: State<Database>) -> Result<Vec<FolderNode>, String>
+
+#[tauri::command]
+async fn move_folder(folder_id: i64, new_parent_id: Option<i64>, db: State<Database>) -> Result<(), String>
+
+#[tauri::command]
+async fn delete_folder(folder_id: i64, db: State<Database>) -> Result<(), String>
+
+#[tauri::command]
+async fn add_text_to_folder(text_id: i64, folder_id: i64, db: State<Database>) -> Result<(), String>
+
+#[tauri::command]
+async fn remove_text_from_folder(text_id: i64, folder_id: i64, db: State<Database>) -> Result<(), String>
+
+#[tauri::command]
+async fn get_texts_in_folder(folder_id: i64, db: State<Database>) -> Result<Vec<Text>, String>
+```
+
+### commands/reading.rs
+Enhanced reading progress with read ranges and paragraph navigation.
+
+```rust
+#[tauri::command]
+async fn mark_range_as_read(text_id: i64, start_pos: i64, end_pos: i64, db: State<Database>) -> Result<(), String>
+
+#[tauri::command]
+async fn get_read_ranges(text_id: i64, db: State<Database>) -> Result<Vec<ReadRange>, String>
+
+#[tauri::command]
+async fn get_most_recently_read_text(text_id: i64, db: State<Database>) -> Result<Option<String>, String>
+
+#[tauri::command]
+async fn calculate_text_progress(text_id: i64, db: State<Database>) -> Result<f64, String>
+
+#[tauri::command]
+async fn get_paragraphs(text_id: i64, db: State<Database>) -> Result<Vec<Paragraph>, String>
+
+#[tauri::command]
+async fn get_next_unread_paragraph(text_id: i64, current_pos: i64, db: State<Database>) -> Result<Option<Paragraph>, String>
+
+#[tauri::command]
+async fn get_previous_paragraph(text_id: i64, current_pos: i64, db: State<Database>) -> Result<Option<Paragraph>, String>
+```
+
+### commands/review.rs
+SRS review with advanced filtering and daily limits.
+
+```rust
+#[tauri::command]
+async fn get_due_cards_by_folder(folder_id: i64, db: State<Database>) -> Result<Vec<Flashcard>, String>
+
+#[tauri::command]
+async fn get_due_cards_by_tag(tag_id: i64, db: State<Database>) -> Result<Vec<Flashcard>, String>
+
+#[tauri::command]
+async fn get_due_cards_by_text(text_id: i64, db: State<Database>) -> Result<Vec<Flashcard>, String>
+
+#[tauri::command]
+async fn get_study_session(filter: StudyFilter, include_new: bool, include_due: bool, db: State<Database>) -> Result<Vec<Flashcard>, String>
+
+#[tauri::command]
+async fn set_daily_limits(new_cards: i64, reviews: i64, db: State<Database>) -> Result<(), String>
+
+#[tauri::command]
+async fn get_todays_progress(db: State<Database>) -> Result<DailyProgress, String>
+```
+
+### commands/stats.rs
+Multi-dimensional statistics aggregation.
+
+```rust
+#[tauri::command]
+async fn get_reading_stats_by_folder(folder_id: i64, db: State<Database>) -> Result<ReadingStats, String>
+
+#[tauri::command]
+async fn get_reading_stats_by_tag(tag_id: i64, db: State<Database>) -> Result<ReadingStats, String>
+
+#[tauri::command]
+async fn get_reading_stats_by_text(text_id: i64, db: State<Database>) -> Result<ReadingStats, String>
+
+#[tauri::command]
+async fn get_flashcard_stats_by_folder(folder_id: i64, db: State<Database>) -> Result<FlashcardStats, String>
+
+#[tauri::command]
+async fn get_flashcard_stats_by_tag(tag_id: i64, db: State<Database>) -> Result<FlashcardStats, String>
+
+#[tauri::command]
+async fn get_flashcard_stats_by_text(text_id: i64, db: State<Database>) -> Result<FlashcardStats, String>
+
+#[tauri::command]
+async fn get_overall_stats(db: State<Database>) -> Result<OverallStats, String>
+```
+
+## Models
+
+### models/folder.rs
+Hierarchical folder structure with tree representation.
+
+```rust
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Folder {
+    pub id: i64,
+    pub name: String,
+    pub parent_id: Option<i64>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FolderNode {
+    pub folder: Folder,
+    pub children: Vec<FolderNode>,
+    pub text_count: i64,
+}
+```
+
+### models/read_range.rs
+Read/unread tracking with position ranges.
+
+```rust
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct ReadRange {
+    pub id: i64,
+    pub text_id: i64,
+    pub user_id: i64,
+    pub start_position: i64,
+    pub end_position: i64,
+    pub marked_at: DateTime<Utc>,
+}
+```
+
+### models/paragraph.rs
+Paragraph boundaries and read state.
+
+```rust
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct Paragraph {
+    pub id: i64,
+    pub text_id: i64,
+    pub paragraph_index: i64,
+    pub start_position: i64,
+    pub end_position: i64,
+    pub character_count: i64,
+    pub created_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParagraphWithReadState {
+    pub paragraph: Paragraph,
+    pub is_read: bool,
+}
+```
+
+### models/stats.rs
+Statistics models for aggregation.
+
+```rust
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReadingStats {
+    pub total_texts: i64,
+    pub total_characters: i64,
+    pub characters_read: i64,
+    pub completion_percentage: f64,
+    pub texts_completed: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FlashcardStats {
+    pub total_cards: i64,
+    pub mature_cards: i64,
+    pub young_cards: i64,
+    pub new_cards: i64,
+    pub average_retention: f64,
+    pub total_reviews: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OverallStats {
+    pub reading: ReadingStats,
+    pub flashcards: FlashcardStats,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DailyProgress {
+    pub new_cards_studied: i64,
+    pub reviews_completed: i64,
+    pub daily_new_limit: i64,
+    pub daily_review_limit: i64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum StudyFilter {
+    All,
+    Folder { folder_id: i64 },
+    Tag { tag_id: i64 },
+    Text { text_id: i64 },
+}
+```
+
+## Services
+
+### services/range_calculator.rs
+Calculates read progress from overlapping ranges.
+
+```rust
+use crate::models::read_range::ReadRange;
+
+pub struct RangeCalculator;
+
+impl RangeCalculator {
+    pub fn calculate_read_characters(ranges: Vec<ReadRange>) -> i64 {
+        if ranges.is_empty() {
+            return 0;
+        }
+
+        let mut sorted_ranges = ranges;
+        sorted_ranges.sort_by_key(|r| r.start_position);
+
+        let mut merged_ranges = Vec::new();
+        let mut current_start = sorted_ranges[0].start_position;
+        let mut current_end = sorted_ranges[0].end_position;
+
+        for range in sorted_ranges.iter().skip(1) {
+            if range.start_position <= current_end {
+                current_end = current_end.max(range.end_position);
+            } else {
+                merged_ranges.push((current_start, current_end));
+                current_start = range.start_position;
+                current_end = range.end_position;
+            }
+        }
+        merged_ranges.push((current_start, current_end));
+
+        merged_ranges.iter().map(|(start, end)| end - start).sum()
+    }
+
+    pub fn is_position_read(position: i64, ranges: &[ReadRange]) -> bool {
+        ranges.iter().any(|r| position >= r.start_position && position < r.end_position)
+    }
+
+    pub fn get_unread_ranges(total_length: i64, read_ranges: Vec<ReadRange>) -> Vec<(i64, i64)> {
+        if read_ranges.is_empty() {
+            return vec![(0, total_length)];
+        }
+
+        let mut sorted_ranges = read_ranges;
+        sorted_ranges.sort_by_key(|r| r.start_position);
+
+        let mut unread = Vec::new();
+        let mut current_pos = 0;
+
+        for range in sorted_ranges {
+            if range.start_position > current_pos {
+                unread.push((current_pos, range.start_position));
+            }
+            current_pos = current_pos.max(range.end_position);
+        }
+
+        if current_pos < total_length {
+            unread.push((current_pos, total_length));
+        }
+
+        unread
+    }
+}
+```
+
+### services/parser.rs
+Enhanced with paragraph detection and MLA parsing.
+
+```rust
+use regex::Regex;
+
+pub struct Parser;
+
+impl Parser {
+    pub fn detect_paragraphs(content: &str) -> Vec<(usize, usize)> {
+        let mut paragraphs = Vec::new();
+        let lines: Vec<&str> = content.lines().collect();
+        let mut current_start = 0;
+        let mut current_pos = 0;
+        let mut in_paragraph = false;
+
+        for line in lines {
+            let line_len = line.len() + 1;
+
+            if line.trim().is_empty() {
+                if in_paragraph {
+                    paragraphs.push((current_start, current_pos));
+                    in_paragraph = false;
+                }
+            } else {
+                if !in_paragraph {
+                    current_start = current_pos;
+                    in_paragraph = true;
+                }
+            }
+
+            current_pos += line_len;
+        }
+
+        if in_paragraph {
+            paragraphs.push((current_start, current_pos));
+        }
+
+        paragraphs
+    }
+
+    pub fn parse_mla_metadata(mla_string: &str) -> MLAMetadata {
+        let author_re = Regex::new(r"^(.+?)\.").unwrap();
+        let date_re = Regex::new(r"\b(\d{4})\b").unwrap();
+        let publisher_re = Regex::new(r"(?:publisher|press):\s*(.+?)[,.]").unwrap();
+        let doi_re = Regex::new(r"doi:\s*([^\s,]+)").unwrap();
+        let isbn_re = Regex::new(r"isbn:\s*([^\s,]+)").unwrap();
+
+        MLAMetadata {
+            author: author_re.captures(mla_string).and_then(|c| c.get(1)).map(|m| m.as_str().to_string()),
+            publication_date: date_re.captures(mla_string).and_then(|c| c.get(1)).map(|m| m.as_str().to_string()),
+            publisher: publisher_re.captures(mla_string).and_then(|c| c.get(1)).map(|m| m.as_str().to_string()),
+            doi: doi_re.captures(mla_string).and_then(|c| c.get(1)).map(|m| m.as_str().to_string()),
+            isbn: isbn_re.captures(mla_string).and_then(|c| c.get(1)).map(|m| m.as_str().to_string()),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MLAMetadata {
+    pub author: Option<String>,
+    pub publication_date: Option<String>,
+    pub publisher: Option<String>,
+    pub doi: Option<String>,
+    pub isbn: Option<String>,
+}
+```
+
 ## Implementation Roadmap
 
-### Phase 1: Foundation (Week 1-2)
-1. Set up Tauri project structure
-2. Initialize SQLite database with SQLx
-3. Implement basic CRUD commands for texts
-4. Create migration system
+### Phase 1: Core Reading (Weeks 1-2)
+1. Database migration: folders, read_ranges, paragraphs, study_limits
+2. Add MLA fields to texts table
+3. Backend: Folder management commands
+4. Backend: Read range tracking and calculation
+5. Backend: Paragraph detection service
+6. Models: folder, read_range, paragraph
 
-### Phase 2: Text Ingestion (Week 2-3)
-1. Implement paste functionality
-2. Integrate Wikipedia API
-3. Add text storage and retrieval
+### Phase 2: Enhanced Navigation (Week 3)
+1. Backend: Paragraph navigation commands
+2. Backend: Progress calculation with read ranges
+3. Service: range_calculator implementation
+4. Command updates: reading.rs enhancements
 
-### Phase 3: Reading Progress (Week 3-4)
-1. Implement position tracking
-2. Add session logging
-3. Build resume functionality
+### Phase 3: Flashcard Integration (Week 4)
+1. Backend: "Most recently read" tracking
+2. Command updates: review.rs filtering
+3. Backend: Study session filtering logic
 
-### Phase 4: Flashcards (Week 4-5)
-1. Implement cloze deletion parser
-2. Create flashcard CRUD operations
-3. Add context preservation
+### Phase 4: Study Filtering (Week 5)
+1. Backend: Study session filtering by folder/tag/text
+2. Backend: Daily limits system implementation
+3. Commands: set_daily_limits, get_todays_progress
+4. Models: StudyFilter, DailyProgress
 
-### Phase 5: SRS Implementation (Week 5-6)
-1. Integrate FSRS library
-2. Implement review scheduling
-3. Add review history tracking
+### Phase 5: Statistics (Week 6)
+1. Backend: Statistics calculation queries
+2. Commands: stats.rs implementation
+3. Models: ReadingStats, FlashcardStats, OverallStats
+4. Aggregation by folder/tag/text
 
-### Phase 6: Polish (Week 6-7)
-1. Add tags system
-2. Implement search functionality
-3. Add statistics and analytics
-4. Optimize performance
+### Phase 6: Polish (Week 7)
+1. MLA metadata parsing
+2. PDF/EPUB import
+3. Performance optimization
+4. Comprehensive error handling

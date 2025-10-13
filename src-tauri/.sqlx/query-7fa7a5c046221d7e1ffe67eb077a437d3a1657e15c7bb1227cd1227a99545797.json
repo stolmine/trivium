@@ -1,0 +1,50 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            start_position as \"start_position!\",\n            end_position as \"end_position!\",\n            marked_at as \"marked_at: _\"\n        FROM read_ranges\n        WHERE text_id = ? AND user_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "text_id!",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "user_id!",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "start_position!",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "end_position!",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "marked_at: _",
+        "ordinal": 5,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7fa7a5c046221d7e1ffe67eb077a437d3a1657e15c7bb1227cd1227a99545797"
+}

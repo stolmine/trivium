@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT text_id\n        FROM read_ranges\n        WHERE user_id = ?\n        ORDER BY marked_at DESC\n        LIMIT 1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "text_id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d28da38bf781cd5745f78733df890b31b91dc33781dc6a1e6a21b2d23ea5b3f3"
+}

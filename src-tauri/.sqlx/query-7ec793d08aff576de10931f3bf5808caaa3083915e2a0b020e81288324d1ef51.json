@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM read_ranges\n        WHERE text_id = ?\n        AND user_id = ?\n        AND start_position < ?\n        AND end_position > ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "7ec793d08aff576de10931f3bf5808caaa3083915e2a0b020e81288324d1ef51"
+}

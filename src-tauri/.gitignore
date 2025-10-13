@@ -6,10 +6,10 @@
 # will have schema files for capabilities auto-completion
 /gen/schemas
 
-# Database
-trivium.db
-trivium.db-shm
-trivium.db-wal
+# Database files
+*.db
+*.db-shm
+*.db-wal
 
 # Environment
 .env

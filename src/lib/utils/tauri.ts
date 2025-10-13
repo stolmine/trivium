@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Article, Flashcard, ReviewResult } from '../types';
+import type { Article, Flashcard, ReviewResult, Text, CreateTextRequest, ReadRange, Paragraph } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
   return await invoke('load_article', { id });
@@ -32,3 +32,42 @@ export async function submitReview(result: ReviewResult): Promise<void> {
 export async function updateReadingPosition(articleId: string, position: number): Promise<void> {
   await invoke('update_reading_position', { articleId, position });
 }
+
+export const api = {
+  texts: {
+    create: async (request: CreateTextRequest): Promise<Text> => {
+      return await invoke('create_text', { request });
+    },
+    list: async (): Promise<Text[]> => {
+      return await invoke('list_texts');
+    },
+    get: async (id: number): Promise<Text> => {
+      return await invoke('get_text', { id });
+    },
+  },
+  reading: {
+    markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
+      return await invoke('mark_range_as_read', {
+        textId: textId,
+        startPos: startPosition,
+        endPos: endPosition
+      });
+    },
+    unmarkRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
+      return await invoke('unmark_range_as_read', {
+        textId: textId,
+        startPos: startPosition,
+        endPos: endPosition
+      });
+    },
+    getReadRanges: async (textId: number): Promise<ReadRange[]> => {
+      return await invoke('get_read_ranges', { textId: textId });
+    },
+    calculateProgress: async (textId: number): Promise<number> => {
+      return await invoke('calculate_text_progress', { textId: textId });
+    },
+    getParagraphs: async (textId: number): Promise<Paragraph[]> => {
+      return await invoke('get_paragraphs', { textId: textId });
+    },
+  },
+};

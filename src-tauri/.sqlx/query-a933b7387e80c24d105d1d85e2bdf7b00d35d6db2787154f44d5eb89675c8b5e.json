@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO paragraphs (text_id, paragraph_index, start_position, end_position, character_count)\n            VALUES (?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "a933b7387e80c24d105d1d85e2bdf7b00d35d6db2787154f44d5eb89675c8b5e"
+}
