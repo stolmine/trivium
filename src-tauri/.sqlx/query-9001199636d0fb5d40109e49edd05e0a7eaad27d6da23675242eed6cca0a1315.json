@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT\n                id as \"id!\",\n                text_id as \"text_id!\",\n                user_id as \"user_id!\",\n                original_text,\n                cloze_text,\n                cloze_index as \"cloze_index!\",\n                display_index as \"display_index!\",\n                cloze_number as \"cloze_number!\",\n                created_at as \"created_at: _\",\n                updated_at as \"updated_at: _\",\n                cloze_note_id,\n                due as \"due: _\",\n                stability as \"stability!\",\n                difficulty as \"difficulty!\",\n                elapsed_days as \"elapsed_days!\",\n                scheduled_days as \"scheduled_days!\",\n                reps as \"reps!\",\n                lapses as \"lapses!\",\n                state as \"state!\",\n                last_review as \"last_review: _\"\n            FROM flashcards\n            WHERE id = ?\n            ",
+  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            original_text,\n            cloze_text,\n            cloze_index as \"cloze_index!\",\n            display_index as \"display_index!\",\n            cloze_number as \"cloze_number!\",\n            created_at as \"created_at: _\",\n            updated_at as \"updated_at: _\",\n            cloze_note_id,\n            due as \"due: _\",\n            stability as \"stability!\",\n            difficulty as \"difficulty!\",\n            elapsed_days as \"elapsed_days!\",\n            scheduled_days as \"scheduled_days!\",\n            reps as \"reps!\",\n            lapses as \"lapses!\",\n            state as \"state!\",\n            last_review as \"last_review: _\"\n        FROM flashcards\n        WHERE due <= ?\n        ORDER BY due ASC\n        LIMIT ?\n        ",
   "describe": {
     "columns": [
       {
@@ -105,10 +105,10 @@
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 2
     },
     "nullable": [
-      false,
+      true,
       false,
       true,
       false,
@@ -130,5 +130,5 @@
       true
     ]
   },
-  "hash": "b1896fab868e436b88361abc9f90ebd502f7d25b60e0b5ca7a3cb2c8efe7d48f"
+  "hash": "9001199636d0fb5d40109e49edd05e0a7eaad27d6da23675242eed6cca0a1315"
 }

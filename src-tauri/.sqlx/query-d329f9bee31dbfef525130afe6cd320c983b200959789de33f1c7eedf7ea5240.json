@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE flashcards\n        SET stability = ?,\n            difficulty = ?,\n            due = ?,\n            scheduled_days = ?,\n            elapsed_days = ?,\n            reps = reps + 1,\n            lapses = lapses + ?,\n            state = ?,\n            last_review = ?,\n            updated_at = ?\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 10
+    },
+    "nullable": []
+  },
+  "hash": "d329f9bee31dbfef525130afe6cd320c983b200959789de33f1c7eedf7ea5240"
+}

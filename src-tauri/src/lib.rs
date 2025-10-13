@@ -55,7 +55,10 @@ pub fn run() {
             commands::flashcards::create_flashcard_from_cloze,
             commands::flashcards::get_flashcards_by_text,
             commands::flashcards::delete_flashcard,
-            commands::flashcards::get_flashcard_preview
+            commands::flashcards::get_flashcard_preview,
+            commands::review::get_due_cards,
+            commands::review::grade_card,
+            commands::review::get_review_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

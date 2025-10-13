@@ -160,3 +160,19 @@
     @apply bg-background text-foreground;
   }
 }
+
+.cloze-hidden {
+  background-color: hsl(var(--primary));
+  color: transparent;
+  user-select: none;
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.cloze-visible {
+  background-color: hsl(var(--primary) / 0.2);
+  color: hsl(var(--foreground));
+  border-radius: 4px;
+  padding: 0 4px;
+  font-weight: 600;
+}

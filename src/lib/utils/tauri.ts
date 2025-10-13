@@ -100,4 +100,18 @@ export const api = {
       });
     },
   },
+  review: {
+    getDueCards: async (limit: number): Promise<Flashcard[]> => {
+      return await invoke('get_due_cards', { limit: limit });
+    },
+    gradeCard: async (flashcardId: number, rating: number): Promise<void> => {
+      return await invoke('grade_card', {
+        flashcardId: flashcardId,
+        rating: rating
+      });
+    },
+    getStats: async (): Promise<{ due_count: number; new_count: number; learning_count: number; review_count: number }> => {
+      return await invoke('get_review_stats');
+    },
+  },
 };

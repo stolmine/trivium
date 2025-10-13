@@ -7,7 +7,7 @@ interface ClozeEditorProps {
   onCancel: () => void;
 }
 
-export function ClozeEditor({ selectedText, context, onSave, onCancel }: ClozeEditorProps) {
+export function ClozeEditor({ selectedText: _selectedText, context: _context, onSave: _onSave, onCancel: _onCancel }: ClozeEditorProps) {
   // TODO: Implement cloze deletion editor
   // Features:
   // - Preview of cloze deletion

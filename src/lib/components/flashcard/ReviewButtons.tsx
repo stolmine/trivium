@@ -5,7 +5,7 @@ interface ReviewButtonsProps {
   disabled?: boolean;
 }
 
-export function ReviewButtons({ onRate, disabled }: ReviewButtonsProps) {
+export function ReviewButtons({ onRate: _onRate, disabled: _disabled }: ReviewButtonsProps) {
   // TODO: Implement review quality buttons
   // Features:
   // - 6 quality levels (0-5) based on SM-2

@@ -6,7 +6,7 @@ interface FlashcardDisplayProps {
   onToggleAnswer: () => void;
 }
 
-export function FlashcardDisplay({ flashcard, showAnswer, onToggleAnswer }: FlashcardDisplayProps) {
+export function FlashcardDisplay({ flashcard: _flashcard, showAnswer: _showAnswer, onToggleAnswer: _onToggleAnswer }: FlashcardDisplayProps) {
   // TODO: Implement flashcard display for review
   // Features:
   // - Display context with cloze deletion
