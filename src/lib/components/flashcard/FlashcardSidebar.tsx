@@ -29,24 +29,16 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
   }, [textId, setMostRecentlyReadTextId, loadFlashcards])
 
   const handleDeleteClick = (flashcardId: number) => {
-    console.log('handleDeleteClick called with flashcardId:', flashcardId)
     setFlashcardToDelete(flashcardId)
     setDeleteDialogOpen(true)
-    console.log('Dialog state set to true')
-    console.log('Flashcard to delete set to:', flashcardId)
   }
 
   const handleConfirmDelete = async () => {
     if (flashcardToDelete === null) return
 
-    console.log('handleConfirmDelete called with flashcardId:', flashcardToDelete)
     try {
-      console.log('Calling deleteFlashcard...')
       await deleteFlashcard(flashcardToDelete)
-      console.log('Delete successful, reloading flashcards...')
-      // Reload flashcards to ensure UI is in sync
       await loadFlashcards(textId)
-      console.log('Flashcards reloaded')
       setDeleteDialogOpen(false)
       setFlashcardToDelete(null)
     } catch (error) {
@@ -59,12 +51,15 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     const parts = flashcard.clozeText.split(/(\{\{c\d+::[^}]+\}\})/g)
     return parts.map((part, idx) => {
       const match = part.match(/\{\{c(\d+)::([^}]+)\}\}/)
-      if (match && parseInt(match[1]) === flashcard.clozeIndex) {
-        return (
-          <span key={idx} className="bg-blue-100 text-blue-800 px-1 rounded">
-            [{match[2]}]
-          </span>
-        )
+      if (match) {
+        if (parseInt(match[1]) === flashcard.clozeIndex) {
+          return (
+            <span key={idx} className="bg-blue-100 text-blue-800 px-1 rounded">
+              [{match[2]}]
+            </span>
+          )
+        }
+        return <span key={idx}>{match[2]}</span>
       }
       return <span key={idx}>{part}</span>
     })
@@ -167,7 +162,6 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
       </div>
 
       {/* Delete Confirmation Dialog */}
-      {console.log('Rendering Dialog, open:', deleteDialogOpen, 'flashcardToDelete:', flashcardToDelete)}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -180,7 +174,6 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
             <Button
               variant="outline"
               onClick={() => {
-                console.log('Cancel clicked')
                 setDeleteDialogOpen(false)
                 setFlashcardToDelete(null)
               }}

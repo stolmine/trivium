@@ -91,15 +91,7 @@ export const api = {
       return await invoke('get_flashcards_by_text', { textId: textId });
     },
     delete: async (flashcardId: number): Promise<void> => {
-      console.log('[API] delete called with flashcardId:', flashcardId);
-      try {
-        const result = await invoke('delete_flashcard', { flashcardId: flashcardId });
-        console.log('[API] delete_flashcard result:', result);
-        return result;
-      } catch (error) {
-        console.error('[API] delete_flashcard error:', error);
-        throw error;
-      }
+      return await invoke('delete_flashcard', { flashcardId: flashcardId });
     },
     getPreview: async (clozeText: string, clozeIndex: number): Promise<FlashcardPreview> => {
       return await invoke('get_flashcard_preview', {

@@ -61,18 +61,14 @@ export const useFlashcardStore = create<FlashcardState>((set) => ({
   },
 
   deleteFlashcard: async (flashcardId: number) => {
-    console.log('[Store] deleteFlashcard called with id:', flashcardId);
     set({ isLoading: true, error: null });
     try {
-      console.log('[Store] Calling api.flashcards.delete...');
       await api.flashcards.delete(flashcardId);
-      console.log('[Store] API call successful, updating state...');
       set((state) => ({
         flashcards: state.flashcards.filter(f => f.id !== flashcardId),
         currentTextFlashcards: state.currentTextFlashcards.filter(f => f.id !== flashcardId),
         isLoading: false
       }));
-      console.log('[Store] State updated');
     } catch (error) {
       console.error('[Store] Failed to delete flashcard:', error);
       set({

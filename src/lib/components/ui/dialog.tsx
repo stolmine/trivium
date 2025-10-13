@@ -11,17 +11,12 @@ interface DialogProps {
 const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   if (!open) return null
 
-  console.log('[Dialog] Rendering dialog with open=true')
-
   const dialogContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       <div
         className="fixed inset-0 bg-black opacity-50"
         style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
-        onClick={() => {
-          console.log('[Dialog] Backdrop clicked')
-          onOpenChange?.(false)
-        }}
+        onClick={() => onOpenChange?.(false)}
       />
       <div className="relative z-[10000]" style={{ position: 'relative', zIndex: 10000 }}>
         {children}
@@ -45,7 +40,6 @@ interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
   ({ className, children, ...props }, ref) => {
-    console.log('[DialogContent] Rendering content')
     return (
       <div
         ref={ref}

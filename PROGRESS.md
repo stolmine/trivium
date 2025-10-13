@@ -169,7 +169,7 @@
 - Full algorithm deferred to Phase 3 as planned
 
 **Commits**:
-- Pending: Will commit Phase 2 implementation next
+- `a78dc2b` - Implement Phase 2: Flashcard Creation with cloze deletion support
 
 ---
 
