@@ -3,17 +3,21 @@ import { api } from '../lib/utils/tauri';
 import type { Folder } from '../lib/types/folder';
 import type { Text } from '../lib/types/article';
 
+export type SortOption = 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'content-length';
+
 interface LibraryState {
   folders: Folder[];
   texts: Text[];
   expandedFolderIds: Set<string>;
   selectedItemId: string | null;
+  sortBy: SortOption;
   isLoading: boolean;
   error: string | null;
 
   loadLibrary: () => Promise<void>;
   toggleFolder: (folderId: string) => void;
   selectItem: (itemId: string | null) => void;
+  setSortBy: (sortBy: SortOption) => void;
   createFolder: (name: string, parentId?: string) => Promise<void>;
   renameFolder: (id: string, name: string) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
@@ -27,6 +31,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
   texts: [],
   expandedFolderIds: new Set<string>(),
   selectedItemId: null,
+  sortBy: 'date-newest',
   isLoading: false,
   error: null,
 
@@ -62,6 +67,10 @@ export const useLibraryStore = create<LibraryState>((set) => ({
 
   selectItem: (itemId: string | null) => {
     set({ selectedItemId: itemId });
+  },
+
+  setSortBy: (sortBy: SortOption) => {
+    set({ sortBy });
   },
 
   createFolder: async (name: string, parentId?: string) => {

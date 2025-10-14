@@ -10,4 +10,4 @@ export type {
   FlashcardPreview
 } from './flashcard';
 export type { DailyProgress, ReadingStats, ReviewStats, UserProgress } from './progress';
-export type { ReadRange, Paragraph } from './reading';
+export type { ReadRange, Paragraph, ExcludedRange } from './reading';

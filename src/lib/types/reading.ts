@@ -15,3 +15,8 @@ export interface Paragraph {
   characterCount: number;
   createdAt: string;
 }
+
+export interface ExcludedRange {
+  startPosition: number;
+  endPosition: number;
+}

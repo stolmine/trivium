@@ -69,7 +69,11 @@
       "WebFetch(domain:dev.to)",
       "Bash(xargs kill:*)",
       "Bash(npx vite build:*)",
-      "WebFetch(domain:juliensobczak.com)"
+      "WebFetch(domain:juliensobczak.com)",
+      "Bash(DATABASE_URL=sqlite:trivium_dev.db cargo sqlx prepare:*)",
+      "Bash(export DATABASE_URL=sqlite:trivium_dev.db)",
+      "Bash(xargs cat:*)",
+      "Bash(export DATABASE_URL=\"sqlite:///Users/why/Library/Application Support/com.why.trivium/trivium.db\")"
     ],
     "deny": [],
     "ask": []

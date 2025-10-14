@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import {
@@ -8,16 +8,23 @@ import {
   Label,
 } from '../../lib/components/ui'
 import { ChevronLeft, X } from 'lucide-react'
+import { useTextHistory } from '../../hooks/useTextHistory'
 
 export function IngestPage() {
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const {
+    content,
+    setContent,
+    setContentImmediate,
+    textareaRef: contentRef,
+    undo,
+    redo,
+  } = useTextHistory({ debounceMs: 500 })
   const [author, setAuthor] = useState('')
   const [publicationDate, setPublicationDate] = useState('')
   const [publisher, setPublisher] = useState('')
   const { createText, isLoading } = useReadingStore()
-  const contentRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,9 +63,8 @@ export function IngestPage() {
         before + selectedText + after +
         content.substring(end)
 
-      setContent(newContent)
+      setContentImmediate(newContent)
 
-      // Set cursor position after the wrapped text
       setTimeout(() => {
         textarea.focus()
         textarea.setSelectionRange(
@@ -69,35 +75,50 @@ export function IngestPage() {
     }
   }
 
-  const handleWrapCloze = () => {
-    wrapSelection('{{c1::', '}}')
-  }
-
   const handleWrapExclude = () => {
     wrapSelection('[[exclude]]', '[[/exclude]]')
   }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check if we're focused on the content textarea
-      if (document.activeElement !== contentRef.current) return
-
-      // Ctrl/Cmd + Shift + C for cloze
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+      if (e.key === 'Escape') {
         e.preventDefault()
-        handleWrapCloze()
+        handleCancel()
+        return
       }
 
-      // Ctrl/Cmd + Shift + E for exclude
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+      if (e.key === 'Enter' && e.shiftKey) {
         e.preventDefault()
-        handleWrapExclude()
+        if (title && content) {
+          handleSubmit(e as unknown as React.FormEvent)
+        }
+        return
+      }
+
+      if (document.activeElement === contentRef.current) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+          e.preventDefault()
+          handleWrapExclude()
+        }
+
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z') {
+          e.preventDefault()
+          undo()
+        }
+
+        if (
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') ||
+          ((e.ctrlKey || e.metaKey) && e.key === 'y')
+        ) {
+          e.preventDefault()
+          redo()
+        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [content])
+  }, [content, title, undo, redo])
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -192,16 +213,6 @@ export function IngestPage() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={handleWrapCloze}
-                        disabled={isLoading}
-                        title="Wrap selection with cloze (Ctrl+Shift+C)"
-                      >
-                        Add Cloze
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
                         onClick={handleWrapExclude}
                         disabled={isLoading}
                         title="Exclude selection from progress (Ctrl+Shift+E)"
@@ -227,7 +238,7 @@ export function IngestPage() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Tip: Select text and press Ctrl+Shift+C to wrap with cloze, or Ctrl+Shift+E to exclude from progress tracking
+                    Tip: Press Shift+Enter to import, Esc to cancel, Ctrl+Z to undo, or Ctrl+Shift+E to exclude selected text from progress tracking
                   </p>
                 </div>
               </div>

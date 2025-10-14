@@ -1,6 +1,7 @@
 use crate::db::Database;
 use crate::models::paragraph::Paragraph;
 use crate::models::read_range::ReadRange;
+use crate::services::parser;
 use crate::services::range_calculator::RangeCalculator;
 use chrono::Utc;
 use std::sync::Arc;
@@ -81,7 +82,7 @@ pub async fn calculate_text_progress(
 
     let text_result = sqlx::query!(
         r#"
-        SELECT content_length
+        SELECT content_length, content
         FROM texts
         WHERE id = ?
         "#,
@@ -92,8 +93,10 @@ pub async fn calculate_text_progress(
     .map_err(|e| format!("Failed to fetch text: {}", e))?;
 
     let total_chars = text_result.content_length;
+    let excluded_chars = parser::calculate_excluded_character_count(&text_result.content);
+    let countable_chars = total_chars - excluded_chars;
 
-    if total_chars == 0 {
+    if countable_chars <= 0 {
         return Ok(0.0);
     }
 
@@ -118,7 +121,7 @@ pub async fn calculate_text_progress(
     .map_err(|e| format!("Failed to fetch read ranges: {}", e))?;
 
     let read_chars = RangeCalculator::calculate_read_characters(ranges);
-    let progress = (read_chars as f64 / total_chars as f64) * 100.0;
+    let progress = (read_chars as f64 / countable_chars as f64) * 100.0;
 
     Ok(progress)
 }

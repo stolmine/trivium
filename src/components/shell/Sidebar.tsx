@@ -1,9 +1,9 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
-import { useLibraryStore } from '../../stores/library';
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Input, Label } from '../../lib/components/ui';
+import { useLibraryStore, type SortOption } from '../../stores/library';
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Input, Label, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../lib/components/ui';
 import { SIDEBAR_WIDTH, getTransitionStyle, shouldReduceMotion } from '../../lib/animations';
 import { cn } from '../../lib/utils';
 import { LibraryTree } from '../library/LibraryTree';
@@ -23,11 +23,28 @@ const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
 ];
 
+const getSortLabel = (sortBy: SortOption): string => {
+  switch (sortBy) {
+    case 'name-asc':
+      return 'Name (A-Z)';
+    case 'name-desc':
+      return 'Name (Z-A)';
+    case 'date-newest':
+      return 'Date Created (Newest)';
+    case 'date-oldest':
+      return 'Date Created (Oldest)';
+    case 'content-length':
+      return 'Content Length';
+    default:
+      return 'Sort';
+  }
+};
+
 export function Sidebar({ onShowHelp }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
-  const { createFolder } = useLibraryStore();
+  const { createFolder, sortBy, setSortBy } = useLibraryStore();
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
@@ -106,16 +123,48 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
               >
                 Library
               </button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCreateFolderDialog(true)}
-                className="h-6 w-6 p-0"
-                aria-label="Create new folder"
-                title="Create new folder"
-              >
-                <FolderPlus className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      title={getSortLabel(sortBy)}
+                      aria-label="Sort library"
+                    >
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}>
+                      Name (A-Z)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-desc' ? 'name-asc' : 'name-desc')}>
+                      Name (Z-A)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-newest' ? 'date-oldest' : 'date-newest')}>
+                      Date Created (Newest)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-oldest' ? 'date-newest' : 'date-oldest')}>
+                      Date Created (Oldest)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('content-length')}>
+                      Content Length
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCreateFolderDialog(true)}
+                  className="h-6 w-6 p-0"
+                  aria-label="Create new folder"
+                  title="Create new folder"
+                >
+                  <FolderPlus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
           <LibraryTree collapsed={sidebarCollapsed} />

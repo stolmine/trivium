@@ -272,3 +272,11 @@
   padding: 0 4px;
   font-weight: 600;
 }
+
+.excluded-text {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 8px;
+  display: inline-block;
+}

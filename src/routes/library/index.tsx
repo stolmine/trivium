@@ -78,21 +78,22 @@ export function LibraryPage() {
                   variant="outline"
                   size="sm"
                   title={getSortLabel(sortBy)}
+                  aria-label="Sort library"
                 >
                   <ArrowUpDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortBy('name-asc')}>
+                <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}>
                   Name (A-Z)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('name-desc')}>
+                <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-desc' ? 'name-asc' : 'name-desc')}>
                   Name (Z-A)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('date-newest')}>
+                <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-newest' ? 'date-oldest' : 'date-newest')}>
                   Date Created (Newest)
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy('date-oldest')}>
+                <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-oldest' ? 'date-newest' : 'date-oldest')}>
                   Date Created (Oldest)
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setSortBy('content-length')}>

@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { FileText } from 'lucide-react';
-import { useLibraryStore } from '../../stores/library';
+import { useLibraryStore, type SortOption } from '../../stores/library';
 import { buildTree } from '../../lib/tree-utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
@@ -11,8 +11,27 @@ interface LibraryTreeProps {
   collapsed?: boolean;
 }
 
+const sortTexts = (texts: Text[], sortBy: SortOption): Text[] => {
+  const textsCopy = [...texts];
+
+  switch (sortBy) {
+    case 'name-asc':
+      return textsCopy.sort((a, b) => a.title.localeCompare(b.title));
+    case 'name-desc':
+      return textsCopy.sort((a, b) => b.title.localeCompare(a.title));
+    case 'date-newest':
+      return textsCopy.sort((a, b) => new Date(b.ingestedAt).getTime() - new Date(a.ingestedAt).getTime());
+    case 'date-oldest':
+      return textsCopy.sort((a, b) => new Date(a.ingestedAt).getTime() - new Date(b.ingestedAt).getTime());
+    case 'content-length':
+      return textsCopy.sort((a, b) => b.contentLength - a.contentLength);
+    default:
+      return textsCopy;
+  }
+};
+
 export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
-  const { folders, texts, isLoading, error, loadLibrary, moveTextToFolder } = useLibraryStore();
+  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder } = useLibraryStore();
 
   useEffect(() => {
     loadLibrary();
@@ -25,6 +44,10 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
       },
     })
   );
+
+  // Always call hooks before any conditional returns
+  const sortedTexts = useMemo(() => sortTexts(texts, sortBy), [texts, sortBy]);
+  const tree = buildTree(folders, sortedTexts);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -47,6 +70,7 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
     }
   };
 
+  // Handle loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
@@ -55,6 +79,7 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
     );
   }
 
+  // Handle error state
   if (error) {
     return (
       <div className="flex items-center justify-center py-8 text-sm text-destructive">
@@ -62,8 +87,6 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
       </div>
     );
   }
-
-  const tree = buildTree(folders, texts);
 
   if (tree.length === 0) {
     return (

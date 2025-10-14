@@ -95,21 +95,20 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       description: 'Show keyboard shortcuts',
       category: 'view',
     },
-    {
-      key: '?',
-      action: onToggleHelp,
-      description: 'Show keyboard shortcuts',
-      category: 'view',
-    },
   ];
 
   const ingestShortcuts: KeyboardShortcut[] = [
     {
-      key: 'C',
-      ctrlKey: true,
+      key: 'Escape',
+      action: () => {},
+      description: 'Close/cancel ingest',
+      category: 'ingest',
+    },
+    {
+      key: 'Enter',
       shiftKey: true,
       action: () => {},
-      description: 'Wrap selection with cloze',
+      description: 'Submit/import text',
       category: 'ingest',
     },
     {
@@ -118,13 +117,6 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       shiftKey: true,
       action: () => {},
       description: 'Exclude selection from progress',
-      category: 'ingest',
-    },
-    {
-      key: 'Enter',
-      ctrlKey: true,
-      action: () => {},
-      description: 'Preview flashcard',
       category: 'ingest',
     },
   ];

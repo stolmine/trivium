@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import type { Text, CreateTextRequest, ReadRange, Paragraph } from '../types';
+import type { Text, CreateTextRequest, ReadRange, Paragraph, ExcludedRange } from '../types';
 import { api } from '../utils/tauri';
 
 interface ReadingState {
   texts: Text[];
   currentText: Text | null;
   readRanges: ReadRange[];
+  excludedRanges: ExcludedRange[];
   paragraphs: Paragraph[];
   currentParagraphIndex: number;
   totalProgress: number;
@@ -18,6 +19,8 @@ interface ReadingState {
   markRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
   unmarkRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
   isRangeRead: (startPosition: number, endPosition: number) => boolean;
+  isRangeExcluded: (startPosition: number, endPosition: number) => boolean;
+  setExcludedRanges: (ranges: ExcludedRange[]) => void;
   getReadRanges: (textId: number) => Promise<void>;
   getParagraphs: (textId: number) => Promise<void>;
   calculateProgress: (textId: number) => Promise<void>;
@@ -29,6 +32,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   texts: [],
   currentText: null,
   readRanges: [],
+  excludedRanges: [],
   paragraphs: [],
   currentParagraphIndex: 0,
   totalProgress: 0,
@@ -116,13 +120,26 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
   isRangeRead: (startPosition: number, endPosition: number) => {
     const { readRanges } = get();
-    // Check if the entire selection is covered by read ranges
     for (const range of readRanges) {
       if (range.startPosition <= startPosition && range.endPosition >= endPosition) {
         return true;
       }
     }
     return false;
+  },
+
+  isRangeExcluded: (startPosition: number, endPosition: number) => {
+    const { excludedRanges } = get();
+    for (const range of excludedRanges) {
+      if (startPosition < range.endPosition && endPosition > range.startPosition) {
+        return true;
+      }
+    }
+    return false;
+  },
+
+  setExcludedRanges: (ranges: ExcludedRange[]) => {
+    set({ excludedRanges: ranges });
   },
 
   getReadRanges: async (textId: number) => {

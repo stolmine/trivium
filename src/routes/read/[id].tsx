@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { Button } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter } from '../../lib/components/reading'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges } from '../../lib/components/reading'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
 import { ChevronLeft } from 'lucide-react'
 
@@ -19,7 +19,8 @@ export function ReadPage() {
     totalProgress,
     getReadRanges,
     getParagraphs,
-    calculateProgress
+    calculateProgress,
+    setExcludedRanges
   } = useReadingStore()
 
   useEffect(() => {
@@ -33,6 +34,14 @@ export function ReadPage() {
     }
   }, [id, loadText, getReadRanges, getParagraphs, calculateProgress])
 
+  useEffect(() => {
+    if (currentText) {
+      const { excludedRanges } = parseExcludedRanges(currentText.content)
+      setExcludedRanges(excludedRanges)
+    }
+  }, [currentText, setExcludedRanges])
+
+  // Handle loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full py-12">
@@ -41,6 +50,7 @@ export function ReadPage() {
     )
   }
 
+  // Handle error state
   if (error) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
@@ -55,6 +65,7 @@ export function ReadPage() {
     )
   }
 
+  // Handle not found state
   if (!currentText) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
@@ -67,6 +78,7 @@ export function ReadPage() {
     )
   }
 
+  // Render main content
   return (
     <div className="flex h-full overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">

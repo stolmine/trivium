@@ -4,6 +4,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
 import { useLibraryStore } from '../../stores/library';
 import { shouldReduceMotion } from '../../lib/animations';
+import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
 
 interface TextNodeProps {
@@ -40,7 +41,7 @@ export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
 
   const indentStyle = collapsed ? {} : { paddingLeft: `${depth * 16 + 8}px` };
 
-  return (
+  const nodeContent = (
     <div
       ref={setNodeRef}
       style={{ ...style, ...indentStyle }}
@@ -65,5 +66,15 @@ export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
         </span>
       )}
     </div>
+  );
+
+  if (collapsed) {
+    return nodeContent;
+  }
+
+  return (
+    <TextContextMenu textId={text.id} textTitle={text.title}>
+      {nodeContent}
+    </TextContextMenu>
   );
 }

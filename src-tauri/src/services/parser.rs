@@ -8,11 +8,13 @@
 // - Validate cloze syntax
 // - Split text into sentences or logical chunks
 // - Clean and normalize text content
+// - Parse exclude tags ([[exclude]]...[[/exclude]])
 //
 // The parser supports Anki-style cloze deletion syntax, which is the
 // standard format for creating fill-in-the-blank flashcards.
 
 use anyhow::Result;
+use regex::Regex;
 use sqlx::{Pool, Sqlite};
 
 #[derive(Debug, Clone)]
@@ -91,4 +93,17 @@ pub async fn store_paragraphs(
     }
 
     Ok(())
+}
+
+pub fn calculate_excluded_character_count(content: &str) -> i64 {
+    let re = Regex::new(r"\[\[exclude\]\](.*?)\[\[/exclude\]\]").unwrap();
+    let mut total_excluded = 0i64;
+
+    for cap in re.captures_iter(content) {
+        if let Some(excluded_text) = cap.get(1) {
+            total_excluded += excluded_text.as_str().len() as i64;
+        }
+    }
+
+    total_excluded
 }

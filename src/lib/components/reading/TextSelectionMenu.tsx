@@ -16,7 +16,7 @@ interface TextSelectionMenuProps {
 }
 
 export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) {
-  const { currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead } = useReadingStore()
+  const { currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead, isRangeExcluded } = useReadingStore()
   const [showFlashcardCreator, setShowFlashcardCreator] = useState(false)
   const [selectedText, setSelectedText] = useState('')
 
@@ -36,6 +36,12 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
     const startPosition = preCaretRange.toString().length
 
     const endPosition = startPosition + selection.toString().length
+
+    if (isRangeExcluded(startPosition, endPosition)) {
+      console.log('Cannot mark excluded text as read')
+      selection.removeAllRanges()
+      return
+    }
 
     if (isRangeRead(startPosition, endPosition)) {
       unmarkRangeAsRead(currentText.id, startPosition, endPosition)
@@ -72,7 +78,7 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead])
+  }, [currentText, markRangeAsRead, unmarkRangeAsRead, isRangeRead, isRangeExcluded])
 
   return (
     <>
