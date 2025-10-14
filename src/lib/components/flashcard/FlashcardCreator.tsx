@@ -107,8 +107,15 @@ export function FlashcardCreator({
     }
   }
 
+  const getNextClozeNumber = (text: string): number => {
+    const matches = text.matchAll(/\{\{c(\d+)::/g)
+    const numbers = Array.from(matches).map(m => parseInt(m[1]))
+    return numbers.length > 0 ? Math.max(...numbers) + 1 : 1
+  }
+
   const handleWrapCloze = () => {
-    wrapSelection('{{c1::', '}}')
+    const nextNumber = getNextClozeNumber(clozeText)
+    wrapSelection(`{{c${nextNumber}::`, '}}')
   }
 
   useEffect(() => {
@@ -121,6 +128,15 @@ export function FlashcardCreator({
           handleWrapCloze()
           return
         }
+      }
+
+      // Shift+Enter to submit form (works anywhere in modal)
+      if (e.key === 'Enter' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault()
+        if (hasClozes(clozeText) && !isLoading) {
+          handleCreate(e as unknown as React.FormEvent)
+        }
+        return
       }
 
       if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
@@ -178,7 +194,7 @@ export function FlashcardCreator({
               required
             />
             <div className="text-xs text-muted-foreground">
-              Tip: Use {'{{c1::text}}'} for cloze deletions or press Ctrl+Shift+C to wrap selected text. Support multiple clozes with c2, c3, etc.
+              Tip: Use {'{{c1::text}}'} for cloze deletions or press Ctrl+Shift+C to wrap selected text (auto-increments cloze numbers). Press Shift+Enter to submit.
             </div>
             {clozeText && !hasClozes(clozeText) && (
               <div className="text-xs text-destructive">
