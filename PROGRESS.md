@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 5 Complete ✅
+## Current Status: Phase 5+ Complete ✅
 
-**Branch**: `3_touchUp`
-**Last Updated**: 2025-10-14
+**Branch**: `main` (merged from `4_touchUp2`)
+**Last Updated**: 2025-10-14 (Late Evening)
 
 ---
 
@@ -97,20 +97,26 @@
 
 ### What Users Can Do Now:
 1. **Import Text**: Paste or type text with metadata (title, author, publisher, etc.)
-2. **Browse Library**: View all imported texts in a list
-3. **Read Content**: Open and read full text articles
-4. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
-5. **Visual Feedback**: Read text appears as white on black (inverse styling)
-6. **Track Progress**: See visual highlighting and percentage progress
-7. **Create Flashcards**: Select text and create cloze deletions (Ctrl+N or right-click)
-8. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
-9. **Preview Cards**: Live preview of how flashcard will appear
-10. **Manage Flashcards**: View, delete flashcards in collapsible sidebar
-11. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
-12. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
-13. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
-14. **Session Statistics**: Track unique cards completed vs total review actions
-15. **Persistent State**: All data saved to database, persists across sessions
+2. **Browse Library**: View all imported texts with reading progress percentages
+3. **Organize Content**: Create folders and organize texts hierarchically
+4. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
+5. **Read Content**: Open and read full text articles with visual progress tracking
+6. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+7. **Visual Feedback**: Read text appears as white on black (inverse styling)
+8. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
+9. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
+10. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
+11. **Preview Cards**: Live preview with complete sentence context
+12. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
+13. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
+14. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
+15. **Review Cards**: Spaced repetition review system with FSRS-6 algorithm
+16. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
+17. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+18. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+19. **Session Statistics**: Track unique cards completed vs total review actions
+20. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
+21. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -278,6 +284,64 @@
 **Commits**:
 - `6fbc8ad` - Implement UI touch-ups and improvements
 - Additional backend and frontend refinements
+
+---
+
+### ✅ Phase 5.5: Progress Tracking & UX Polish (Branch 4_touchUp2) - COMPLETE
+**Completed**: 2025-10-14 (Evening)
+**Branch**: `4_touchUp2` (merged to `main`)
+
+**Progress Tracking System**:
+- ✅ Reading progress display in sidebar (texts show "45%" next to name)
+- ✅ Reading progress display in library view (synced with sidebar)
+- ✅ Folder aggregate progress (recursive calculation from all contained texts)
+- ✅ Progress caching with 60-second TTL to prevent duplicate fetches
+- ✅ Cache invalidation when text marked as read/unread
+- ✅ Created `useTextProgress` and `useFolderProgress` hooks
+
+**Time-Aware Due Dates**:
+- ✅ Replaced generic "due today" with precise timing ("in 33 min", "in 2 hours")
+- ✅ Color-coded urgency: red (overdue/urgent), yellow (within 24h), gray (later)
+- ✅ Shows both relative time and absolute date on flashcards
+- ✅ Matches backend's timestamp-based FSRS scheduling logic
+- ✅ Created comprehensive date utility functions
+
+**Review System Fixes**:
+- ✅ Fixed backend/frontend naming mismatch (ReviewStats: camelCase → snake_case)
+- ✅ Review button properly shows count: "Review Cards (5)" or "Review Cards (0)"
+- ✅ Button disabled and greyed out when no cards due
+- ✅ Button enabled and clickable when cards are due
+- ✅ Works on both dashboard and library page
+
+**Flashcard UX Improvements**:
+- ✅ Fixed preview context extraction to show complete words and sentences
+- ✅ Enhanced sentence boundary detection (checks for `. `, `.\n`, etc.)
+- ✅ Proper word-based fallback with ellipsis indicators
+- ✅ Fixed review card display to show bold `[...]` for cloze deletions (was invisible)
+- ✅ Added Shift+Enter shortcut to submit flashcard modal from anywhere
+- ✅ Auto-sequential cloze numbering (detects c1, c2, inserts c3 automatically)
+- ✅ Updated help text with new shortcuts
+
+**Backend Changes**:
+- ✅ Added `calculate_folder_progress` command with recursive SQL CTEs
+- ✅ Registered new command in main.rs
+- ✅ Added SQLx query cache for folder progress queries
+- ✅ Fixed ReviewStats serialization to use snake_case
+
+**Frontend Changes**:
+- ✅ Created `src/lib/hooks/useTextProgress.ts` with caching
+- ✅ Created `src/lib/utils/date.ts` with time-aware formatting
+- ✅ Updated TextNode and FolderNode to display progress
+- ✅ Updated Library page to show progress next to texts
+- ✅ Updated FlashcardSidebar with better context extraction
+- ✅ Updated FlashcardCreator with auto-sequential numbering
+- ✅ Updated index.css with proper .cloze-hidden styling
+
+**Commits**:
+- `1c213a1` - Add progress tracking and time-aware due dates
+- `2c44c55` - Fix flashcard preview to show complete words and sentences
+- `6505c28` - Improve flashcard creation UX with shortcuts and visual fixes
+- `6520a5b` - Merge branch '4_touchUp2' (into main)
 
 ---
 
