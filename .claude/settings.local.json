@@ -68,7 +68,8 @@
       "Bash(done)",
       "WebFetch(domain:dev.to)",
       "Bash(xargs kill:*)",
-      "Bash(npx vite build:*)"
+      "Bash(npx vite build:*)",
+      "WebFetch(domain:juliensobczak.com)"
     ],
     "deny": [],
     "ask": []

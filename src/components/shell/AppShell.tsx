@@ -16,7 +16,7 @@ export function AppShell() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <Sidebar onShowHelp={() => setShowShortcutHelp(true)} />
       <main className="flex-1 overflow-auto">
         <Outlet />
       </main>

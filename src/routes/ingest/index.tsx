@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import {
@@ -17,6 +17,7 @@ export function IngestPage() {
   const [publicationDate, setPublicationDate] = useState('')
   const [publisher, setPublisher] = useState('')
   const { createText, isLoading } = useReadingStore()
+  const contentRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,6 +41,63 @@ export function IngestPage() {
   const handleCancel = () => {
     navigate(-1)
   }
+
+  const wrapSelection = (before: string, after: string) => {
+    const textarea = contentRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = content.substring(start, end)
+
+    if (selectedText) {
+      const newContent =
+        content.substring(0, start) +
+        before + selectedText + after +
+        content.substring(end)
+
+      setContent(newContent)
+
+      // Set cursor position after the wrapped text
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(
+          start + before.length + selectedText.length + after.length,
+          start + before.length + selectedText.length + after.length
+        )
+      }, 0)
+    }
+  }
+
+  const handleWrapCloze = () => {
+    wrapSelection('{{c1::', '}}')
+  }
+
+  const handleWrapExclude = () => {
+    wrapSelection('[[exclude]]', '[[/exclude]]')
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if we're focused on the content textarea
+      if (document.activeElement !== contentRef.current) return
+
+      // Ctrl/Cmd + Shift + C for cloze
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault()
+        handleWrapCloze()
+      }
+
+      // Ctrl/Cmd + Shift + E for exclude
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+        e.preventDefault()
+        handleWrapExclude()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [content])
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -125,10 +183,35 @@ export function IngestPage() {
                 <h2 className="text-lg font-semibold mb-4">Content</h2>
 
                 <div className="space-y-2">
-                  <Label htmlFor="content">
-                    Text Content <span className="text-destructive">*</span>
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="content">
+                      Text Content <span className="text-destructive">*</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleWrapCloze}
+                        disabled={isLoading}
+                        title="Wrap selection with cloze (Ctrl+Shift+C)"
+                      >
+                        Add Cloze
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleWrapExclude}
+                        disabled={isLoading}
+                        title="Exclude selection from progress (Ctrl+Shift+E)"
+                      >
+                        Exclude Text
+                      </Button>
+                    </div>
+                  </div>
                   <Textarea
+                    ref={contentRef}
                     id="content"
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
@@ -143,6 +226,9 @@ export function IngestPage() {
                       {content.length.toLocaleString()} characters
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground">
+                    Tip: Select text and press Ctrl+Shift+C to wrap with cloze, or Ctrl+Shift+E to exclude from progress tracking
+                  </p>
                 </div>
               </div>
             </div>

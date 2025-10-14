@@ -189,49 +189,51 @@
   }
 }
 
-@utility reading-content {
-  font-family: 'Charter', 'Georgia', 'Cambria', serif;
-  font-size: 1.25rem;
-  line-height: 1.8;
-  max-width: 70ch;
-}
+@layer utilities {
+  .reading-content {
+    font-family: 'Charter', 'Georgia', 'Cambria', serif;
+    font-size: 1.25rem;
+    line-height: 1.8;
+    max-width: 70ch;
+  }
 
-@utility text-small {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-}
+  .text-small {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
 
-@utility shadow-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.05);
-}
+  .shadow-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
 
-@utility shadow-card-hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-}
+  .shadow-card-hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
 
-@utility shadow-modal {
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-}
+  .shadow-modal {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  }
 
-@utility shadow-dropdown {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-}
+  .shadow-dropdown {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
 
-@utility transition-smooth {
-  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .transition-smooth {
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-@utility transition-base {
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .transition-base {
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-@utility hover-lift {
-  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-}
+  .hover-lift {
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-@utility focus-ring {
-  outline: none;
-  box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background));
+  .focus-ring {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background));
+  }
 }
 
 /* Separate class definitions that need pseudo-selectors */

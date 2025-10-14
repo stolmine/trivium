@@ -118,16 +118,14 @@ export function ReadPage() {
 
       <div
         className={`hidden md:flex flex-col border-l transition-all duration-300 ${
-          isSidebarCollapsed ? 'w-0' : 'w-96'
+          isSidebarCollapsed ? 'w-12' : 'w-96'
         }`}
       >
-        {!isSidebarCollapsed && (
-          <FlashcardSidebar
-            textId={currentText.id}
-            isCollapsed={isSidebarCollapsed}
-            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          />
-        )}
+        <FlashcardSidebar
+          textId={currentText.id}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
       </div>
     </div>
   )

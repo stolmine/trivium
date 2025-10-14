@@ -9,6 +9,7 @@ export {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from './dialog'
 export {
   ContextMenu,

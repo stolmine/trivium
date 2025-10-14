@@ -33,7 +33,6 @@ export function LibraryPage() {
               onClick={() => navigate('/review')}
               disabled={reviewStats.due_count === 0}
               variant="default"
-              size="lg"
               aria-label={`Review ${reviewStats.due_count} due flashcard${reviewStats.due_count !== 1 ? 's' : ''}`}
             >
               Review Cards ({reviewStats.due_count})
