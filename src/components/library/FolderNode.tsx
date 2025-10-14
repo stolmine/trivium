@@ -5,6 +5,7 @@ import { useLibraryStore } from '../../stores/library';
 import { shouldReduceMotion } from '../../lib/animations';
 import { FolderContextMenu } from './FolderContextMenu';
 import { TextNode } from './TextNode';
+import { useFolderProgress } from '../../lib/hooks/useTextProgress';
 import type { TreeNode } from '../../lib/types/folder';
 import type { Folder as FolderType } from '../../lib/types/folder';
 import type { Text } from '../../lib/types/article';
@@ -21,6 +22,7 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
   const folder = node.data as FolderType;
   const isExpanded = expandedFolderIds.has(folder.id);
   const isSelected = selectedItemId === folder.id;
+  const { progress } = useFolderProgress(folder.id);
 
   const { setNodeRef, isOver } = useDroppable({
     id: folder.id,
@@ -84,9 +86,16 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
           )}
 
           {!collapsed && (
-            <span className="truncate flex-1" title={folder.name}>
-              {folder.name}
-            </span>
+            <>
+              <span className="truncate flex-1" title={folder.name}>
+                {folder.name}
+              </span>
+              {progress !== null && progress > 0 && (
+                <span className="text-xs text-muted-foreground ml-auto pl-2 flex-shrink-0">
+                  {Math.round(progress)}%
+                </span>
+              )}
+            </>
           )}
         </div>
       </FolderContextMenu>

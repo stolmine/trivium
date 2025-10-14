@@ -12,6 +12,9 @@
 use crate::db::Database;
 use crate::models::folder::Folder;
 use crate::models::text::Text;
+use crate::models::read_range::ReadRange;
+use crate::services::parser;
+use crate::services::range_calculator::RangeCalculator;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
@@ -255,4 +258,86 @@ pub async fn get_texts_in_folder(
     };
 
     Ok(texts)
+}
+
+#[tauri::command]
+pub async fn calculate_folder_progress(
+    folder_id: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<f64, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let user_id = 1;
+
+    // Get all text IDs in those folders (includes descendants recursively)
+    let text_ids = sqlx::query!(
+        r#"
+        SELECT id, content_length, content
+        FROM texts
+        WHERE folder_id IN (
+            WITH RECURSIVE folder_tree AS (
+                SELECT id FROM folders WHERE id = ?
+                UNION ALL
+                SELECT f.id FROM folders f
+                INNER JOIN folder_tree ft ON f.parent_id = ft.id
+            )
+            SELECT id FROM folder_tree
+        )
+        "#,
+        folder_id
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch texts in folder tree: {}", e))?;
+
+    // Handle empty folders
+    if text_ids.is_empty() {
+        return Ok(0.0);
+    }
+
+    // Calculate progress for each text and average them
+    let mut total_progress = 0.0;
+    let mut text_count = 0;
+
+    for text_record in text_ids {
+        let total_chars = text_record.content_length;
+        let excluded_chars = parser::calculate_excluded_character_count(&text_record.content);
+        let countable_chars = total_chars - excluded_chars;
+
+        if countable_chars <= 0 {
+            continue;
+        }
+
+        let ranges = sqlx::query_as!(
+            ReadRange,
+            r#"
+            SELECT
+                id as "id!",
+                text_id as "text_id!",
+                user_id as "user_id!",
+                start_position as "start_position!",
+                end_position as "end_position!",
+                marked_at as "marked_at: _"
+            FROM read_ranges
+            WHERE text_id = ? AND user_id = ?
+            "#,
+            text_record.id,
+            user_id
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch read ranges: {}", e))?;
+
+        let read_chars = RangeCalculator::calculate_read_characters(ranges);
+        let progress = (read_chars as f64 / countable_chars as f64) * 100.0;
+
+        total_progress += progress;
+        text_count += 1;
+    }
+
+    if text_count == 0 {
+        return Ok(0.0);
+    }
+
+    Ok(total_progress / text_count as f64)
 }

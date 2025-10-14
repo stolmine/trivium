@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Text, CreateTextRequest, ReadRange, Paragraph, ExcludedRange } from '../types';
 import { api } from '../utils/tauri';
+import { invalidateProgressCache } from '../hooks/useTextProgress';
 
 interface ReadingState {
   texts: Text[];
@@ -95,6 +96,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       await api.reading.markRangeAsRead(textId, startPosition, endPosition);
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
+      invalidateProgressCache(textId);
     } catch (error) {
       console.error('Failed to mark range as read:', error);
       set({
@@ -109,6 +111,7 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       await api.reading.unmarkRangeAsRead(textId, startPosition, endPosition);
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
+      invalidateProgressCache(textId);
     } catch (error) {
       console.error('Failed to unmark range as read:', error);
       set({

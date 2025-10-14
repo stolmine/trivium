@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Trash2, ArrowUpDown } from 'lucide-react'
 import { useFlashcardStore } from '../../stores/flashcard'
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui'
+import { formatRelativeDue, formatDueDate, getDueColorClass } from '../../utils'
 import type { Flashcard } from '../../types'
 
 type FlashcardSortOption = 'display-order' | 'alpha-asc' | 'alpha-desc' | 'due-soonest' | 'due-latest' | 'difficulty'
@@ -300,13 +301,23 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
                         renderClozePreview({ ...flashcard, clozeText: contextText })
                       )}
                     </div>
+
+                    <div className="flex items-center gap-2 mt-2 text-xs">
+                      <span className="text-gray-500">Due:</span>
+                      <span className={getDueColorClass(flashcard.due)}>
+                        {formatRelativeDue(flashcard.due)}
+                      </span>
+                      <span className="text-gray-400">
+                        ({formatDueDate(flashcard.due)})
+                      </span>
+                    </div>
                   </div>
 
                   {isExpanded && (
                     <div className="px-3 pb-3 pt-0">
                       <div className="pt-2 border-t border-gray-100">
                         <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>Due: {new Date(flashcard.due).toLocaleDateString()}</span>
+                          <span>Difficulty: {flashcard.difficulty.toFixed(1)}</span>
                           <span>Reps: {flashcard.reps}</span>
                         </div>
                       </div>

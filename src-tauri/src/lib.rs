@@ -67,7 +67,8 @@ pub fn run() {
             commands::folder::rename_folder,
             commands::folder::delete_folder,
             commands::folder::move_text_to_folder,
-            commands::folder::get_texts_in_folder
+            commands::folder::get_texts_in_folder,
+            commands::folder::calculate_folder_progress
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

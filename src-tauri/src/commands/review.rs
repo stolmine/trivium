@@ -16,7 +16,6 @@ pub struct GradeResult {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 pub struct ReviewStats {
     pub due_count: i64,
     pub new_count: i64,

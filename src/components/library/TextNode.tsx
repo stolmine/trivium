@@ -6,6 +6,7 @@ import { useLibraryStore } from '../../stores/library';
 import { shouldReduceMotion } from '../../lib/animations';
 import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
+import { useTextProgress } from '../../lib/hooks/useTextProgress';
 
 interface TextNodeProps {
   text: Text;
@@ -16,6 +17,7 @@ interface TextNodeProps {
 export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
   const navigate = useNavigate();
   const { selectedItemId, selectItem } = useLibraryStore();
+  const { progress } = useTextProgress(text.id);
 
   const nodeId = `text-${text.id}`;
   const isSelected = selectedItemId === nodeId;
@@ -61,9 +63,16 @@ export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
     >
       <FileText className="h-4 w-4 flex-shrink-0" />
       {!collapsed && (
-        <span className="truncate flex-1" title={text.title}>
-          {text.title}
-        </span>
+        <>
+          <span className="truncate flex-1" title={text.title}>
+            {text.title}
+          </span>
+          {progress !== null && progress > 0 && (
+            <span className="text-xs text-muted-foreground ml-auto pl-2 flex-shrink-0">
+              {Math.round(progress)}%
+            </span>
+          )}
+        </>
       )}
     </div>
   );
