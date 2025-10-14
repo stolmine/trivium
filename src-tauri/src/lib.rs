@@ -58,7 +58,14 @@ pub fn run() {
             commands::flashcards::get_flashcard_preview,
             commands::review::get_due_cards,
             commands::review::grade_card,
-            commands::review::get_review_stats
+            commands::review::get_review_stats,
+            commands::review::get_review_history_since,
+            commands::folder::create_folder,
+            commands::folder::get_folder_tree,
+            commands::folder::rename_folder,
+            commands::folder::delete_folder,
+            commands::folder::move_text_to_folder,
+            commands::folder::get_texts_in_folder
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

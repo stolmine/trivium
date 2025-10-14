@@ -56,7 +56,19 @@
       "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" cargo sqlx migrate run)",
       "WebFetch(domain:expertium.github.io)",
       "Bash(awk:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git log:*)",
+      "Bash(npx eslint:*)",
+      "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" cargo sqlx prepare)",
+      "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" sqlx migrate run)",
+      "Bash(for:*)",
+      "Bash(do if [ ! -f \"$file\" ])",
+      "Bash(then echo \"MISSING: $file\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "WebFetch(domain:dev.to)",
+      "Bash(xargs kill:*)",
+      "Bash(npx vite build:*)"
     ],
     "deny": [],
     "ask": []

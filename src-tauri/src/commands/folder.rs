@@ -1,0 +1,258 @@
+// Folder management commands
+//
+// Tauri commands for managing hierarchical folder structure:
+// - Create folders with optional parent
+// - Get folder tree
+// - Rename folders
+// - Delete folders (cascade to children, move texts to null)
+// - Move texts to folders
+// - Get texts in a folder
+//
+
+use crate::db::Database;
+use crate::models::folder::Folder;
+use crate::models::text::Text;
+use std::sync::Arc;
+use tauri::State;
+use tokio::sync::Mutex;
+use uuid::Uuid;
+
+#[tauri::command]
+pub async fn create_folder(
+    name: String,
+    parent_id: Option<String>,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<Folder, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    // Generate UUID for folder
+    let id = Uuid::new_v4().to_string();
+    let now = chrono::Utc::now().to_rfc3339();
+
+    // Insert folder
+    sqlx::query!(
+        r#"
+        INSERT INTO folders (id, name, parent_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        "#,
+        id,
+        name,
+        parent_id,
+        now,
+        now
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to create folder: {}", e))?;
+
+    // Fetch and return created folder
+    let folder = sqlx::query_as!(
+        Folder,
+        r#"
+        SELECT id, name, parent_id, created_at, updated_at
+        FROM folders
+        WHERE id = ?
+        "#,
+        id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch created folder: {}", e))?;
+
+    Ok(folder)
+}
+
+#[tauri::command]
+pub async fn get_folder_tree(
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<Vec<Folder>, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    // Fetch all folders (frontend will build tree structure)
+    let folders = sqlx::query_as!(
+        Folder,
+        r#"
+        SELECT id, name, parent_id, created_at, updated_at
+        FROM folders
+        ORDER BY name ASC
+        "#
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch folder tree: {}", e))?;
+
+    Ok(folders)
+}
+
+#[tauri::command]
+pub async fn rename_folder(
+    id: String,
+    name: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    let now = chrono::Utc::now().to_rfc3339();
+
+    // Update folder name and timestamp
+    let result = sqlx::query!(
+        r#"
+        UPDATE folders
+        SET name = ?, updated_at = ?
+        WHERE id = ?
+        "#,
+        name,
+        now,
+        id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to rename folder: {}", e))?;
+
+    if result.rows_affected() == 0 {
+        return Err("Folder not found".to_string());
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_folder(
+    id: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    // Start transaction to ensure atomicity
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| format!("Failed to start transaction: {}", e))?;
+
+    // Move texts in this folder (and all descendant folders) to null folder_id
+    sqlx::query!(
+        r#"
+        UPDATE texts
+        SET folder_id = NULL
+        WHERE folder_id = ? OR folder_id IN (
+            WITH RECURSIVE folder_tree AS (
+                SELECT id FROM folders WHERE parent_id = ?
+                UNION ALL
+                SELECT f.id FROM folders f
+                INNER JOIN folder_tree ft ON f.parent_id = ft.id
+            )
+            SELECT id FROM folder_tree
+        )
+        "#,
+        id,
+        id
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| format!("Failed to move texts out of folder: {}", e))?;
+
+    // Delete folder (CASCADE will handle child folders)
+    let result = sqlx::query!(
+        r#"
+        DELETE FROM folders
+        WHERE id = ?
+        "#,
+        id
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| format!("Failed to delete folder: {}", e))?;
+
+    if result.rows_affected() == 0 {
+        return Err("Folder not found".to_string());
+    }
+
+    // Commit transaction
+    tx.commit()
+        .await
+        .map_err(|e| format!("Failed to commit transaction: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn move_text_to_folder(
+    text_id: i64,
+    folder_id: Option<String>,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    // Update text's folder_id
+    let result = sqlx::query!(
+        r#"
+        UPDATE texts
+        SET folder_id = ?
+        WHERE id = ?
+        "#,
+        folder_id,
+        text_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to move text to folder: {}", e))?;
+
+    if result.rows_affected() == 0 {
+        return Err("Text not found".to_string());
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_texts_in_folder(
+    folder_id: Option<String>,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<Vec<Text>, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    // Query texts based on folder_id
+    // If folder_id is None, return texts with NULL folder_id (root texts)
+    let texts = if let Some(folder_id) = folder_id {
+        sqlx::query_as!(
+            Text,
+            r#"
+            SELECT
+                id as "id!", title, source, source_url, content, content_length as "content_length!",
+                ingested_at as "ingested_at: _", updated_at as "updated_at: _",
+                metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id
+            FROM texts
+            WHERE folder_id = ?
+            ORDER BY ingested_at DESC
+            "#,
+            folder_id
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch texts in folder: {}", e))?
+    } else {
+        sqlx::query_as!(
+            Text,
+            r#"
+            SELECT
+                id as "id!", title, source, source_url, content, content_length as "content_length!",
+                ingested_at as "ingested_at: _", updated_at as "updated_at: _",
+                metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id
+            FROM texts
+            WHERE folder_id IS NULL
+            ORDER BY ingested_at DESC
+            "#
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch texts in root: {}", e))?
+    };
+
+    Ok(texts)
+}

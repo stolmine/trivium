@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            id as \"id!\", title, source, source_url, content, content_length as \"content_length!\",\n            ingested_at as \"ingested_at: _\", updated_at as \"updated_at: _\",\n            metadata, author, publication_date, publisher, access_date, doi, isbn\n        FROM texts\n        WHERE id = ?\n        ",
+  "query": "\n            SELECT\n                id as \"id!\", title, source, source_url, content, content_length as \"content_length!\",\n                ingested_at as \"ingested_at: _\", updated_at as \"updated_at: _\",\n                metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id\n            FROM texts\n            WHERE folder_id IS NULL\n            ORDER BY ingested_at DESC\n            ",
   "describe": {
     "columns": [
       {
@@ -77,13 +77,18 @@
         "name": "isbn",
         "ordinal": 14,
         "type_info": "Text"
+      },
+      {
+        "name": "folder_id",
+        "ordinal": 15,
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 0
     },
     "nullable": [
-      false,
+      true,
       false,
       false,
       true,
@@ -91,6 +96,7 @@
       false,
       false,
       false,
+      true,
       true,
       true,
       true,
@@ -100,5 +106,5 @@
       true
     ]
   },
-  "hash": "26e81d0fe9cc32dbfaa07fb173e2511925817162cc5034681ebed57b8e110ea4"
+  "hash": "8969920976d1942e561781906d744e03e183a44cb9810c98a70ab014e5976b51"
 }

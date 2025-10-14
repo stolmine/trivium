@@ -1,0 +1,110 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id as \"id!\", title, source, source_url, content, content_length as \"content_length!\",\n            ingested_at as \"ingested_at: _\", updated_at as \"updated_at: _\",\n            metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id\n        FROM texts\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "source",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "source_url",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "content",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "content_length!",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "ingested_at: _",
+        "ordinal": 6,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "updated_at: _",
+        "ordinal": 7,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "metadata",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "author",
+        "ordinal": 9,
+        "type_info": "Text"
+      },
+      {
+        "name": "publication_date",
+        "ordinal": 10,
+        "type_info": "Text"
+      },
+      {
+        "name": "publisher",
+        "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "access_date",
+        "ordinal": 12,
+        "type_info": "Text"
+      },
+      {
+        "name": "doi",
+        "ordinal": 13,
+        "type_info": "Text"
+      },
+      {
+        "name": "isbn",
+        "ordinal": 14,
+        "type_info": "Text"
+      },
+      {
+        "name": "folder_id",
+        "ordinal": 15,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "c258eda4fd97e4b45c6775f6b3c100148fe43bfb5d937f798376bd5f90d736d1"
+}

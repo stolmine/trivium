@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useReviewStore } from '../../lib/stores/review'
-import { ReviewHeader } from '../../lib/components/review/ReviewHeader'
 import { ReviewCard } from '../../lib/components/review/ReviewCard'
 import { ReviewGrading } from '../../lib/components/review/ReviewGrading'
 import { SessionComplete } from '../../lib/components/review/SessionComplete'
+import { Button } from '../../lib/components/ui'
+import { ChevronLeft } from 'lucide-react'
 
 export function ReviewPage() {
+  const navigate = useNavigate()
   const {
     currentCard,
     showAnswer,
@@ -55,22 +58,20 @@ export function ReviewPage() {
 
   if (isLoading && !currentCard) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg" role="status" aria-live="polite">Loading cards...</div>
+      <div className="flex items-center justify-center h-full py-12">
+        <div className="text-muted-foreground" role="status" aria-live="polite">Loading cards...</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <div className="text-red-500 text-lg" role="alert" aria-live="assertive">{error}</div>
-        <button
-          onClick={() => navigate('/')}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
-        >
-          Return to Library
-        </button>
+      <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+        <div className="text-destructive text-lg" role="alert" aria-live="assertive">{error}</div>
+        <Button variant="outline" onClick={() => navigate('/')}>
+          <ChevronLeft className="h-4 w-4 mr-2" />
+          Return to Dashboard
+        </Button>
       </div>
     )
   }
@@ -79,17 +80,48 @@ export function ReviewPage() {
     return <SessionComplete />
   }
 
+  const percentage = queue.length > 0 ? Math.round(((currentIndex + 1) / queue.length) * 100) : 0
+
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <ReviewHeader progress={currentIndex + 1} total={queue.length} />
+    <div className="flex flex-col h-full bg-background">
+      <header className="border-b bg-card" role="banner">
+        <div className="container mx-auto px-6 py-4 max-w-4xl">
+          <div className="flex items-center justify-between mb-3">
+            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              Exit
+            </Button>
+            <span className="text-sm text-muted-foreground" aria-live="polite">
+              {currentIndex + 1} / {queue.length}
+            </span>
+          </div>
+          <div
+            className="w-full bg-secondary rounded-full h-2"
+            role="progressbar"
+            aria-valuenow={percentage}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Review progress: ${percentage}% complete`}
+          >
+            <div
+              className="bg-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        </div>
+      </header>
 
       <main className="flex-1 flex items-center justify-center p-8" role="main">
-        <ReviewCard card={currentCard} showAnswer={showAnswer} onToggleAnswer={toggleAnswer} />
+        <div className="w-full max-w-2xl">
+          <ReviewCard card={currentCard} showAnswer={showAnswer} onToggleAnswer={toggleAnswer} />
+        </div>
       </main>
 
       {showAnswer && (
-        <div className="p-8 border-t" role="region" aria-label="Grading options">
-          <ReviewGrading onGrade={gradeCard} disabled={isLoading} />
+        <div className="border-t bg-card" role="region" aria-label="Grading options">
+          <div className="container mx-auto px-6 py-6 max-w-2xl">
+            <ReviewGrading onGrade={gradeCard} disabled={isLoading} />
+          </div>
         </div>
       )}
     </div>

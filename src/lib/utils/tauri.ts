@@ -114,4 +114,29 @@ export const api = {
       return await invoke('get_review_stats');
     },
   },
+  dashboard: {
+    getMostRecentlyReadText: async (): Promise<number | null> => {
+      return await invoke('get_most_recently_read_text');
+    },
+  },
+  folders: {
+    create: async (name: string, parentId: string | null): Promise<any> => {
+      return await invoke('create_folder', { name, parentId });
+    },
+    getAll: async (): Promise<any[]> => {
+      return await invoke('get_folder_tree');
+    },
+    rename: async (id: string, name: string): Promise<void> => {
+      return await invoke('rename_folder', { id, name });
+    },
+    delete: async (id: string): Promise<void> => {
+      return await invoke('delete_folder', { id });
+    },
+    moveText: async (textId: number, folderId: string | null): Promise<void> => {
+      return await invoke('move_text_to_folder', { textId, folderId });
+    },
+    getTextsInFolder: async (folderId: string): Promise<any[]> => {
+      return await invoke('get_texts_in_folder', { folderId });
+    },
+  },
 };

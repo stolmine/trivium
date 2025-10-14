@@ -15,7 +15,7 @@ export function SessionComplete() {
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-background">
+    <div className="flex items-center justify-center h-full bg-background py-12">
       <div className="max-w-md w-full p-8 bg-card rounded-lg shadow-lg border">
         <h1 className="text-3xl font-bold mb-6 text-center">Session Complete!</h1>
 
@@ -44,7 +44,7 @@ export function SessionComplete() {
             variant="outline"
             className="w-full py-3"
           >
-            Back to Library
+            Back to Dashboard
           </Button>
         </div>
       </div>

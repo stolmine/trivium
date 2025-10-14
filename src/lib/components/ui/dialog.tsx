@@ -118,6 +118,25 @@ const DialogDescription: React.FC<DialogDescriptionProps> = ({
   )
 }
 
+interface DialogFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  children?: React.ReactNode
+}
+
+const DialogFooter: React.FC<DialogFooterProps> = ({
+  className,
+  children,
+  ...props
+}) => {
+  return (
+    <div
+      className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
 export {
   Dialog,
   DialogTrigger,
@@ -125,4 +144,5 @@ export {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 }

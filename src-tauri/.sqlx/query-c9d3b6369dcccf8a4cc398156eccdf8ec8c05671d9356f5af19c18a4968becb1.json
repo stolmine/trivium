@@ -1,0 +1,62 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id as \"id!\",\n            flashcard_id as \"flashcard_id!\",\n            user_id as \"user_id!\",\n            reviewed_at as \"reviewed_at: _\",\n            rating as \"rating!\",\n            review_duration_ms,\n            state_before as \"state_before!\",\n            state_after as \"state_after!\"\n        FROM review_history\n        WHERE reviewed_at >= ?\n        ORDER BY reviewed_at DESC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "flashcard_id!",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "user_id!",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "reviewed_at: _",
+        "ordinal": 3,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "rating!",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "review_duration_ms",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "state_before!",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "state_after!",
+        "ordinal": 7,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "c9d3b6369dcccf8a4cc398156eccdf8ec8c05671d9356f5af19c18a4968becb1"
+}

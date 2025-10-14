@@ -4,3 +4,4 @@ pub mod progress;
 pub mod read_range;
 pub mod paragraph;
 pub mod cloze_note;
+pub mod folder;

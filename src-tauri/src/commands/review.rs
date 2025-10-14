@@ -24,6 +24,19 @@ pub struct ReviewStats {
     pub review_count: i64,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReviewHistoryEntry {
+    pub id: i64,
+    pub flashcard_id: i64,
+    pub user_id: i64,
+    pub reviewed_at: DateTime<Utc>,
+    pub rating: i64,
+    pub review_duration_ms: Option<i64>,
+    pub state_before: i64,
+    pub state_after: i64,
+}
+
 #[tauri::command]
 pub async fn get_due_cards(
     limit: Option<i64>,
@@ -260,4 +273,41 @@ pub async fn get_review_stats(
         learning_count: stats.learning_count,
         review_count: stats.review_count,
     })
+}
+
+#[tauri::command]
+pub async fn get_review_history_since(
+    since: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<Vec<ReviewHistoryEntry>, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    let since_dt = DateTime::parse_from_rfc3339(&since)
+        .map_err(|e| format!("Invalid date format: {}", e))?
+        .with_timezone(&Utc);
+
+    let history = sqlx::query_as!(
+        ReviewHistoryEntry,
+        r#"
+        SELECT
+            id as "id!",
+            flashcard_id as "flashcard_id!",
+            user_id as "user_id!",
+            reviewed_at as "reviewed_at: _",
+            rating as "rating!",
+            review_duration_ms,
+            state_before as "state_before!",
+            state_after as "state_after!"
+        FROM review_history
+        WHERE reviewed_at >= ?
+        ORDER BY reviewed_at DESC
+        "#,
+        since_dt
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch review history: {}", e))?;
+
+    Ok(history)
 }

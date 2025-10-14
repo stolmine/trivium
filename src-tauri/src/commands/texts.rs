@@ -68,7 +68,7 @@ pub async fn create_text(
         SELECT
             id as "id!", title, source, source_url, content, content_length as "content_length!",
             ingested_at as "ingested_at: _", updated_at as "updated_at: _",
-            metadata, author, publication_date, publisher, access_date, doi, isbn
+            metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id
         FROM texts
         WHERE id = ?
         "#,
@@ -92,7 +92,7 @@ pub async fn list_texts(db: State<'_, Arc<Mutex<Database>>>) -> Result<Vec<Text>
         SELECT
             id as "id!", title, source, source_url, content, content_length as "content_length!",
             ingested_at as "ingested_at: _", updated_at as "updated_at: _",
-            metadata, author, publication_date, publisher, access_date, doi, isbn
+            metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id
         FROM texts
         ORDER BY ingested_at DESC
         "#
@@ -118,7 +118,7 @@ pub async fn get_text(
         SELECT
             id as "id!", title, source, source_url, content, content_length as "content_length!",
             ingested_at as "ingested_at: _", updated_at as "updated_at: _",
-            metadata, author, publication_date, publisher, access_date, doi, isbn
+            metadata, author, publication_date, publisher, access_date, doi, isbn, folder_id
         FROM texts
         WHERE id = ?
         "#,
