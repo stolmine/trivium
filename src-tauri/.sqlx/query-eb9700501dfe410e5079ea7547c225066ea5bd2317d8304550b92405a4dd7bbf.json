@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT id, content_length, content\n        FROM texts\n        WHERE folder_id IN (\n            WITH RECURSIVE folder_tree AS (\n                SELECT id FROM folders WHERE id = ?\n                UNION ALL\n                SELECT f.id FROM folders f\n                INNER JOIN folder_tree ft ON f.parent_id = ft.id\n            )\n            SELECT id FROM folder_tree\n        )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "content_length",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "content",
+        "ordinal": 2,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "eb9700501dfe410e5079ea7547c225066ea5bd2317d8304550b92405a4dd7bbf"
+}

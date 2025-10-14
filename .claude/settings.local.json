@@ -73,7 +73,10 @@
       "Bash(DATABASE_URL=sqlite:trivium_dev.db cargo sqlx prepare:*)",
       "Bash(export DATABASE_URL=sqlite:trivium_dev.db)",
       "Bash(xargs cat:*)",
-      "Bash(export DATABASE_URL=\"sqlite:///Users/why/Library/Application Support/com.why.trivium/trivium.db\")"
+      "Bash(export DATABASE_URL=\"sqlite:///Users/why/Library/Application Support/com.why.trivium/trivium.db\")",
+      "Bash(git pull:*)",
+      "Bash(DATABASE_URL=\"sqlite:/Users/why/Library/Application Support/com.why.trivium/trivium.db\" cargo sqlx prepare --workspace)",
+      "Bash(TZ=UTC date:*)"
     ],
     "deny": [],
     "ask": []

@@ -6,6 +6,7 @@ import { api } from '../../lib/utils/tauri'
 import { Plus, ArrowUpDown } from 'lucide-react'
 import type { Text } from '../../lib/types'
 import { TextContextMenu } from '../../components/library/TextContextMenu'
+import { useTextProgress } from '../../lib/hooks/useTextProgress'
 
 type SortOption = 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'content-length'
 
@@ -45,6 +46,20 @@ const getSortLabel = (sortBy: SortOption): string => {
   }
 }
 
+function TextProgress({ textId }: { textId: number }) {
+  const { progress } = useTextProgress(textId);
+
+  if (progress === null || progress === 0) {
+    return null;
+  }
+
+  return (
+    <span className="text-sm text-muted-foreground">
+      {Math.round(progress)}% read
+    </span>
+  );
+}
+
 export function LibraryPage() {
   const navigate = useNavigate()
   const { texts, isLoading, error, loadTexts } = useReadingStore()
@@ -53,7 +68,11 @@ export function LibraryPage() {
 
   useEffect(() => {
     loadTexts()
-    api.review.getStats().then(setReviewStats).catch(console.error)
+    api.review.getStats().then(setReviewStats).catch((err) => {
+      console.error('Failed to fetch review stats:', err)
+      // Set default stats on error so button still renders
+      setReviewStats({ due_count: 0, new_count: 0, learning_count: 0, review_count: 0 })
+    })
   }, [loadTexts])
 
   const handleTextClick = (id: number) => {
@@ -147,9 +166,12 @@ export function LibraryPage() {
                 {text.author && (
                   <p className="text-sm text-muted-foreground mb-1">by {text.author}</p>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  {text.contentLength.toLocaleString()} characters
-                </p>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    {text.contentLength.toLocaleString()} characters
+                  </p>
+                  <TextProgress textId={text.id} />
+                </div>
               </div>
             </TextContextMenu>
           ))}

@@ -258,11 +258,11 @@
 }
 
 .cloze-hidden {
-  background-color: hsl(var(--primary));
-  color: transparent;
+  background-color: transparent;
+  color: hsl(var(--primary));
+  font-weight: 700;
   user-select: none;
-  border-radius: 4px;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 .cloze-visible {

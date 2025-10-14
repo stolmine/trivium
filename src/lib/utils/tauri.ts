@@ -144,5 +144,8 @@ export const api = {
     getTextsInFolder: async (folderId: string): Promise<any[]> => {
       return await invoke('get_texts_in_folder', { folderId });
     },
+    calculateProgress: async (folderId: string): Promise<number> => {
+      return await invoke('calculate_folder_progress', { folderId });
+    },
   },
 };

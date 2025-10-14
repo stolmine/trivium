@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Brain } from 'lucide-react';
 import { Button } from '../../lib/components/ui';
 import { api } from '../../lib/utils/tauri';
 import type { Flashcard } from '../../lib/types';
 import { SkeletonCard } from '../shared/SkeletonLoader';
-import { EmptyState } from '../shared/EmptyState';
 
 interface CardsByText {
   textId: number;
@@ -86,18 +84,6 @@ export function DueReviewCard() {
     );
   }
 
-  if (totalDue === 0) {
-    return (
-      <div className="border rounded-lg p-8 shadow-card bg-card h-full flex items-center justify-center">
-        <EmptyState
-          icon={Brain}
-          title="All Caught Up!"
-          description="No cards due for review. Great job staying on top of your studies!"
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="border rounded-lg p-8 shadow-card hover-lift bg-card">
       <h2 className="text-lg font-semibold mb-6">Due for Review</h2>
@@ -110,22 +96,32 @@ export function DueReviewCard() {
           </div>
         </div>
 
-        {breakdown.length > 0 && (
-          <div className="space-y-2 pt-2 border-t">
-            <div className="text-xs font-medium text-muted-foreground mb-2">
-              By Text:
-            </div>
-            {breakdown.map((item) => (
-              <div key={item.textId} className="flex justify-between items-center text-sm">
-                <span className="truncate flex-1 mr-2">{item.textTitle}</span>
-                <span className="font-medium text-muted-foreground">{item.count}</span>
-              </div>
-            ))}
+        {totalDue === 0 ? (
+          <div className="text-center py-4 text-sm text-muted-foreground">
+            All caught up! Great job staying on top of your studies!
           </div>
+        ) : (
+          breakdown.length > 0 && (
+            <div className="space-y-2 pt-2 border-t">
+              <div className="text-xs font-medium text-muted-foreground mb-2">
+                By Text:
+              </div>
+              {breakdown.map((item) => (
+                <div key={item.textId} className="flex justify-between items-center text-sm">
+                  <span className="truncate flex-1 mr-2">{item.textTitle}</span>
+                  <span className="font-medium text-muted-foreground">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          )
         )}
 
-        <Button onClick={handleStartReview} className="w-full mt-4">
-          Start Review
+        <Button
+          onClick={handleStartReview}
+          className="w-full mt-4"
+          disabled={totalDue === 0}
+        >
+          Review Cards ({totalDue})
         </Button>
       </div>
     </div>

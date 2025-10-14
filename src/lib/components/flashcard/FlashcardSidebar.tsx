@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Trash2, ArrowUpDown } from 'lucide-react'
 import { useFlashcardStore } from '../../stores/flashcard'
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui'
+import { formatRelativeDue, formatDueDate, getDueColorClass } from '../../utils'
 import type { Flashcard } from '../../types'
 
 type FlashcardSortOption = 'display-order' | 'alpha-asc' | 'alpha-desc' | 'due-soonest' | 'due-latest' | 'difficulty'
@@ -108,39 +109,63 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     if (!clozeMatch) return clozeText
 
     const clozePosition = clozeMatch.index || 0
+    const clozeEnd = clozePosition + clozeMatch[0].length
     const textBeforeCloze = clozeText.slice(0, clozePosition)
-    const textAfterCloze = clozeText.slice(clozePosition + clozeMatch[0].length)
+    const textAfterCloze = clozeText.slice(clozeEnd)
 
-    const sentenceStart = Math.max(
-      textBeforeCloze.lastIndexOf('. ') + 2,
-      textBeforeCloze.lastIndexOf('! ') + 2,
-      textBeforeCloze.lastIndexOf('? ') + 2,
-      0
-    )
+    // Find sentence boundaries - look for punctuation followed by space
+    const sentenceEnders = [
+      textBeforeCloze.lastIndexOf('. '),
+      textBeforeCloze.lastIndexOf('! '),
+      textBeforeCloze.lastIndexOf('? '),
+      textBeforeCloze.lastIndexOf('.\n'),
+      textBeforeCloze.lastIndexOf('!\n'),
+      textBeforeCloze.lastIndexOf('?\n')
+    ]
+    const lastSentenceEnd = Math.max(...sentenceEnders)
+    const sentenceStartIndex = lastSentenceEnd >= 0 ? lastSentenceEnd + 2 : 0
 
-    const sentenceEndInAfter = Math.min(
-      ...[
-        textAfterCloze.indexOf('. '),
-        textAfterCloze.indexOf('! '),
-        textAfterCloze.indexOf('? ')
-      ]
-        .filter((i) => i !== -1)
-        .map((i) => i + 1),
-      textAfterCloze.length
-    )
+    // Find the next sentence boundary after the cloze
+    const nextSentenceEnders = [
+      textAfterCloze.indexOf('. '),
+      textAfterCloze.indexOf('! '),
+      textAfterCloze.indexOf('? '),
+      textAfterCloze.indexOf('.\n'),
+      textAfterCloze.indexOf('!\n'),
+      textAfterCloze.indexOf('?\n')
+    ].filter((i) => i !== -1)
 
-    if (sentenceStart === 0 && sentenceEndInAfter === textAfterCloze.length) {
-      const words = clozeText.split(/\s+/)
-      const clozeWordIndex = words.findIndex((word) => word.includes('{{c'))
-      const start = Math.max(0, clozeWordIndex - 5)
-      const end = Math.min(words.length, clozeWordIndex + 6)
-      const contextWords = words.slice(start, end)
-      if (start > 0) contextWords.unshift('...')
-      if (end < words.length) contextWords.push('...')
-      return contextWords.join(' ')
+    const nextSentenceEnd = nextSentenceEnders.length > 0
+      ? Math.min(...nextSentenceEnders) + 1
+      : textAfterCloze.length
+
+    // Extract the sentence(s) containing the cloze
+    const extractedText = clozeText.slice(
+      sentenceStartIndex,
+      clozeEnd + nextSentenceEnd
+    ).trim()
+
+    // If we got a reasonable sentence, return it
+    if (extractedText.length > 0 && (lastSentenceEnd >= 0 || nextSentenceEnders.length > 0)) {
+      return extractedText
     }
 
-    return clozeText.slice(sentenceStart, clozePosition + clozeMatch[0].length + sentenceEndInAfter)
+    // Fall back to word-based context if no clear sentence boundaries
+    const words = clozeText.split(/\s+/)
+    const clozeWordIndex = words.findIndex((word) => word.includes('{{c'))
+
+    if (clozeWordIndex === -1) return clozeText
+
+    // Extract 5-7 words before and after the cloze
+    const start = Math.max(0, clozeWordIndex - 5)
+    const end = Math.min(words.length, clozeWordIndex + 6)
+    const contextWords = words.slice(start, end)
+
+    // Add ellipsis indicators when truncating
+    if (start > 0) contextWords.unshift('...')
+    if (end < words.length) contextWords.push('...')
+
+    return contextWords.join(' ')
   }
 
   const renderClozePreview = (flashcard: Flashcard) => {
@@ -300,13 +325,23 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
                         renderClozePreview({ ...flashcard, clozeText: contextText })
                       )}
                     </div>
+
+                    <div className="flex items-center gap-2 mt-2 text-xs">
+                      <span className="text-gray-500">Due:</span>
+                      <span className={getDueColorClass(flashcard.due)}>
+                        {formatRelativeDue(flashcard.due)}
+                      </span>
+                      <span className="text-gray-400">
+                        ({formatDueDate(flashcard.due)})
+                      </span>
+                    </div>
                   </div>
 
                   {isExpanded && (
                     <div className="px-3 pb-3 pt-0">
                       <div className="pt-2 border-t border-gray-100">
                         <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>Due: {new Date(flashcard.due).toLocaleDateString()}</span>
+                          <span>Difficulty: {flashcard.difficulty.toFixed(1)}</span>
                           <span>Reps: {flashcard.reps}</span>
                         </div>
                       </div>
