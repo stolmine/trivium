@@ -36,12 +36,11 @@ pub struct FSRSParameters {
 impl Default for FSRSParameters {
     fn default() -> Self {
         Self {
-            // More conservative initial stability values to match Anki's behavior
-            // These give shorter initial intervals for better learning
-            // Again=0.4 days (~10 hours), Hard=0.6 days (~14 hours),
-            // Good=1.0 day, Easy=4.0 days
-            // This is closer to Anki's defaults of learning->1 day->4 days
-            initial_stability: [0.4, 0.6, 1.0, 4.0],
+            // FSRS-6 default parameters (research-backed optimal values)
+            // Based on 700M+ reviews from 20,000 users
+            // Again=0.212 days (~5 hours), Hard=1.29 days (~31 hours),
+            // Good=2.31 days, Easy=8.30 days
+            initial_stability: [0.212, 1.2931, 2.3065, 8.2956],
 
             // Difficulty adjustment weight
             difficulty_weight: 0.5,
@@ -255,16 +254,16 @@ mod tests {
 
         // Test that new cards get correct initial stability based on rating
         let info_again = scheduler.schedule(0.0, 5.0, 0, 0, 1);
-        assert_eq!(info_again.new_stability, 0.4, "Again should give 0.4 days stability");
+        assert_eq!(info_again.new_stability, 0.212, "Again should give 0.212 days stability");
 
         let info_hard = scheduler.schedule(0.0, 5.0, 0, 0, 2);
-        assert_eq!(info_hard.new_stability, 0.6, "Hard should give 0.6 days stability");
+        assert_eq!(info_hard.new_stability, 1.2931, "Hard should give 1.2931 days stability");
 
         let info_good = scheduler.schedule(0.0, 5.0, 0, 0, 3);
-        assert_eq!(info_good.new_stability, 1.0, "Good should give 1.0 day stability");
+        assert_eq!(info_good.new_stability, 2.3065, "Good should give 2.3065 days stability");
 
         let info_easy = scheduler.schedule(0.0, 5.0, 0, 0, 4);
-        assert_eq!(info_easy.new_stability, 4.0, "Easy should give 4.0 days stability");
+        assert_eq!(info_easy.new_stability, 8.2956, "Easy should give 8.2956 days stability");
     }
 
     #[test]
@@ -405,10 +404,10 @@ mod tests {
         // Simulate a realistic learning session
         // Day 1: First review of new card with "Good" rating
         let review1 = scheduler.schedule(0.0, 5.0, 0, 0, 3);
-        assert_eq!(review1.interval, 1, "First Good should give 1 day");
+        assert_eq!(review1.interval, 2, "First Good should give 2 days (FSRS-6: 2.3065 rounds to 2)");
         assert_eq!(review1.new_state, 2, "Should be in Review state");
 
-        // Day 2: Second review (1 day later) with "Good" rating
+        // Day 3: Second review (2 days later) with "Good" rating
         let review2 = scheduler.schedule(
             review1.new_stability,
             review1.new_difficulty,
@@ -417,9 +416,9 @@ mod tests {
             3
         );
         assert!(review2.interval > review1.interval, "Interval should increase");
-        assert_eq!(review2.interval, 3, "Should be about 3 days (1.0 * 2.5 = 2.5, rounded to 3)");
+        assert_eq!(review2.interval, 6, "Should be about 6 days (2.3065 * 2.5 = 5.766, rounded to 6)");
 
-        // Day 5: Third review (3 days later), forgot it - "Again" rating
+        // Day 9: Third review (6 days later), forgot it - "Again" rating
         let review3 = scheduler.schedule(
             review2.new_stability,
             review2.new_difficulty,
@@ -432,5 +431,25 @@ mod tests {
 
         // Verify difficulty increased (card was hard)
         assert!(review3.new_difficulty < review2.new_difficulty, "Difficulty should decrease after Again");
+    }
+
+    #[test]
+    fn test_new_card_intervals() {
+        // This test documents the expected intervals for a brand new card
+        // based on FSRS-6 initial_stability values: [0.212, 1.2931, 2.3065, 8.2956]
+        let scheduler = FSRSScheduler::new();
+
+        // New card (state=0, stability=0, difficulty=5.0)
+        let again = scheduler.schedule(0.0, 5.0, 0, 0, 1);
+        assert_eq!(again.interval, 1, "Again: 0.212 days rounds to 0, then max(1) = 1 day");
+
+        let hard = scheduler.schedule(0.0, 5.0, 0, 0, 2);
+        assert_eq!(hard.interval, 1, "Hard: 1.2931 days rounds to 1 day");
+
+        let good = scheduler.schedule(0.0, 5.0, 0, 0, 3);
+        assert_eq!(good.interval, 2, "Good: 2.3065 days rounds to 2 days");
+
+        let easy = scheduler.schedule(0.0, 5.0, 0, 0, 4);
+        assert_eq!(easy.interval, 8, "Easy: 8.2956 days rounds to 8 days");
     }
 }

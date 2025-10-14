@@ -274,9 +274,14 @@
 }
 
 .excluded-text {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
-  border-left: 3px solid hsl(var(--border));
-  padding-left: 8px;
-  display: inline-block;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  border-left: 3px solid var(--border);
+  padding-left: 0.75rem;
+  padding-right: 0.25rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+  margin-left: 0.5rem;
+  display: block;
+  border-radius: 0.25rem;
 }

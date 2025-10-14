@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import {
   ContextMenu,
@@ -16,6 +16,7 @@ import {
 } from '../../lib/components/ui/dialog';
 import { Button, Input, Label } from '../../lib/components/ui';
 import { useLibraryStore } from '../../stores/library';
+import { useReadingStore } from '../../lib/stores/reading';
 
 interface TextContextMenuProps {
   textId: number;
@@ -25,6 +26,7 @@ interface TextContextMenuProps {
 
 export function TextContextMenu({ textId, textTitle, children }: TextContextMenuProps) {
   const { renameText, deleteText } = useLibraryStore();
+  const { loadTexts } = useReadingStore();
 
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -40,8 +42,25 @@ export function TextContextMenu({ textId, textTitle, children }: TextContextMenu
 
   const handleDelete = async () => {
     await deleteText(textId);
+    // Refresh reading store so library page updates immediately
+    await loadTexts();
     setShowDeleteDialog(false);
   };
+
+  // Add keyboard shortcuts for delete dialog
+  useEffect(() => {
+    if (!showDeleteDialog) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteDialog]);
 
   return (
     <>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
+import { useLibraryStore } from '../../stores/library'
 import {
   Button,
   Input,
@@ -25,6 +26,7 @@ export function IngestPage() {
   const [publicationDate, setPublicationDate] = useState('')
   const [publisher, setPublisher] = useState('')
   const { createText, isLoading } = useReadingStore()
+  const { loadLibrary } = useLibraryStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,6 +40,9 @@ export function IngestPage() {
         publicationDate: publicationDate || undefined,
         publisher: publisher || undefined,
       })
+
+      // Refresh the library store so sidebar updates immediately
+      await loadLibrary()
 
       navigate('/library')
     } catch (error) {

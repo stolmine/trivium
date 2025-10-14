@@ -3,14 +3,22 @@ import type { ReviewQuality } from '../../types'
 interface ReviewGradingProps {
   onGrade: (rating: ReviewQuality) => void
   disabled?: boolean
+  cardState?: { stability: number; state: number }
 }
 
-export function ReviewGrading({ onGrade, disabled }: ReviewGradingProps) {
+export function ReviewGrading({ onGrade, disabled, cardState: _cardState }: ReviewGradingProps) {
+  // Note: Intervals shown are approximate for new cards based on FSRS-6 initial_stability values:
+  // - Again: 0.212d → <1d (~5 hours)
+  // - Hard: 1.29d → 1d (~31 hours)
+  // - Good: 2.31d → 2d
+  // - Easy: 8.30d → 8d
+  // For review cards, actual intervals will be dynamically calculated by FSRS based on
+  // current stability and will typically be longer.
   const grades = [
-    { rating: 0 as ReviewQuality, label: 'Again', color: 'bg-red-500 hover:bg-red-600', key: '1', interval: '<10m' },
-    { rating: 1 as ReviewQuality, label: 'Hard', color: 'bg-orange-500 hover:bg-orange-600', key: '2', interval: '4d' },
-    { rating: 2 as ReviewQuality, label: 'Good', color: 'bg-green-500 hover:bg-green-600', key: '3', interval: '10d' },
-    { rating: 3 as ReviewQuality, label: 'Easy', color: 'bg-blue-500 hover:bg-blue-600', key: '4', interval: '1mo' },
+    { rating: 0 as ReviewQuality, label: 'Again', color: 'bg-red-500 hover:bg-red-600', key: '1', interval: '<1d' },
+    { rating: 1 as ReviewQuality, label: 'Hard', color: 'bg-orange-500 hover:bg-orange-600', key: '2', interval: '1d' },
+    { rating: 2 as ReviewQuality, label: 'Good', color: 'bg-green-500 hover:bg-green-600', key: '3', interval: '2d' },
+    { rating: 3 as ReviewQuality, label: 'Easy', color: 'bg-blue-500 hover:bg-blue-600', key: '4', interval: '8d' },
   ]
 
   return (
