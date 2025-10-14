@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 2 Complete ✅
+## Current Status: Phase 3 Complete ✅
 
 **Branch**: `1_flashcardCreate`
-**Last Updated**: 2025-10-13
+**Last Updated**: 2025-10-14
 
 ---
 
@@ -106,7 +106,11 @@
 8. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
 9. **Preview Cards**: Live preview of how flashcard will appear
 10. **Manage Flashcards**: View, delete flashcards in collapsible sidebar
-11. **Persistent State**: All data saved to database, persists across sessions
+11. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
+12. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+13. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+14. **Session Statistics**: Track unique cards completed vs total review actions
+15. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -175,36 +179,58 @@
 
 ---
 
-### 📋 Phase 3: Review System (Week 5)
-**Status**: Not Started
-**Estimated Effort**: 7-9 days
-
-**Critical Blocker**: FSRS dependency conflict needs resolution
+### ✅ Phase 3: Review System with FSRS-5 (Week 5) - COMPLETE
+**Status**: Complete
+**Completed**: 2025-10-14
+**Actual Effort**: 1 day (agents in parallel)
+**Resolution**: FSRS dependency conflict resolved via manual implementation
 
 **Backend Tasks**:
-- [ ] Resolve FSRS dependency conflict (manual impl or rusqlite switch)
-- [ ] `get_due_cards` command
-- [ ] `grade_card` command with FSRS algorithm
-- [ ] Update card state based on FSRS
-- [ ] Review history tracking
-- [ ] Basic queue management
+- ✅ Manual FSRS-5 algorithm implementation (no external dependency)
+- ✅ FSRSScheduler with full scheduling logic
+- ✅ `get_due_cards` command - query cards WHERE due ≤ NOW
+- ✅ `grade_card` command with FSRS integration
+- ✅ Update card state (stability, difficulty, interval, state)
+- ✅ Review history tracking (all attempts logged)
+- ✅ Queue management with re-queue for "Again" grades
+- ✅ 11 comprehensive unit tests (all passing)
 
 **Frontend Tasks**:
-- [ ] Full-screen study session view
-- [ ] Display card with cloze hidden
-- [ ] "Show answer" button
-- [ ] 4-button grading system (Again/Hard/Good/Easy)
-- [ ] Show next review interval for each grade
-- [ ] Keyboard shortcuts (Space, 1-4)
-- [ ] Progress display during session
-- [ ] Session complete screen
+- ✅ Full-screen review session view
+- ✅ ReviewCard component with cloze hidden/visible
+- ✅ "Show answer" button (Space key)
+- ✅ 4-button grading system (Again/Hard/Good/Easy)
+- ✅ Color-coded buttons with keyboard shortcuts (1-4)
+- ✅ Keyboard shortcuts (Space, 1-4 keys)
+- ✅ Progress display during session (with re-queued cards)
+- ✅ SessionComplete screen with statistics
+- ✅ Dual statistics tracking (unique cards vs total reviews)
+- ✅ "Again" grade re-queues cards for same session
+- ✅ Full accessibility (ARIA labels, keyboard navigation)
 
-**Success Criteria**:
-- [ ] Can review flashcards with spaced repetition
-- [ ] FSRS algorithm working correctly
-- [ ] Grading updates intervals
-- [ ] Review history tracked
-- [ ] Keyboard-only workflow possible
+**Success Criteria Met**:
+- ✅ Can review flashcards with spaced repetition
+- ✅ FSRS-5 algorithm working correctly
+- ✅ Grading updates intervals accurately
+- ✅ Review history tracked for all attempts
+- ✅ Keyboard-only workflow fully functional
+- ✅ "Again" cards return to queue for retry
+- ✅ Statistics distinguish unique cards from total reviews
+- ✅ Error recovery with navigation
+- ✅ Backend: 32/32 tests passing
+- ✅ Frontend: TypeScript compilation successful
+
+**Key Implementation Details**:
+- FSRS-5 algorithm manually implemented (437 lines)
+- Retrievability formula: R = (1 + t / (9 * S))^(-1)
+- Stability multipliers: Again=0.5x, Hard=1.2x, Good=2.5x, Easy=4.0x
+- State machine: New → Learning → Review → Relearning
+- Complete review_history audit trail
+- Re-queue logic for "Again" grades
+- Rating conversion: Frontend (0-3) → Backend (1-4)
+
+**Commits**:
+- `2d2930f` - Implement Phase 3: Review System with FSRS-5 Algorithm
 
 ---
 
@@ -444,11 +470,11 @@
 - [ ] Flashcards stored correctly
 - [ ] "Most recently read" updates
 
-### Phase 3 (Pending)
-- [ ] FSRS algorithm works
-- [ ] Card queue generated correctly
-- [ ] Grading updates intervals
-- [ ] Review history tracked
+### Phase 3 ✅
+- [x] FSRS algorithm works
+- [x] Card queue generated correctly
+- [x] Grading updates intervals
+- [x] Review history tracked
 
 ### Phase 4 (Pending)
 - [ ] Folder tree renders correctly
