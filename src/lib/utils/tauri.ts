@@ -1,5 +1,14 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { Article, Flashcard, ReviewResult, Text, CreateTextRequest, ReadRange, Paragraph } from '../types';
+import type {
+  Article,
+  Flashcard,
+  FlashcardPreview,
+  ReviewResult,
+  Text,
+  CreateTextRequest,
+  ReadRange,
+  Paragraph
+} from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
   return await invoke('load_article', { id });
@@ -68,6 +77,41 @@ export const api = {
     },
     getParagraphs: async (textId: number): Promise<Paragraph[]> => {
       return await invoke('get_paragraphs', { textId: textId });
+    },
+  },
+  flashcards: {
+    createFromCloze: async (textId: number, selectedText: string, clozeText: string): Promise<Flashcard[]> => {
+      return await invoke('create_flashcard_from_cloze', {
+        textId: textId,
+        selectedText: selectedText,
+        clozeText: clozeText
+      });
+    },
+    getByText: async (textId: number): Promise<Flashcard[]> => {
+      return await invoke('get_flashcards_by_text', { textId: textId });
+    },
+    delete: async (flashcardId: number): Promise<void> => {
+      return await invoke('delete_flashcard', { flashcardId: flashcardId });
+    },
+    getPreview: async (clozeText: string, clozeNumber: number): Promise<FlashcardPreview> => {
+      return await invoke('get_flashcard_preview', {
+        clozeText: clozeText,
+        clozeNumber: clozeNumber
+      });
+    },
+  },
+  review: {
+    getDueCards: async (limit: number): Promise<Flashcard[]> => {
+      return await invoke('get_due_cards', { limit: limit });
+    },
+    gradeCard: async (flashcardId: number, rating: number): Promise<void> => {
+      return await invoke('grade_card', {
+        flashcardId: flashcardId,
+        rating: rating
+      });
+    },
+    getStats: async (): Promise<{ due_count: number; new_count: number; learning_count: number; review_count: number }> => {
+      return await invoke('get_review_stats');
     },
   },
 };

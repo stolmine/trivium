@@ -6,10 +6,10 @@ interface ReadingProgressProps {
 }
 
 export function ReadingProgress({
-  progress,
-  wordsRead,
-  totalWords,
-  estimatedTimeRemaining,
+  progress: _progress,
+  wordsRead: _wordsRead,
+  totalWords: _totalWords,
+  estimatedTimeRemaining: _estimatedTimeRemaining,
 }: ReadingProgressProps) {
   // TODO: Implement reading progress indicator
   // Features:

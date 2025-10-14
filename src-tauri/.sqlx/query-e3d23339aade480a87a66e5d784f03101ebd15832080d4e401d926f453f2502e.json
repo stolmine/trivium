@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            COUNT(CASE WHEN due <= ? THEN 1 END) as \"due_count!\",\n            COUNT(CASE WHEN state = 0 THEN 1 END) as \"new_count!\",\n            COUNT(CASE WHEN state IN (1, 3) THEN 1 END) as \"learning_count!\",\n            COUNT(CASE WHEN state = 2 THEN 1 END) as \"review_count!\"\n        FROM flashcards\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "due_count!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "new_count!",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "learning_count!",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "review_count!",
+        "ordinal": 3,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e3d23339aade480a87a66e5d784f03101ebd15832080d4e401d926f453f2502e"
+}

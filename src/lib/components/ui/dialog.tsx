@@ -1,4 +1,5 @@
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { cn } from "../../utils"
 
 interface DialogProps {
@@ -10,15 +11,20 @@ interface DialogProps {
 const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   if (!open) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  const dialogContent = (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       <div
-        className="fixed inset-0 bg-black/50"
+        className="fixed inset-0 bg-black opacity-50"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
         onClick={() => onOpenChange?.(false)}
       />
-      <div className="relative z-50">{children}</div>
+      <div className="relative z-[10000]" style={{ position: 'relative', zIndex: 10000 }}>
+        {children}
+      </div>
     </div>
   )
+
+  return createPortal(dialogContent, document.body)
 }
 
 const DialogTrigger: React.FC<{
@@ -38,9 +44,17 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-background w-full max-w-lg rounded-lg border p-6 shadow-lg",
+          "bg-white w-full max-w-lg rounded-lg border p-6 shadow-lg",
           className
         )}
+        style={{
+          backgroundColor: 'white',
+          padding: '24px',
+          borderRadius: '8px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+          maxWidth: '500px',
+          width: '90%'
+        }}
         {...props}
       >
         {children}

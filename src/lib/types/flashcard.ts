@@ -1,16 +1,49 @@
 export interface Flashcard {
-  id: string;
-  articleId: string;
-  context: string;
+  id: number;
+  textId: number;
+  userId: number;
+  originalText: string;
   clozeText: string;
-  clozePosition: number;
-  dateCreated: Date;
-  lastReviewed?: Date;
-  nextReview: Date;
+  clozeIndex: number;
+  displayIndex: number;
+  clozeNumber: number;
+  createdAt: string;
+  updatedAt: string;
+  clozeNoteId: number | null;
+  due: string;
+  stability: number;
   difficulty: number;
-  interval: number;
-  repetitions: number;
-  easeFactor: number;
+  elapsedDays: number;
+  scheduledDays: number;
+  reps: number;
+  lapses: number;
+  state: number;
+  lastReview: string | null;
+}
+
+export interface ClozeNote {
+  id: number;
+  textId: number;
+  userId: number;
+  originalText: string;
+  parsedSegments: string;
+  clozeCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClozeSegment {
+  clozeNumber: number;
+  text: string;
+  hint: string | null;
+  startPosition: number;
+  endPosition: number;
+}
+
+export interface CreateFlashcardRequest {
+  textId: number;
+  selectedText: string;
+  clozeText: string;
 }
 
 export interface ClozeData {
@@ -30,3 +63,8 @@ export interface ReviewResult {
 }
 
 export type ReviewQuality = 0 | 1 | 2 | 3 | 4 | 5;
+
+export interface FlashcardPreview {
+  html: string;
+  clozeNumber: number;
+}

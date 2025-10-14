@@ -1,23 +1,28 @@
-// Flashcard model
-//
-// Data structures for cloze deletion flashcards with FSRS state.
-//
-// Corresponds to the `flashcards` table in the database:
-// - id: Unique identifier
-// - text_id: Foreign key to source text
-// - user_id: User identifier (default: 1)
-// - original_text: Full context with cloze syntax
-// - cloze_text: Text with {{c1::deletion}} markers
-// - cloze_index: Index of this cloze (c1, c2, etc.)
-// - created_at, updated_at: Timestamps
-//
-// FSRS algorithm state:
-// - due: Next review date
-// - stability: FSRS stability parameter
-// - difficulty: FSRS difficulty parameter
-// - elapsed_days: Days since last review
-// - scheduled_days: Scheduled interval
-// - reps: Total review count
-// - lapses: Number of failed reviews
-// - state: Card state (New=0, Learning=1, Review=2, Relearning=3)
-// - last_review: Last review timestamp
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct Flashcard {
+    pub id: i64,
+    pub text_id: i64,
+    pub user_id: i64,
+    pub original_text: String,
+    pub cloze_text: String,
+    pub cloze_index: i64,
+    pub display_index: i64,
+    pub cloze_number: i64,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub cloze_note_id: Option<i64>,
+    pub due: DateTime<Utc>,
+    pub stability: f64,
+    pub difficulty: f64,
+    pub elapsed_days: i64,
+    pub scheduled_days: i64,
+    pub reps: i64,
+    pub lapses: i64,
+    pub state: i64,
+    pub last_review: Option<DateTime<Utc>>,
+}
