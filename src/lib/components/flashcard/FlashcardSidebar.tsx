@@ -1,8 +1,50 @@
-import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Trash2, ArrowUpDown } from 'lucide-react'
 import { useFlashcardStore } from '../../stores/flashcard'
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui'
 import type { Flashcard } from '../../types'
+
+type FlashcardSortOption = 'display-order' | 'alpha-asc' | 'alpha-desc' | 'due-soonest' | 'due-latest' | 'difficulty'
+
+const sortFlashcards = (flashcards: Flashcard[], sortBy: FlashcardSortOption): Flashcard[] => {
+  const flashcardsCopy = [...flashcards]
+
+  switch (sortBy) {
+    case 'display-order':
+      return flashcardsCopy.sort((a, b) => a.displayIndex - b.displayIndex)
+    case 'alpha-asc':
+      return flashcardsCopy.sort((a, b) => a.clozeText.localeCompare(b.clozeText))
+    case 'alpha-desc':
+      return flashcardsCopy.sort((a, b) => b.clozeText.localeCompare(a.clozeText))
+    case 'due-soonest':
+      return flashcardsCopy.sort((a, b) => new Date(a.due).getTime() - new Date(b.due).getTime())
+    case 'due-latest':
+      return flashcardsCopy.sort((a, b) => new Date(b.due).getTime() - new Date(a.due).getTime())
+    case 'difficulty':
+      return flashcardsCopy.sort((a, b) => b.difficulty - a.difficulty)
+    default:
+      return flashcardsCopy
+  }
+}
+
+const getFlashcardSortLabel = (sortBy: FlashcardSortOption): string => {
+  switch (sortBy) {
+    case 'display-order':
+      return 'Display Order'
+    case 'alpha-asc':
+      return 'Alphabetical (A-Z)'
+    case 'alpha-desc':
+      return 'Alphabetical (Z-A)'
+    case 'due-soonest':
+      return 'Due Date (Soonest)'
+    case 'due-latest':
+      return 'Due Date (Latest)'
+    case 'difficulty':
+      return 'Difficulty'
+    default:
+      return 'Sort'
+  }
+}
 
 interface FlashcardSidebarProps {
   textId: number
@@ -22,6 +64,8 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [flashcardToDelete, setFlashcardToDelete] = useState<number | null>(null)
+  const [expandedCardIds, setExpandedCardIds] = useState<Set<number>>(new Set())
+  const [sortBy, setSortBy] = useState<FlashcardSortOption>('display-order')
 
   useEffect(() => {
     setMostRecentlyReadTextId(textId)
@@ -47,6 +91,58 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     }
   }
 
+  const toggleCardExpansion = (flashcardId: number) => {
+    setExpandedCardIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(flashcardId)) {
+        next.delete(flashcardId)
+      } else {
+        next.add(flashcardId)
+      }
+      return next
+    })
+  }
+
+  const extractContext = (clozeText: string): string => {
+    const clozeMatch = clozeText.match(/\{\{c\d+::[^}]+\}\}/)
+    if (!clozeMatch) return clozeText
+
+    const clozePosition = clozeMatch.index || 0
+    const textBeforeCloze = clozeText.slice(0, clozePosition)
+    const textAfterCloze = clozeText.slice(clozePosition + clozeMatch[0].length)
+
+    const sentenceStart = Math.max(
+      textBeforeCloze.lastIndexOf('. ') + 2,
+      textBeforeCloze.lastIndexOf('! ') + 2,
+      textBeforeCloze.lastIndexOf('? ') + 2,
+      0
+    )
+
+    const sentenceEndInAfter = Math.min(
+      ...[
+        textAfterCloze.indexOf('. '),
+        textAfterCloze.indexOf('! '),
+        textAfterCloze.indexOf('? ')
+      ]
+        .filter((i) => i !== -1)
+        .map((i) => i + 1),
+      textAfterCloze.length
+    )
+
+    if (sentenceStart === 0 && sentenceEndInAfter === textAfterCloze.length) {
+      const words = clozeText.split(/\s+/)
+      const clozeWordIndex = words.findIndex((word) => word.includes('{{c'))
+      const start = Math.max(0, clozeWordIndex - 5)
+      const end = Math.min(words.length, clozeWordIndex + 6)
+      const contextWords = words.slice(start, end)
+      if (start > 0) contextWords.unshift('...')
+      if (end < words.length) contextWords.push('...')
+      return contextWords.join(' ')
+    }
+
+    return clozeText.slice(sentenceStart, clozePosition + clozeMatch[0].length + sentenceEndInAfter)
+  }
+
   const renderClozePreview = (flashcard: Flashcard) => {
     const parts = flashcard.clozeText.split(/(\{\{c\d+::[^}]+\}\})/g)
     return parts.map((part, idx) => {
@@ -64,6 +160,11 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
       return <span key={idx}>{part}</span>
     })
   }
+
+  const sortedFlashcards = useMemo(
+    () => sortFlashcards(currentTextFlashcards, sortBy),
+    [currentTextFlashcards, sortBy]
+  )
 
   if (isCollapsed) {
     return (
@@ -85,14 +186,49 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     <div className="flex flex-col border-l border-gray-200 bg-gray-50 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
         <h2 className="text-lg font-semibold">Flashcards</h2>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          title="Collapse sidebar"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {currentTextFlashcards.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  title={getFlashcardSortLabel(sortBy)}
+                >
+                  <ArrowUpDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setSortBy('display-order')}>
+                  Display Order
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('alpha-asc')}>
+                  Alphabetical (A-Z)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('alpha-desc')}>
+                  Alphabetical (Z-A)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('due-soonest')}>
+                  Due Date (Soonest)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('due-latest')}>
+                  Due Date (Latest)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy('difficulty')}>
+                  Difficulty
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapse}
+            title="Collapse sidebar"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
@@ -117,40 +253,68 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
           </div>
         )}
 
-        {!isLoading && !error && currentTextFlashcards.length > 0 && (
+        {!isLoading && !error && sortedFlashcards.length > 0 && (
           <div className="space-y-3">
-            {currentTextFlashcards.map((flashcard) => (
-              <div
-                key={flashcard.id}
-                className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div className="text-xs text-gray-500">
-                    Card #{flashcard.displayIndex}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDeleteClick(flashcard.id)}
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
-                    title="Delete flashcard"
+            {sortedFlashcards.map((flashcard) => {
+              const isExpanded = expandedCardIds.has(flashcard.id)
+              const contextText = extractContext(flashcard.clozeText)
+
+              return (
+                <div
+                  key={flashcard.id}
+                  className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div
+                    className="p-3 cursor-pointer"
+                    onClick={() => toggleCardExpansion(flashcard.id)}
                   >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs text-gray-500">
+                          Card #{flashcard.displayIndex}
+                        </div>
+                        {isExpanded ? (
+                          <ChevronUp className="h-3 w-3 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="h-3 w-3 text-gray-400" />
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteClick(flashcard.id)
+                        }}
+                        className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                        title="Delete flashcard"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
 
-                <div className="text-sm text-gray-800 leading-relaxed">
-                  {renderClozePreview(flashcard)}
-                </div>
-
-                <div className="mt-2 pt-2 border-t border-gray-100">
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>Due: {new Date(flashcard.due).toLocaleDateString()}</span>
-                    <span>Reps: {flashcard.reps}</span>
+                    <div className="text-sm text-gray-800 leading-relaxed">
+                      {isExpanded ? (
+                        renderClozePreview(flashcard)
+                      ) : (
+                        renderClozePreview({ ...flashcard, clozeText: contextText })
+                      )}
+                    </div>
                   </div>
+
+                  {isExpanded && (
+                    <div className="px-3 pb-3 pt-0">
+                      <div className="pt-2 border-t border-gray-100">
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Due: {new Date(flashcard.due).toLocaleDateString()}</span>
+                          <span>Reps: {flashcard.reps}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>

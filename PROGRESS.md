@@ -1,8 +1,8 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 3 Complete ✅
+## Current Status: Phase 5 Complete ✅
 
-**Branch**: `1_flashcardCreate`
+**Branch**: `3_touchUp`
 **Last Updated**: 2025-10-14
 
 ---
@@ -234,9 +234,55 @@
 
 ---
 
-### 📁 Phase 4: Folder Organization (Week 6)
+### ✅ Phase 4: GUI Redesign (Week 6) - COMPLETE
+**Completed**: 2025-10-14
+
+**Major Changes**:
+- ✅ Unified application shell with persistent sidebar
+- ✅ Dashboard view with stats cards (continue reading, due reviews, stats, activity)
+- ✅ Hierarchical library tree with folders and drag-and-drop
+- ✅ Folder CRUD operations (create, rename, delete, move texts)
+- ✅ Adapted all views to new shell (Reading, Review, Ingest)
+- ✅ Tailwind CSS v4 migration and design system
+- ✅ Keyboard shortcuts system with help dialog
+- ✅ Professional visual polish and animations
+
+**Commits**:
+- `55c2339` - Complete GUI redesign with Tailwind CSS v4 fixes
+- `53f44af` - Merge branch '1_flashcardCreate'
+- Additional commits documented in GUI_REDESIGN_COMPLETE.md
+
+---
+
+### ✅ Phase 5: UI Touch-ups & Improvements (Week 6) - COMPLETE
+**Completed**: 2025-10-14
+
+**UI/UX Improvements**:
+- ✅ Text CRUD: Added rename and delete functionality for texts with context menu
+- ✅ Collapsible flashcards: Default collapsed state with sentence-level context preview
+- ✅ Visual sorting: Added Obsidian-style sort dropdowns for library and flashcards
+- ✅ Library navigation: Made Library header clickable to navigate to library page
+- ✅ Keyboard shortcuts: Complete documentation in help view (15+ shortcuts across 5 categories)
+- ✅ Modal improvements: All dialogs close with Esc, submit with Enter
+- ✅ Flashcard validation: Prevent creation without clozes, live preview updates
+- ✅ Cloze hotkeys: Ctrl+Shift+C works in modals, Ctrl+Shift+E for progress exclusion
+- ✅ SRS intervals: Adjusted initial intervals to match Anki (1 day Good, 4 days Easy)
+- ✅ Button sizing: Standardized UI button sizes across app
+
+**Technical Fixes**:
+- ✅ Tailwind CSS v4 compatibility (@utility → @layer utilities)
+- ✅ DialogFooter export added to UI components
+- ✅ DropdownMenu component created for reusable dropdowns
+- ✅ SQLx query cache prepared for text operations
+
+**Commits**:
+- `6fbc8ad` - Implement UI touch-ups and improvements
+- Additional backend and frontend refinements
+
+---
+
+### 📁 Phase 6: Future Enhancements
 **Status**: Not Started
-**Estimated Effort**: 5-7 days
 
 **Backend Tasks**:
 - [ ] `create_folder` command

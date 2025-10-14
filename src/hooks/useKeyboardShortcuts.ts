@@ -9,7 +9,7 @@ export interface KeyboardShortcut {
   altKey?: boolean;
   action: () => void;
   description: string;
-  category: 'navigation' | 'actions' | 'view';
+  category: 'navigation' | 'actions' | 'view' | 'ingest' | 'review';
 }
 
 interface UseKeyboardShortcutsOptions {
@@ -103,9 +103,68 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
     },
   ];
 
+  const ingestShortcuts: KeyboardShortcut[] = [
+    {
+      key: 'C',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => {},
+      description: 'Wrap selection with cloze',
+      category: 'ingest',
+    },
+    {
+      key: 'E',
+      ctrlKey: true,
+      shiftKey: true,
+      action: () => {},
+      description: 'Exclude selection from progress',
+      category: 'ingest',
+    },
+    {
+      key: 'Enter',
+      ctrlKey: true,
+      action: () => {},
+      description: 'Preview flashcard',
+      category: 'ingest',
+    },
+  ];
+
+  const reviewShortcuts: KeyboardShortcut[] = [
+    {
+      key: 'Space',
+      action: () => {},
+      description: 'Toggle answer',
+      category: 'review',
+    },
+    {
+      key: '1',
+      action: () => {},
+      description: 'Grade card: Again',
+      category: 'review',
+    },
+    {
+      key: '2',
+      action: () => {},
+      description: 'Grade card: Hard',
+      category: 'review',
+    },
+    {
+      key: '3',
+      action: () => {},
+      description: 'Grade card: Good',
+      category: 'review',
+    },
+    {
+      key: '4',
+      action: () => {},
+      description: 'Grade card: Easy',
+      category: 'review',
+    },
+  ];
+
   useKeyboardShortcuts({ shortcuts: globalShortcuts });
 
-  return globalShortcuts;
+  return [...globalShortcuts, ...ingestShortcuts, ...reviewShortcuts];
 }
 
 export function getShortcutLabel(shortcut: KeyboardShortcut): string {

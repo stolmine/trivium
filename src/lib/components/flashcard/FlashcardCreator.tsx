@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useFlashcardStore } from '../../stores/flashcard'
 import {
   Dialog,
@@ -19,6 +19,10 @@ interface FlashcardCreatorProps {
   selectedText: string
 }
 
+const hasClozes = (text: string): boolean => {
+  return /\{\{c\d+::.+?\}\}/.test(text)
+}
+
 export function FlashcardCreator({
   open,
   onOpenChange,
@@ -30,6 +34,7 @@ export function FlashcardCreator({
   const [previewClozeNumber, setPreviewClozeNumber] = useState(1)
   const [showPreview, setShowPreview] = useState(false)
   const { createFlashcard, getPreview, isLoading } = useFlashcardStore()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (open && selectedText) {
@@ -54,7 +59,7 @@ export function FlashcardCreator({
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!clozeText.trim()) return
+    if (!clozeText.trim() || !hasClozes(clozeText)) return
 
     try {
       await createFlashcard(textId, selectedText, clozeText)
@@ -76,9 +81,57 @@ export function FlashcardCreator({
     }
   }
 
+  const wrapSelection = (before: string, after: string) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const start = textarea.selectionStart
+    const end = textarea.selectionEnd
+    const selectedText = clozeText.substring(start, end)
+
+    if (selectedText) {
+      const newContent =
+        clozeText.substring(0, start) +
+        before + selectedText + after +
+        clozeText.substring(end)
+
+      setClozeText(newContent)
+
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(
+          start + before.length + selectedText.length + after.length,
+          start + before.length + selectedText.length + after.length
+        )
+      }, 0)
+    }
+  }
+
+  const handleWrapCloze = () => {
+    wrapSelection('{{c1::', '}}')
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!open) return
+
+      if (document.activeElement === textareaRef.current) {
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+          e.preventDefault()
+          handleWrapCloze()
+          return
+        }
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        const target = e.target as HTMLElement
+        if (target.tagName === 'TEXTAREA') return
+
+        e.preventDefault()
+        if (hasClozes(clozeText) && !isLoading) {
+          handleCreate(e as unknown as React.FormEvent)
+        }
+      }
 
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault()
@@ -88,7 +141,20 @@ export function FlashcardCreator({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, clozeText, previewClozeNumber])
+  }, [open, clozeText, previewClozeNumber, isLoading])
+
+  useEffect(() => {
+    if (clozeText && hasClozes(clozeText)) {
+      const timeoutId = setTimeout(() => {
+        handlePreview()
+      }, 500)
+
+      return () => clearTimeout(timeoutId)
+    } else {
+      setShowPreview(false)
+      setPreviewHtml('')
+    }
+  }, [clozeText, previewClozeNumber])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,6 +169,7 @@ export function FlashcardCreator({
           <div className="space-y-2">
             <Label htmlFor="clozeText">Cloze Text</Label>
             <Textarea
+              ref={textareaRef}
               id="clozeText"
               value={clozeText}
               onChange={(e) => setClozeText(e.target.value)}
@@ -111,8 +178,13 @@ export function FlashcardCreator({
               required
             />
             <div className="text-xs text-muted-foreground">
-              Tip: Use {'{{c1::text}}'} for cloze deletions. Support multiple clozes with c2, c3, etc.
+              Tip: Use {'{{c1::text}}'} for cloze deletions or press Ctrl+Shift+C to wrap selected text. Support multiple clozes with c2, c3, etc.
             </div>
+            {clozeText && !hasClozes(clozeText) && (
+              <div className="text-xs text-destructive">
+                No cloze deletions detected. Add at least one cloze using {'{{c1::text}}'} syntax.
+              </div>
+            )}
           </div>
 
           {showPreview && previewHtml && (
@@ -156,11 +228,11 @@ export function FlashcardCreator({
               type="button"
               variant="secondary"
               onClick={handlePreview}
-              disabled={isLoading || !clozeText.trim()}
+              disabled={isLoading || !clozeText.trim() || !hasClozes(clozeText)}
             >
               Preview
             </Button>
-            <Button type="submit" disabled={isLoading || !clozeText.trim()}>
+            <Button type="submit" disabled={isLoading || !clozeText.trim() || !hasClozes(clozeText)}>
               {isLoading ? 'Creating...' : 'Create'}
             </Button>
           </div>

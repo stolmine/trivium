@@ -9,6 +9,20 @@ interface DialogProps {
 }
 
 const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
+  React.useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onOpenChange?.(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, onOpenChange])
+
   if (!open) return null
 
   const dialogContent = (

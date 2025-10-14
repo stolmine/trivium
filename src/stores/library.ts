@@ -18,6 +18,8 @@ interface LibraryState {
   renameFolder: (id: string, name: string) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
   moveTextToFolder: (textId: number, folderId: string | null) => Promise<void>;
+  renameText: (id: number, title: string) => Promise<void>;
+  deleteText: (id: number) => Promise<void>;
 }
 
 export const useLibraryStore = create<LibraryState>((set) => ({
@@ -113,6 +115,32 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }));
     } catch (error) {
       console.error('Failed to move text to folder:', error);
+      set({ error: String(error) });
+    }
+  },
+
+  renameText: async (id: number, title: string) => {
+    try {
+      await api.texts.rename(id, title);
+      set((state) => ({
+        texts: state.texts.map((text) =>
+          text.id === id ? { ...text, title, updatedAt: new Date().toISOString() } : text
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to rename text:', error);
+      set({ error: String(error) });
+    }
+  },
+
+  deleteText: async (id: number) => {
+    try {
+      await api.texts.delete(id);
+      set((state) => ({
+        texts: state.texts.filter((text) => text.id !== id),
+      }));
+    } catch (error) {
+      console.error('Failed to delete text:', error);
       set({ error: String(error) });
     }
   },

@@ -53,6 +53,12 @@ export const api = {
     get: async (id: number): Promise<Text> => {
       return await invoke('get_text', { id });
     },
+    rename: async (id: number, title: string): Promise<void> => {
+      return await invoke('rename_text', { id, title });
+    },
+    delete: async (id: number): Promise<void> => {
+      return await invoke('delete_text', { id });
+    },
   },
   reading: {
     markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {

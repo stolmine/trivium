@@ -48,6 +48,8 @@ export function ShortcutHelp({ shortcuts, open, onClose }: ShortcutHelpProps) {
     navigation: 'Navigation',
     actions: 'Actions',
     view: 'View',
+    ingest: 'Text Editing (Ingest)',
+    review: 'Review',
   };
 
   return (

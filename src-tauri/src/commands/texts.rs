@@ -130,3 +130,52 @@ pub async fn get_text(
 
     Ok(text)
 }
+
+#[tauri::command]
+pub async fn rename_text(
+    id: i64,
+    title: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let now = Utc::now();
+
+    sqlx::query!(
+        r#"
+        UPDATE texts
+        SET title = ?, updated_at = ?
+        WHERE id = ?
+        "#,
+        title,
+        now,
+        id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to rename text: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn delete_text(
+    id: i64,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    sqlx::query!(
+        r#"
+        DELETE FROM texts
+        WHERE id = ?
+        "#,
+        id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to delete text: {}", e))?;
+
+    Ok(())
+}
