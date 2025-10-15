@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id,\n            user_id,\n            daily_new_cards,\n            daily_reviews,\n            per_text_new_limit,\n            per_text_review_limit,\n            per_folder_new_limit,\n            per_folder_review_limit,\n            updated_at\n        FROM study_limits\n        WHERE user_id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "user_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "daily_new_cards",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "daily_reviews",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "per_text_new_limit",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "per_text_review_limit",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "per_folder_new_limit",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "per_folder_review_limit",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "updated_at",
+        "ordinal": 8,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "610de97a6b853c7a9e3c97e67bd528e950b33e9575674a5a4dbbf568fa59bdc3"
+}

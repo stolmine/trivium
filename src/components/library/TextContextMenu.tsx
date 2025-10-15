@@ -102,10 +102,10 @@ export function TextContextMenu({ textId, textTitle, children }: TextContextMenu
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowRenameDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleRename} disabled={!renameTextTitle.trim()}>
+            <Button type="button" onClick={handleRename} disabled={!renameTextTitle.trim()}>
               Rename
             </Button>
           </DialogFooter>
@@ -124,10 +124,10 @@ export function TextContextMenu({ textId, textTitle, children }: TextContextMenu
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button type="button" variant="destructive" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>

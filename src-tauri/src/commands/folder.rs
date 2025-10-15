@@ -29,11 +29,9 @@ pub async fn create_folder(
     let db = db.lock().await;
     let pool = db.pool();
 
-    // Generate UUID for folder
     let id = Uuid::new_v4().to_string();
-    let now = chrono::Utc::now().to_rfc3339();
+    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-    // Insert folder
     sqlx::query!(
         r#"
         INSERT INTO folders (id, name, parent_id, created_at, updated_at)
@@ -49,7 +47,6 @@ pub async fn create_folder(
     .await
     .map_err(|e| format!("Failed to create folder: {}", e))?;
 
-    // Fetch and return created folder
     let folder = sqlx::query_as!(
         Folder,
         r#"
@@ -73,7 +70,6 @@ pub async fn get_folder_tree(
     let db = db.lock().await;
     let pool = db.pool();
 
-    // Fetch all folders (frontend will build tree structure)
     let folders = sqlx::query_as!(
         Folder,
         r#"
@@ -98,17 +94,13 @@ pub async fn rename_folder(
     let db = db.lock().await;
     let pool = db.pool();
 
-    let now = chrono::Utc::now().to_rfc3339();
-
-    // Update folder name and timestamp
     let result = sqlx::query!(
         r#"
         UPDATE folders
-        SET name = ?, updated_at = ?
+        SET name = ?, updated_at = datetime('now')
         WHERE id = ?
         "#,
         name,
-        now,
         id
     )
     .execute(pool)
@@ -130,13 +122,11 @@ pub async fn delete_folder(
     let db = db.lock().await;
     let pool = db.pool();
 
-    // Start transaction to ensure atomicity
     let mut tx = pool
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction: {}", e))?;
 
-    // Move texts in this folder (and all descendant folders) to null folder_id
     sqlx::query!(
         r#"
         UPDATE texts
@@ -158,7 +148,6 @@ pub async fn delete_folder(
     .await
     .map_err(|e| format!("Failed to move texts out of folder: {}", e))?;
 
-    // Delete folder (CASCADE will handle child folders)
     let result = sqlx::query!(
         r#"
         DELETE FROM folders
@@ -174,7 +163,6 @@ pub async fn delete_folder(
         return Err("Folder not found".to_string());
     }
 
-    // Commit transaction
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transaction: {}", e))?;
@@ -191,7 +179,6 @@ pub async fn move_text_to_folder(
     let db = db.lock().await;
     let pool = db.pool();
 
-    // Update text's folder_id
     let result = sqlx::query!(
         r#"
         UPDATE texts
@@ -220,8 +207,6 @@ pub async fn get_texts_in_folder(
     let db = db.lock().await;
     let pool = db.pool();
 
-    // Query texts based on folder_id
-    // If folder_id is None, return texts with NULL folder_id (root texts)
     let texts = if let Some(folder_id) = folder_id {
         sqlx::query_as!(
             Text,
@@ -269,7 +254,6 @@ pub async fn calculate_folder_progress(
     let pool = db.pool();
     let user_id = 1;
 
-    // Get all text IDs in those folders (includes descendants recursively)
     let text_ids = sqlx::query!(
         r#"
         SELECT id, content_length, content

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            COUNT(CASE WHEN due <= ? THEN 1 END) as \"due_count!\",\n            COUNT(CASE WHEN state = 0 THEN 1 END) as \"new_count!\",\n            COUNT(CASE WHEN state IN (1, 3) THEN 1 END) as \"learning_count!\",\n            COUNT(CASE WHEN state = 2 THEN 1 END) as \"review_count!\"\n        FROM flashcards\n        ",
+  "query": "\n        SELECT\n            COUNT(CASE WHEN datetime(due) <= datetime(?) THEN 1 END) as \"due_count!\",\n            COUNT(CASE WHEN state = 0 THEN 1 END) as \"new_count!\",\n            COUNT(CASE WHEN state IN (1, 3) THEN 1 END) as \"learning_count!\",\n            COUNT(CASE WHEN state = 2 THEN 1 END) as \"review_count!\"\n        FROM flashcards\n        ",
   "describe": {
     "columns": [
       {
@@ -34,5 +34,5 @@
       false
     ]
   },
-  "hash": "e3d23339aade480a87a66e5d784f03101ebd15832080d4e401d926f453f2502e"
+  "hash": "5c172da7e915007f6e5a7a2f3dd9bb23d65b284a4b2df9ac3f3c6cf51814894d"
 }

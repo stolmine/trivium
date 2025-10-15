@@ -47,7 +47,7 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
 
   // Always call hooks before any conditional returns
   const sortedTexts = useMemo(() => sortTexts(texts, sortBy), [texts, sortBy]);
-  const tree = buildTree(folders, sortedTexts);
+  const tree = useMemo(() => buildTree(folders, sortedTexts), [folders, sortedTexts]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

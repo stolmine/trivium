@@ -68,6 +68,10 @@ export function DueReviewCard() {
   }, []);
 
   const handleStartReview = () => {
+    navigate('/review/session');
+  };
+
+  const handleConfigureReview = () => {
     navigate('/review');
   };
 
@@ -116,13 +120,23 @@ export function DueReviewCard() {
           )
         )}
 
-        <Button
-          onClick={handleStartReview}
-          className="w-full mt-4"
-          disabled={totalDue === 0}
-        >
-          Review Cards ({totalDue})
-        </Button>
+        <div className="space-y-2">
+          <Button
+            onClick={handleStartReview}
+            className="w-full mt-4"
+            disabled={totalDue === 0}
+          >
+            Quick Start ({totalDue})
+          </Button>
+          <Button
+            onClick={handleConfigureReview}
+            variant="outline"
+            className="w-full"
+            disabled={totalDue === 0}
+          >
+            Configure Review
+          </Button>
+        </div>
       </div>
     </div>
   );

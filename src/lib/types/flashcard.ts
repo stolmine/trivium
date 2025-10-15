@@ -68,3 +68,8 @@ export interface FlashcardPreview {
   html: string;
   clozeNumber: number;
 }
+
+export type ReviewFilter =
+  | { type: 'global' }
+  | { type: 'text'; textId: number }
+  | { type: 'folder'; folderId: string };

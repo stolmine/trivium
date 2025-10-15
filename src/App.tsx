@@ -6,7 +6,8 @@ import { SkeletonDashboard, SkeletonReadingView, SkeletonReviewCard } from './co
 const DashboardPage = lazy(() => import('./routes/dashboard').then(module => ({ default: module.DashboardPage })))
 const LibraryPage = lazy(() => import('./routes/library').then(module => ({ default: module.LibraryPage })))
 const ReadPage = lazy(() => import('./routes/read/[id]').then(module => ({ default: module.ReadPage })))
-const ReviewPage = lazy(() => import('./routes/review').then(module => ({ default: module.ReviewPage })))
+const ReviewHubPage = lazy(() => import('./routes/review').then(module => ({ default: module.ReviewHubPage })))
+const ReviewSessionPage = lazy(() => import('./routes/review/session').then(module => ({ default: module.ReviewSessionPage })))
 const IngestPage = lazy(() => import('./routes/ingest').then(module => ({ default: module.IngestPage })))
 
 const router = createBrowserRouter([
@@ -40,11 +41,24 @@ const router = createBrowserRouter([
       },
       {
         path: 'review',
-        element: (
-          <Suspense fallback={<div className="flex items-center justify-center h-full p-8"><SkeletonReviewCard /></div>}>
-            <ReviewPage />
-          </Suspense>
-        ),
+        children: [
+          {
+            index: true,
+            element: (
+              <Suspense fallback={<SkeletonDashboard />}>
+                <ReviewHubPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: 'session',
+            element: (
+              <Suspense fallback={<div className="flex items-center justify-center h-full p-8"><SkeletonReviewCard /></div>}>
+                <ReviewSessionPage />
+              </Suspense>
+            ),
+          },
+        ],
       },
       {
         path: 'ingest',

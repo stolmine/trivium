@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE study_limits\n            SET daily_new_cards = COALESCE(?, daily_new_cards),\n                daily_reviews = COALESCE(?, daily_reviews),\n                per_text_new_limit = COALESCE(?, per_text_new_limit),\n                per_text_review_limit = COALESCE(?, per_text_review_limit),\n                per_folder_new_limit = COALESCE(?, per_folder_new_limit),\n                per_folder_review_limit = COALESCE(?, per_folder_review_limit),\n                updated_at = ?\n            WHERE user_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "9be46f0961cc4a0f56560e9e80332739e7fdc983746f77661a5bb2bc78e421df"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE folders\n        SET name = ?, updated_at = datetime('now')\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "73c46d16ad77539ae0829466bb12a92693adfeb252f0aa357577695d2ee23bc2"
+}

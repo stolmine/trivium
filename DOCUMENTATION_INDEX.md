@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-14 (Late Evening Session - Branch 4_touchUp2 Complete)
+Last Updated: 2025-10-15 (Phase 6 Complete + Critical Bug Fixes + SQLx Migration Repair)
 
 ---
 
@@ -53,8 +53,8 @@ Last Updated: 2025-10-14 (Late Evening Session - Branch 4_touchUp2 Complete)
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign), current capabilities, upcoming phases, testing status, and next actions
-**Last Updated**: 2025-10-14
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings + Critical Bug Fixes), current capabilities, upcoming phases, detailed bug fix documentation (6 major issues resolved), testing status, and next actions
+**Last Updated**: 2025-10-15
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -75,6 +75,10 @@ Last Updated: 2025-10-14 (Late Evening Session - Branch 4_touchUp2 Complete)
 ### `/Users/why/repos/trivium/DATABASE_SETUP.md`
 **Description**: SQLx and SQLite configuration documentation covering migration file creation, Database module implementation, app initialization via Tauri setup hook, .env configuration, compile-time verification setup, and database file locations per platform
 **Last Updated**: 2025-10-12
+
+### `/Users/why/repos/trivium/SQLX_MIGRATION_GUIDE.md`
+**Description**: Comprehensive SQLx migration best practices guide preventing compilation errors and migration panics. Documents the golden rule (never modify applied migrations), proper schema change workflow, type mismatch solutions, datetime comparison fixes, recovery procedures for modified migrations, dev vs production database strategies, and real-world example from Trivium's migration checksum panic fix. Includes step-by-step checklist and quick reference commands
+**Last Updated**: 2025-10-15
 
 ### `/Users/why/repos/trivium/FRONTEND_SETUP.md`
 **Description**: Frontend dependencies installation documentation detailing Zustand (5.0), Lexical (0.37), shadcn/ui with Tailwind CSS v4, configuration files (components.json, tsconfig.json, vite.config.ts, index.css), CSS-based theme configuration using @theme directive, and path aliases setup
@@ -126,13 +130,13 @@ Last Updated: 2025-10-14 (Late Evening Session - Branch 4_touchUp2 Complete)
 
 ## Statistics
 
-**Total Documentation Files**: 23 markdown files
-**Total Lines of Documentation**: ~16,000+ lines
+**Total Documentation Files**: 24 markdown files
+**Total Lines of Documentation**: ~18,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 3 files
-- Setup & Configuration: 3 files
+- Setup & Configuration: 4 files (includes SQLx guide)
 - Feature-Specific: 3 files
 - Design System: 1 file
 - Debugging: 3 files
@@ -167,5 +171,5 @@ Last Updated: 2025-10-14 (Late Evening Session - Branch 4_touchUp2 Complete)
 ---
 
 **Index Maintained By**: AI Agents and Contributors
-**Index Version**: 1.0
-**Next Review**: 2025-11-14
+**Index Version**: 1.1
+**Next Review**: 2025-11-15

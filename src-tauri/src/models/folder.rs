@@ -1,15 +1,3 @@
-// Folder model
-//
-// Data structures for representing hierarchical folders in the application.
-//
-// Corresponds to the `folders` table in the database:
-// - id: UUID identifier (TEXT)
-// - name: Folder name
-// - parent_id: Optional parent folder ID for hierarchy
-// - created_at: Timestamp when folder was created
-// - updated_at: Last modification timestamp
-//
-
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 

@@ -35,3 +35,6 @@ export {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from './dropdown-menu'
+export { RadioGroup, RadioGroupItem } from './radio-group'
+export { Slider } from './slider'
+export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from './select'

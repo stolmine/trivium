@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id as \"id!\",\n            user_id as \"user_id!\",\n            scope_type,\n            scope_id,\n            date,\n            new_cards_seen as \"new_cards_seen!\",\n            review_cards_seen as \"review_cards_seen!\"\n        FROM daily_progress\n        WHERE user_id = ? AND scope_type = ? AND scope_id IS ? AND date = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "user_id!",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "scope_type",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "scope_id",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "date",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "new_cards_seen!",
+        "ordinal": 5,
+        "type_info": "Integer"
+      },
+      {
+        "name": "review_cards_seen!",
+        "ordinal": 6,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "33ce8532a3f7e73f1496dc89f9c3cefe92094fec86d0a18e387504b1f8446a30"
+}

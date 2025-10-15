@@ -124,11 +124,11 @@ export function LibraryPage() {
           {reviewStats && (
             <Button
               onClick={() => navigate('/review')}
-              disabled={reviewStats.due_count === 0}
+              disabled={(reviewStats.due_count ?? 0) === 0}
               variant="default"
-              aria-label={`Review ${reviewStats.due_count} due flashcard${reviewStats.due_count !== 1 ? 's' : ''}`}
+              aria-label={`Review ${reviewStats.due_count ?? 0} due flashcard${(reviewStats.due_count ?? 0) !== 1 ? 's' : ''}`}
             >
-              Review Cards ({reviewStats.due_count})
+              Review Cards ({reviewStats.due_count ?? 0})
             </Button>
           )}
           <Button onClick={handleImportText}>

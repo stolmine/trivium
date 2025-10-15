@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                INSERT INTO daily_progress (\n                    user_id, scope_type, scope_id, date,\n                    new_cards_seen, review_cards_seen\n                )\n                VALUES (?, ?, ?, ?, 0, 1)\n                ON CONFLICT(user_id, scope_type, scope_id, date)\n                DO UPDATE SET\n                    review_cards_seen = review_cards_seen + 1,\n                    updated_at = datetime('now')\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "8118d0a5921a3c7a5ea9fbe0277e587a141a165f807b956af345ce4dcd680f0e"
+}

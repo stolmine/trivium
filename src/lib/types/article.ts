@@ -47,6 +47,7 @@ export interface Text {
   accessDate?: string;
   doi?: string;
   isbn?: string;
+  folderId?: string | null;
 }
 
 export interface CreateTextRequest {

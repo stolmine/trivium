@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -13,6 +13,7 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   path: string;
+  shortcut?: string;
 }
 
 interface SidebarProps {
@@ -20,7 +21,8 @@ interface SidebarProps {
 }
 
 const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/', shortcut: 'Ctrl+1' },
+  { id: 'review', label: 'Review', icon: GraduationCap, path: '/review', shortcut: 'Ctrl+3' },
 ];
 
 const getSortLabel = (sortBy: SortOption): string => {
@@ -53,9 +55,14 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
 
   const handleCreateFolder = async () => {
     if (newFolderName.trim()) {
-      await createFolder(newFolderName.trim());
-      setNewFolderName('');
-      setShowCreateFolderDialog(false);
+      try {
+        await createFolder(newFolderName.trim());
+        setNewFolderName('');
+        setShowCreateFolderDialog(false);
+      } catch (error) {
+        // Error already logged in store, could add toast notification here
+        console.error('Error creating folder:', error);
+      }
     }
   };
 
@@ -102,7 +109,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
                   )}
                   aria-label={item.label}
                   aria-current={active ? 'page' : undefined}
-                  title={sidebarCollapsed ? item.label : undefined}
+                  title={sidebarCollapsed ? item.label : (item.shortcut ? `${item.label} (${item.shortcut})` : item.label)}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   {!sidebarCollapsed && <span>{item.label}</span>}
@@ -224,10 +231,10 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateFolderDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowCreateFolderDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+            <Button type="button" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
               Create
             </Button>
           </DialogFooter>

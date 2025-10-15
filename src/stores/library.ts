@@ -44,7 +44,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
         api.texts.list(),
       ]);
 
-      set({ folders, texts, isLoading: false });
+      set({ folders, texts, isLoading: false, error: null });
     } catch (error) {
       console.error('Failed to load library:', error);
       set({ error: String(error), isLoading: false });
@@ -81,7 +81,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }));
     } catch (error) {
       console.error('Failed to create folder:', error);
-      set({ error: String(error) });
+      throw error; // Let the caller handle the error
     }
   },
 
@@ -95,7 +95,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }));
     } catch (error) {
       console.error('Failed to rename folder:', error);
-      set({ error: String(error) });
+      throw error; // Let the caller handle the error
     }
   },
 
@@ -110,7 +110,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }));
     } catch (error) {
       console.error('Failed to delete folder:', error);
-      set({ error: String(error) });
+      throw error; // Let the caller handle the error
     }
   },
 
@@ -119,12 +119,12 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       await api.folders.moveText(textId, folderId);
       set((state) => ({
         texts: state.texts.map((text) =>
-          text.id === textId ? { ...text, folderId } as any : text
+          text.id === textId ? { ...text, folderId } : text
         ),
       }));
     } catch (error) {
       console.error('Failed to move text to folder:', error);
-      set({ error: String(error) });
+      throw error; // Let the caller handle the error
     }
   },
 
@@ -138,7 +138,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }));
     } catch (error) {
       console.error('Failed to rename text:', error);
-      set({ error: String(error) });
+      throw error; // Let the caller handle the error
     }
   },
 
@@ -150,7 +150,7 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       }));
     } catch (error) {
       console.error('Failed to delete text:', error);
-      set({ error: String(error) });
+      throw error; // Let the caller handle the error
     }
   },
 }));

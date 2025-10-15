@@ -42,9 +42,8 @@ export function buildTree(folders: Folder[], texts: Text[]): TreeNode[] {
       depth: 0,
     };
 
-    const folderId = (text as any).folderId;
-    if (folderId) {
-      const parentNode = folderMap.get(folderId);
+    if (text.folderId) {
+      const parentNode = folderMap.get(text.folderId);
       if (parentNode) {
         textNode.depth = parentNode.depth + 1;
         parentNode.children.push(textNode);

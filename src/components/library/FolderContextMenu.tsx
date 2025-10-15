@@ -35,22 +35,37 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
 
   const handleCreateSubfolder = async () => {
     if (newFolderName.trim()) {
-      await createFolder(newFolderName.trim(), folderId);
-      setNewFolderName('');
-      setShowCreateDialog(false);
+      try {
+        await createFolder(newFolderName.trim(), folderId);
+        setNewFolderName('');
+        setShowCreateDialog(false);
+      } catch (error) {
+        // Error already logged in store, could add toast notification here
+        console.error('Error creating subfolder:', error);
+      }
     }
   };
 
   const handleRename = async () => {
     if (renameFolderName.trim() && renameFolderName.trim() !== folderName) {
-      await renameFolder(folderId, renameFolderName.trim());
-      setShowRenameDialog(false);
+      try {
+        await renameFolder(folderId, renameFolderName.trim());
+        setShowRenameDialog(false);
+      } catch (error) {
+        // Error already logged in store, could add toast notification here
+        console.error('Error renaming folder:', error);
+      }
     }
   };
 
   const handleDelete = async () => {
-    await deleteFolder(folderId);
-    setShowDeleteDialog(false);
+    try {
+      await deleteFolder(folderId);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      // Error already logged in store, could add toast notification here
+      console.error('Error deleting folder:', error);
+    }
   };
 
   return (
@@ -97,10 +112,10 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateSubfolder} disabled={!newFolderName.trim()}>
+            <Button type="button" onClick={handleCreateSubfolder} disabled={!newFolderName.trim()}>
               Create
             </Button>
           </DialogFooter>
@@ -130,10 +145,10 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowRenameDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleRename} disabled={!renameFolderName.trim()}>
+            <Button type="button" onClick={handleRename} disabled={!renameFolderName.trim()}>
               Rename
             </Button>
           </DialogFooter>
@@ -152,10 +167,10 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+            <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            <Button type="button" variant="destructive" onClick={handleDelete}>
               Delete
             </Button>
           </DialogFooter>

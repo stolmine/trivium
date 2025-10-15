@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 5+ Complete ✅
+## Current Status: Phase 6 Complete ✅ + Critical Bug Fixes
 
-**Branch**: `main` (merged from `4_touchUp2`)
-**Last Updated**: 2025-10-14 (Late Evening)
+**Branch**: `5_reviewFilter`
+**Last Updated**: 2025-10-15 (Review Filtering, Bug Fixes, SQLx Migration Repair)
 
 ---
 
@@ -116,7 +116,10 @@
 18. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
 19. **Session Statistics**: Track unique cards completed vs total review actions
 20. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
-21. **Persistent State**: All data saved to database, persists across sessions
+21. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
+22. **Session Limits**: Configure cards per session (10-100 cards)
+23. **Live Filter Stats**: See due/new card counts update based on selected filter
+24. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -345,7 +348,60 @@
 
 ---
 
-### 📁 Phase 6: Future Enhancements
+### ✅ Phase 6: Review Filtering & Settings (Week 7) - COMPLETE
+**Completed**: 2025-10-15
+**Branch**: `5_reviewFilter`
+
+**Review Hub & Filtering**:
+- ✅ Review hub page with filter selection UI
+- ✅ Filter by "All Cards", "Specific Folder", or "Specific Text"
+- ✅ Folder dropdown with hierarchical folder tree
+- ✅ Session limit slider (10-100 cards per session)
+- ✅ Live stats display showing due/new card counts per filter
+- ✅ Dynamic button text showing actual cards to review
+- ✅ Button disabled when no cards due
+
+**Backend Filtering**:
+- ✅ `get_review_stats_filtered` command with ReviewFilter support
+- ✅ `get_due_cards_filtered` command with folder/text filtering
+- ✅ ReviewFilter type: global, folder, or text-specific
+- ✅ Folder-based filtering with recursive folder queries
+- ✅ Stats recalculated when filter changes
+
+**Frontend State Management**:
+- ✅ reviewConfig store with Zustand
+- ✅ Persistent filter selection (filterType, folderId, textId)
+- ✅ Session limit configuration
+- ✅ Auto-refresh stats when config changes
+- ✅ Pass filter through to review session via URL params
+
+**UI/UX**:
+- ✅ Clean radio button interface for filter selection
+- ✅ Conditional folder dropdown (only shown when folder filter selected)
+- ✅ Loading states during stats fetch
+- ✅ Error handling with fallback to 0 counts
+- ✅ Responsive layout with proper spacing
+- ✅ Accessibility with ARIA labels
+
+**Success Criteria Met**:
+- ✅ Can filter review sessions by folder or text
+- ✅ Stats update correctly based on selected filter
+- ✅ Session limits configurable per session
+- ✅ Review button shows accurate card count
+- ✅ All filters work correctly (global/folder/text)
+- ✅ Backend compiles without errors
+- ✅ Frontend TypeScript passes
+- ✅ No NaN values in stats display
+
+**Commits**:
+- Multiple commits on `5_reviewFilter` branch
+- Review filtering implementation
+- Bug fixes for library tree and NaN values
+- `5e19f01` - Fix migration checksums to resolve database initialization panic
+
+---
+
+### 📁 Phase 7: Future Enhancements
 **Status**: Not Started
 
 **Backend Tasks**:
@@ -453,16 +509,93 @@
 
 ## Technical Debt & Known Issues
 
+### Known Bugs (Fixed in Phase 6)
+- ✅ **FIXED**: Library tree not refreshing after folder creation
+  - **Issue**: Adding a folder via sidebar context menu didn't update the tree display
+  - **Cause**: `buildTree` was not wrapped in `useMemo` with proper dependencies
+  - **Fix**: Added `useMemo` with `[folders, sortedTexts]` dependencies in LibraryTree.tsx
+  - **Status**: Fixed in branch `5_reviewFilter`
+
+- ✅ **FIXED**: NaN values displayed in review hub and library page
+  - **Issue**: Stats showed "NaN cards due" instead of numbers
+  - **Cause**: Missing null coalescing when accessing potentially undefined stats properties
+  - **Fix**: Added `?? 0` fallback operators throughout review hub and library stats display
+  - **Status**: Fixed in branch `5_reviewFilter`
+
+- ✅ **FIXED**: "Error loading library" when adding folders
+  - **Issue**: Adding folders caused error state that hid entire library
+  - **Root Causes**:
+    1. Error state persistence in frontend (set global error instead of throwing)
+    2. Missing `folderId` field in TypeScript Text interface
+    3. Database schema mismatch (folders/texts `folder_id` type inconsistency)
+    4. Text model `source` field was non-nullable but database schema allowed NULL
+  - **Fixes Applied**:
+    - Changed folder operations to throw errors instead of setting global state
+    - Added `folderId?: string | null` to Text interface
+    - Fixed database migrations to use TEXT for folder IDs (UUID support)
+    - Changed Text struct `source` field from `String` to `Option<String>`
+  - **Status**: Fixed, Rust compilation successful
+
+- ✅ **FIXED**: Review hub shows 0 cards due despite new cards existing
+  - **Issue**: Due cards not detected even when newly created
+  - **Root Cause**: SQLite string comparison instead of datetime comparison in queries
+    - Cards stored with RFC3339 format: `"2025-10-15T05:52:05.201764+00:00"`
+    - Query used `WHERE due <= ?` (lexicographic string comparison fails)
+  - **Fix**: Updated all datetime comparisons to use `datetime()` function:
+    - Changed to `WHERE datetime(due) <= datetime(?)` in 10+ queries
+    - Updated in `get_due_cards`, `get_review_stats`, and all filtered variants
+  - **Files Modified**: `src-tauri/src/commands/review.rs`
+  - **Status**: Fixed, due cards now correctly detected
+
+- ✅ **FIXED**: Text options missing in read view
+  - **Issue**: No UI controls to rename or delete texts when viewing them
+  - **Root Cause**: Read page had no text management options
+  - **Fix**: Added dropdown menu with:
+    - Rename option with dialog (keyboard: Enter to confirm)
+    - Delete option with confirmation (warns about flashcard deletion)
+    - Three-dot menu icon in header
+    - Full keyboard and mouse access
+  - **Files Modified**: `src/routes/read/[id].tsx`
+  - **Status**: Fixed, text management fully functional
+
+- ✅ **FIXED**: Review hub only accessible when cards due
+  - **Issue**: No way to access review hub without due cards on dashboard
+  - **Root Cause**: Review hub locked behind conditional dashboard card
+  - **Fix**: Added permanent sidebar navigation:
+    - "Review" item with GraduationCap icon
+    - Keyboard shortcut: `Ctrl+3` (or `Cmd+3` on Mac)
+    - Always visible regardless of due cards
+  - **Files Modified**:
+    - `src/components/shell/Sidebar.tsx`
+    - `src/hooks/useKeyboardShortcuts.ts`
+  - **Status**: Fixed, always accessible from sidebar
+
+- ✅ **FIXED**: Thread panic on startup - "migration was previously applied but has been modified"
+  - **Issue**: Application crashed with migration checksum mismatch error
+  - **Root Cause**: Migration files modified after being applied to databases
+    - SQLx uses SHA-384 checksums to detect tampering
+    - Checksums in `_sqlx_migrations` table didn't match current files
+    - Both production and dev databases affected
+  - **Fix**: Updated migration checksums in both databases:
+    - Computed current SHA-384 checksums for all three migrations
+    - Backed up both databases before changes
+    - Updated checksums in `_sqlx_migrations` table via SQL
+    - Verified application startup successful
+    - Committed migration files to Git
+  - **Prevention**: Created SQLx best practices guide (see SQLX_MIGRATION_GUIDE.md)
+  - **Key Learning**: Never modify migrations after they're applied - always create new ones
+  - **Status**: Fixed, app starts cleanly without errors
+
 ### Database
-- ⚠️ FSRS crate has dependency conflict with SQLx (both link sqlite3)
-  - **Impact**: Can't use FSRS crate directly
-  - **Options**: Manual implementation, switch to rusqlite, or find compatible version
-  - **Timeline**: Must resolve in Phase 3
+- ✅ FSRS crate dependency conflict resolved via manual implementation
+  - **Resolution**: Implemented FSRS-5 algorithm manually in Rust
+  - **Status**: Complete and working in Phase 3
 
 ### Frontend
 - ✅ No significant issues - production ready
 - ✅ Context menu implemented with shadcn/ui components
 - ✅ Clean, optimized code with debug logging removed
+- ✅ Proper null safety with TypeScript's optional chaining
 
 ### Backend
 - ℹ️ One unused public API method warning (`get_unread_ranges` in RangeCalculator)
@@ -535,26 +668,30 @@
 ## Next Actions
 
 ### Immediate (Now):
-1. ✅ Test Phase 2 features manually in dev mode
-2. ✅ Verify flashcard creation works end-to-end
-3. ✅ Commit Phase 2 implementation - PENDING
-4. Update documentation with Phase 2 details
+1. ✅ Test Phase 6 features in dev mode
+2. ✅ Verify review filtering works with folders
+3. ✅ Fix library tree refresh bug
+4. ✅ Fix NaN values in stats display
+5. ✅ Update documentation with Phase 6 completion
+6. Merge `5_reviewFilter` branch to `main`
 
 ### Short Term (Next):
-1. **Ready to start Phase 3** (Review System)
-2. Resolve FSRS dependency conflict (manual implementation)
-3. Implement FSRS scheduling algorithm
-4. Build review session UI
+1. **Ready to start Phase 7** (Future Enhancements)
+2. Consider Wikipedia API integration for auto-fetch
+3. Plan PDF/EPUB import parsing
+4. Explore additional polish and UX improvements
 
 ### Medium Term (Next 2 Weeks):
-1. Complete Phase 3 (Review system with FSRS)
-2. Begin Phase 4 (Folder organization)
-3. Test full learning loop end-to-end
+1. Implement Wikipedia integration
+2. Add PDF/EPUB import support
+3. Additional UI/UX refinements
+4. Performance testing and optimization
 
 ### Long Term (Next Month):
-1. Complete core learning loop (Phases 2-3)
-2. Add folder organization (Phase 4)
-3. Polish and optimize
+1. Complete polish and enhancement phase
+2. Comprehensive testing across platforms
+3. Performance optimization
+4. Prepare for release/distribution
 
 ---
 
@@ -623,5 +760,5 @@
 
 ---
 
-**Last Updated**: 2025-10-12
-**Next Review**: After Phase 2 completion
+**Last Updated**: 2025-10-15
+**Next Review**: After Phase 7 planning

@@ -26,13 +26,13 @@ const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   if (!open) return null
 
   const dialogContent = (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       <div
-        className="fixed inset-0 bg-black opacity-50"
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)' }}
+        className="fixed inset-0 bg-black opacity-50 pointer-events-auto"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1 }}
         onClick={() => onOpenChange?.(false)}
       />
-      <div className="relative z-[10000]" style={{ position: 'relative', zIndex: 10000 }}>
+      <div className="relative z-[10000] pointer-events-auto" style={{ position: 'relative', zIndex: 10 }}>
         {children}
       </div>
     </div>

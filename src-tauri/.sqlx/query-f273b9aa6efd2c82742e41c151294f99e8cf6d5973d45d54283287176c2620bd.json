@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO study_limits (\n                user_id, daily_new_cards, daily_reviews,\n                per_text_new_limit, per_text_review_limit,\n                per_folder_new_limit, per_folder_review_limit,\n                updated_at\n            )\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "f273b9aa6efd2c82742e41c151294f99e8cf6d5973d45d54283287176c2620bd"
+}

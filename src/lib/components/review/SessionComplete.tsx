@@ -1,23 +1,54 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useReviewStore } from '../../stores/review'
 import { Button } from '../ui'
+import { api } from '../../utils/tauri'
 
 export function SessionComplete() {
-  const { sessionStats, resetSession, loadDueCards } = useReviewStore()
+  const { sessionStats, resetSession, loadDueCards, currentFilter } = useReviewStore()
   const navigate = useNavigate()
+  const [filterDisplayName, setFilterDisplayName] = useState<string>('')
 
   const { totalReviews, uniqueCards, againCount, hardCount, goodCount, easyCount, startTime } = sessionStats
   const duration = Math.floor((Date.now() - startTime.getTime()) / 1000 / 60)
 
+  useEffect(() => {
+    const loadFilterName = async () => {
+      if (!currentFilter || currentFilter.type === 'global') {
+        setFilterDisplayName('')
+        return
+      }
+
+      if (currentFilter.type === 'text') {
+        try {
+          const text = await api.texts.get(currentFilter.textId)
+          setFilterDisplayName(text.title)
+        } catch {
+          setFilterDisplayName(`Text #${currentFilter.textId}`)
+        }
+      } else if (currentFilter.type === 'folder') {
+        setFilterDisplayName('Folder')
+      }
+    }
+
+    loadFilterName()
+  }, [currentFilter])
+
   const handleReviewMore = async () => {
     resetSession()
-    await loadDueCards()
+    await loadDueCards(currentFilter || undefined)
   }
 
   return (
     <div className="flex items-center justify-center h-full bg-background py-12">
       <div className="max-w-md w-full p-8 bg-card rounded-lg shadow-lg border">
         <h1 className="text-3xl font-bold mb-6 text-center">Session Complete!</h1>
+
+        {filterDisplayName && (
+          <p className="text-center text-muted-foreground mb-6">
+            You reviewed: {filterDisplayName}
+          </p>
+        )}
 
         <div className="space-y-4 mb-8">
           <StatRow label="Cards completed" value={uniqueCards} />
@@ -40,11 +71,19 @@ export function SessionComplete() {
           </Button>
 
           <Button
+            onClick={() => navigate('/review')}
+            variant="outline"
+            className="w-full py-3"
+          >
+            Choose Different Collection
+          </Button>
+
+          <Button
             onClick={() => navigate('/')}
             variant="outline"
             className="w-full py-3"
           >
-            Back to Dashboard
+            Return to Dashboard
           </Button>
         </div>
       </div>

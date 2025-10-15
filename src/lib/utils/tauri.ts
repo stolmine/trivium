@@ -7,7 +7,10 @@ import type {
   Text,
   CreateTextRequest,
   ReadRange,
-  Paragraph
+  Paragraph,
+  ReviewFilter,
+  ReviewStats,
+  LimitStatus
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -110,14 +113,27 @@ export const api = {
     getDueCards: async (limit: number): Promise<Flashcard[]> => {
       return await invoke('get_due_cards', { limit: limit });
     },
-    gradeCard: async (flashcardId: number, rating: number): Promise<void> => {
+    gradeCard: async (flashcardId: number, rating: number, filter?: ReviewFilter): Promise<void> => {
       return await invoke('grade_card', {
         flashcardId: flashcardId,
-        rating: rating
+        rating: rating,
+        filter: filter || null
       });
     },
     getStats: async (): Promise<{ due_count: number; new_count: number; learning_count: number; review_count: number }> => {
       return await invoke('get_review_stats');
+    },
+    getDueCardsFiltered: async (params: {
+      filter?: ReviewFilter,
+      limit?: number
+    }): Promise<Flashcard[]> => {
+      return await invoke('get_due_cards_filtered', params);
+    },
+    getReviewStatsFiltered: async (filter?: ReviewFilter): Promise<ReviewStats> => {
+      return await invoke('get_review_stats_filtered', { filter });
+    },
+    getLimitStatus: async (filter?: ReviewFilter): Promise<LimitStatus> => {
+      return await invoke('get_limit_status', { filter });
     },
   },
   dashboard: {

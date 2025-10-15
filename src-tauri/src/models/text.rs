@@ -23,7 +23,7 @@ use sqlx::FromRow;
 pub struct Text {
     pub id: i64,
     pub title: String,
-    pub source: String,
+    pub source: Option<String>,
     pub source_url: Option<String>,
     pub content: String,
     pub content_length: i64,

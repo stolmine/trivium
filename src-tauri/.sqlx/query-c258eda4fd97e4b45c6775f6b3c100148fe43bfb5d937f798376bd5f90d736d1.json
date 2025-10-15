@@ -36,12 +36,12 @@
       {
         "name": "ingested_at: _",
         "ordinal": 6,
-        "type_info": "Datetime"
+        "type_info": "Text"
       },
       {
         "name": "updated_at: _",
         "ordinal": 7,
-        "type_info": "Datetime"
+        "type_info": "Text"
       },
       {
         "name": "metadata",
@@ -90,7 +90,7 @@
     "nullable": [
       false,
       false,
-      false,
+      true,
       true,
       false,
       false,

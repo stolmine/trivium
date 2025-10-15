@@ -82,6 +82,13 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       category: 'navigation',
     },
     {
+      key: '3',
+      ctrlKey: true,
+      action: handleNavigation('/review'),
+      description: 'Go to Review',
+      category: 'navigation',
+    },
+    {
       key: 'n',
       ctrlKey: true,
       action: handleNavigation('/ingest'),

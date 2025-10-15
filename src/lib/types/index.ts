@@ -7,7 +7,9 @@ export type {
   ClozeData,
   ReviewResult,
   ReviewQuality,
-  FlashcardPreview
+  FlashcardPreview,
+  ReviewFilter
 } from './flashcard';
-export type { DailyProgress, ReadingStats, ReviewStats, UserProgress } from './progress';
+export type { DailyProgress, ReadingStats, UserProgress } from './progress';
 export type { ReadRange, Paragraph, ExcludedRange } from './reading';
+export type { LimitStatus, ReviewStats } from './review';

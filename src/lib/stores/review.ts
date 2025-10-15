@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Flashcard, ReviewQuality } from '../types';
+import type { Flashcard, ReviewQuality, ReviewFilter } from '../types';
 import { api } from '../utils/tauri';
 
 export interface ReviewState {
@@ -7,6 +7,7 @@ export interface ReviewState {
   currentIndex: number;
   currentCard: Flashcard | null;
   showAnswer: boolean;
+  currentFilter: ReviewFilter | null;
   sessionStats: {
     totalReviews: number;
     uniqueCards: number;
@@ -18,7 +19,7 @@ export interface ReviewState {
   };
   isLoading: boolean;
   error: string | null;
-  loadDueCards: () => Promise<void>;
+  loadDueCards: (filter?: ReviewFilter, limit?: number) => Promise<void>;
   gradeCard: (rating: ReviewQuality) => Promise<void>;
   toggleAnswer: () => void;
   nextCard: () => void;
@@ -30,6 +31,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   currentIndex: 0,
   currentCard: null,
   showAnswer: false,
+  currentFilter: null,
   isLoading: false,
   error: null,
   sessionStats: {
@@ -42,14 +44,17 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     startTime: new Date(),
   },
 
-  loadDueCards: async () => {
+  loadDueCards: async (filter, limit = 20) => {
     set({ isLoading: true, error: null });
     try {
-      const cards = await api.review.getDueCards(20);
+      const cards = filter
+        ? await api.review.getDueCardsFiltered({ filter, limit })
+        : await api.review.getDueCards(limit);
       set({
         queue: cards,
         currentIndex: 0,
         currentCard: cards[0] || null,
+        currentFilter: filter || null,
         isLoading: false,
         sessionStats: {
           totalReviews: 0,
@@ -71,13 +76,12 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   gradeCard: async (rating: ReviewQuality) => {
-    const { currentCard, sessionStats, queue } = get();
+    const { currentCard, sessionStats, queue, currentFilter } = get();
     if (!currentCard) return;
 
     set({ isLoading: true });
     try {
-      // Convert frontend rating (0-3) to backend rating (1-4)
-      await api.review.gradeCard(currentCard.id, rating + 1);
+      await api.review.gradeCard(currentCard.id, rating + 1, currentFilter || undefined);
 
       const statKey = ['againCount', 'hardCount', 'goodCount', 'easyCount'][rating] as keyof typeof sessionStats;
       set({
@@ -137,6 +141,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       currentIndex: 0,
       currentCard: null,
       showAnswer: false,
+      currentFilter: null,
       isLoading: false,
       error: null,
       sessionStats: {
