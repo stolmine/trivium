@@ -1,7 +1,13 @@
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
+use regex::Regex;
 use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
+
+static REFERENCE_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\[\d+\]").unwrap()
+});
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WikipediaArticle {
@@ -86,7 +92,8 @@ pub async fn fetch_wikipedia_article(url: &str) -> Result<WikipediaArticle> {
 
     let html_content = &api_response.parse.text.content;
     let plain_text = html_to_plain_text(html_content)?;
-    let cleaned_text = clean_empty_sections(&plain_text);
+    let text_without_refs = strip_reference_indicators(&plain_text);
+    let cleaned_text = clean_empty_sections(&text_without_refs);
 
     Ok(WikipediaArticle {
         title: api_response.parse.title.clone(),
@@ -207,6 +214,10 @@ fn get_text_with_links(node: scraper::element_ref::ElementRef) -> String {
 
 fn matches_selector(node: scraper::element_ref::ElementRef, selector: &Selector) -> bool {
     selector.matches(&node)
+}
+
+fn strip_reference_indicators(text: &str) -> String {
+    REFERENCE_REGEX.replace_all(text, "").to_string()
 }
 
 fn clean_empty_sections(text: &str) -> String {
@@ -375,5 +386,47 @@ mod tests {
         let text = "Text\n\n\n\n\nMore text";
         let cleaned = clean_empty_sections(text);
         assert!(!cleaned.contains("\n\n\n"));
+    }
+
+    #[test]
+    fn test_strip_reference_indicators_single_digit() {
+        let text = "This is a sentence with a reference[1] here.";
+        let stripped = strip_reference_indicators(text);
+        assert_eq!(stripped, "This is a sentence with a reference here.");
+    }
+
+    #[test]
+    fn test_strip_reference_indicators_multiple_digits() {
+        let text = "Reference[123] and another[4567] reference.";
+        let stripped = strip_reference_indicators(text);
+        assert_eq!(stripped, "Reference and another reference.");
+    }
+
+    #[test]
+    fn test_strip_reference_indicators_multiple_refs() {
+        let text = "First[1] second[2] third[3] text.";
+        let stripped = strip_reference_indicators(text);
+        assert_eq!(stripped, "First second third text.");
+    }
+
+    #[test]
+    fn test_strip_reference_indicators_preserves_non_numeric() {
+        let text = "This [note] and [abc] should be preserved.";
+        let stripped = strip_reference_indicators(text);
+        assert_eq!(stripped, "This [note] and [abc] should be preserved.");
+    }
+
+    #[test]
+    fn test_strip_reference_indicators_preserves_section_headers() {
+        let text = "== Section Header ==\nContent with reference[1] here.";
+        let stripped = strip_reference_indicators(text);
+        assert_eq!(stripped, "== Section Header ==\nContent with reference here.");
+    }
+
+    #[test]
+    fn test_strip_reference_indicators_no_refs() {
+        let text = "This text has no references.";
+        let stripped = strip_reference_indicators(text);
+        assert_eq!(stripped, "This text has no references.");
     }
 }

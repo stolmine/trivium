@@ -14,6 +14,23 @@ interface TextSegment {
   isExcluded: boolean
 }
 
+function formatWikipediaHeaders(text: string): string {
+  const lines = text.split('\n')
+  const formattedLines = lines.map(line => {
+    const trimmedLine = line.trim()
+    const headerMatch = trimmedLine.match(/^(={2,})\s*(.+?)\s*\1$/)
+
+    if (headerMatch) {
+      const headerText = headerMatch[2].trim()
+      return line.replace(trimmedLine, `<strong>${headerText}</strong>`)
+    }
+
+    return line
+  })
+
+  return formattedLines.join('\n')
+}
+
 export function parseExcludedRanges(content: string): { cleanedContent: string; excludedRanges: ExcludedRange[] } {
   const excludedRanges: ExcludedRange[] = []
   let cleanedContent = content
@@ -112,9 +129,8 @@ export function ReadHighlighter({ content, readRanges, className }: ReadHighligh
           key={idx}
           className={segment.isExcluded ? 'excluded-text' : ''}
           style={segment.isRead ? { backgroundColor: 'black', color: 'white' } : {}}
-        >
-          {segment.text}
-        </span>
+          dangerouslySetInnerHTML={{ __html: formatWikipediaHeaders(segment.text) }}
+        />
       ))}
     </div>
   )
