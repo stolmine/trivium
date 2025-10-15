@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 6 Complete ✅ + Critical Bug Fixes (All Resolved)
+## Current Status: Phase 6.5 Complete ✅ - Wikipedia Article Parsing Integration
 
 **Branch**: `5_reviewFilter`
-**Last Updated**: 2025-10-15 (Review Filtering, 10 Bug Fixes, SQLx Migration Repair)
+**Last Updated**: 2025-10-15 (Wikipedia Parsing, Review Filtering, Bug Fixes Complete)
 
 ---
 
@@ -97,29 +97,30 @@
 
 ### What Users Can Do Now:
 1. **Import Text**: Paste or type text with metadata (title, author, publisher, etc.)
-2. **Browse Library**: View all imported texts with reading progress percentages
-3. **Organize Content**: Create folders and organize texts hierarchically
-4. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
-5. **Read Content**: Open and read full text articles with visual progress tracking
-6. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
-7. **Visual Feedback**: Read text appears as white on black (inverse styling)
-8. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
-9. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
-10. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
-11. **Preview Cards**: Live preview with complete sentence context
-12. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
-13. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
-14. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
-15. **Review Cards**: Spaced repetition review system with FSRS-6 algorithm
-16. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
-17. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
-18. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
-19. **Session Statistics**: Track unique cards completed vs total review actions
-20. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
-21. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
-22. **Session Limits**: Configure cards per session (10-100 cards)
-23. **Live Filter Stats**: See due/new card counts update based on selected filter
-24. **Persistent State**: All data saved to database, persists across sessions
+2. **Import from Wikipedia**: Paste Wikipedia URLs and auto-fetch clean article content
+3. **Browse Library**: View all imported texts with reading progress percentages
+4. **Organize Content**: Create folders and organize texts hierarchically
+5. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
+6. **Read Content**: Open and read full text articles with visual progress tracking
+7. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+8. **Visual Feedback**: Read text appears as white on black (inverse styling)
+9. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
+10. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
+11. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
+12. **Preview Cards**: Live preview with complete sentence context
+13. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
+14. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
+15. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
+16. **Review Cards**: Spaced repetition review system with FSRS-6 algorithm
+17. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
+18. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+19. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+20. **Session Statistics**: Track unique cards completed vs total review actions
+21. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
+22. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
+23. **Session Limits**: Configure cards per session (10-100 cards)
+24. **Live Filter Stats**: See due/new card counts update based on selected filter
+25. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -401,6 +402,84 @@
 
 ---
 
+### ✅ Phase 6.5: Wikipedia Article Parsing Integration - COMPLETE
+**Completed**: 2025-10-15
+**Branch**: `5_reviewFilter`
+
+**Wikipedia Integration**:
+- ✅ Wikipedia URL field in ingest form with "Fetch Article" button
+- ✅ Automatic article fetching from Wikipedia Parse API
+- ✅ HTML parsing using scraper crate with CSS selector-based content extraction
+- ✅ Clean plain text extraction while preserving link text content
+- ✅ Automatic metadata population (title, publisher, publication date, source URL)
+- ✅ Smart content filtering (removes infoboxes, tables, references, navigation elements)
+- ✅ Section heading preservation with proper text structure
+- ✅ Instrumentation list preservation in music-related articles
+- ✅ Error handling with user-friendly messages
+
+**Backend Implementation**:
+- ✅ Complete rewrite of `src-tauri/src/services/wikipedia.rs` with HTML parsing
+  - Wikipedia Parse API integration for fetching article HTML
+  - CSS selector-based extraction using `scraper` crate
+  - Robust content filtering (removes `.infobox`, `.navbox`, `.vertical-navbox`, `.sidebar`, etc.)
+  - Section heading detection and preservation
+  - Table removal with instrumentation list exception (`.toccolours` tables preserved)
+  - Link text extraction while removing reference links
+  - Clean whitespace normalization
+- ✅ New `src-tauri/src/commands/wikipedia.rs` command module
+  - `fetch_wikipedia_article` Tauri command
+  - Error handling with proper Result types
+  - Integration with Wikipedia service layer
+- ✅ Added `scraper = "0.20"` dependency to `Cargo.toml`
+
+**Frontend Implementation**:
+- ✅ Updated `src/routes/ingest/index.tsx` with Wikipedia URL field
+  - New input field for Wikipedia URLs above main content area
+  - "Fetch Article" button with loading states
+  - Auto-population of all form fields (content, title, source, publisher, publicationDate)
+  - User-friendly error messages for invalid URLs or fetch failures
+- ✅ New `src/lib/types/wikipedia.ts` type definitions
+  - `WikipediaArticle` interface matching backend struct
+- ✅ Updated `src/lib/utils/tauri.ts` API wrappers
+  - Added `wikipedia.fetch` method for invoking Tauri command
+
+**Success Criteria Met**:
+- ✅ Can paste Wikipedia URLs into ingest form
+- ✅ Article content fetches automatically with button click
+- ✅ Clean text extracted without HTML markup or unwanted elements
+- ✅ Metadata auto-populated from Wikipedia article data
+- ✅ Section headings preserved in final text
+- ✅ Link text content preserved (not removed)
+- ✅ Tables removed except instrumentation lists
+- ✅ User-friendly error handling for invalid URLs
+- ✅ Backend compiles without errors
+- ✅ Frontend TypeScript passes
+
+**Key Implementation Details**:
+- Uses Wikipedia Parse API endpoint: `https://en.wikipedia.org/w/api.php?action=parse`
+- HTML parsing with `scraper` crate (selector-based, robust)
+- CSS selectors for content filtering:
+  - Removes: `.infobox`, `.navbox`, `.sidebar`, `.reference`, `.mw-editsection`, etc.
+  - Preserves: `.toccolours` tables (instrumentation lists), section headings, body text
+- Publisher always set to "Wikipedia"
+- Publication date set to current date (Wikipedia articles are living documents)
+- Source URL preserved for attribution and future reference
+
+**Files Modified**:
+- `src-tauri/src/services/wikipedia.rs` (complete rewrite - 150+ lines)
+- `src-tauri/src/commands/wikipedia.rs` (new file - 20 lines)
+- `src-tauri/src/commands/mod.rs` (added wikipedia module export)
+- `src-tauri/src/main.rs` (registered fetch_wikipedia_article command)
+- `src-tauri/Cargo.toml` (added scraper dependency)
+- `src/routes/ingest/index.tsx` (added Wikipedia URL field and fetch logic - 40+ lines)
+- `src/lib/utils/tauri.ts` (added wikipedia.fetch method)
+- `src/lib/types/wikipedia.ts` (new file - type definitions)
+
+**Commits**:
+- Wikipedia parsing integration commits on `5_reviewFilter` branch
+
+---
+
 ### 📁 Phase 7: Future Enhancements
 **Status**: Not Started
 
@@ -484,11 +563,11 @@
 ---
 
 ### ✨ Phase 7: Polish & Enhancement (Week 9-10)
-**Status**: Not Started
+**Status**: Partially Complete
 **Estimated Effort**: 10-14 days
 
 **Features**:
-- [ ] Wikipedia API integration (auto-fetch)
+- [x] Wikipedia API integration (auto-fetch) - COMPLETE (Phase 6.5)
 - [ ] PDF/EPUB import parsing
 - [ ] MLA metadata parsing from citation string
 - [ ] Drag-and-drop for folders
@@ -500,7 +579,7 @@
 - [ ] Performance optimizations
 
 **Success Criteria**:
-- [ ] Wikipedia auto-fetch working
+- [x] Wikipedia auto-fetch working - COMPLETE
 - [ ] PDF/EPUB import functional
 - [ ] Professional polish throughout
 - [ ] No major UX friction
@@ -684,16 +763,17 @@
 3. ✅ Fix library tree refresh bug
 4. ✅ Fix NaN values in stats display
 5. ✅ Update documentation with Phase 6 completion
-6. Merge `5_reviewFilter` branch to `main`
+6. ✅ Implement Wikipedia article parsing integration
+7. Merge `5_reviewFilter` branch to `main`
 
 ### Short Term (Next):
 1. **Ready to start Phase 7** (Future Enhancements)
-2. Consider Wikipedia API integration for auto-fetch
+2. ✅ Wikipedia API integration complete
 3. Plan PDF/EPUB import parsing
 4. Explore additional polish and UX improvements
 
 ### Medium Term (Next 2 Weeks):
-1. Implement Wikipedia integration
+1. ✅ Wikipedia integration complete
 2. Add PDF/EPUB import support
 3. Additional UI/UX refinements
 4. Performance testing and optimization
