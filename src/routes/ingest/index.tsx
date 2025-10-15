@@ -8,8 +8,9 @@ import {
   Textarea,
   Label,
 } from '../../lib/components/ui'
-import { ChevronLeft, X } from 'lucide-react'
+import { ChevronLeft, X, Loader2 } from 'lucide-react'
 import { useTextHistory } from '../../hooks/useTextHistory'
+import { api } from '../../lib/utils/tauri'
 
 export function IngestPage() {
   const navigate = useNavigate()
@@ -27,6 +28,31 @@ export function IngestPage() {
   const [publisher, setPublisher] = useState('')
   const { createText, isLoading } = useReadingStore()
   const { loadLibrary } = useLibraryStore()
+  const [wikipediaUrl, setWikipediaUrl] = useState('')
+  const [isFetching, setIsFetching] = useState(false)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+
+  const handleFetchWikipedia = async () => {
+    if (!wikipediaUrl.trim()) return
+
+    setIsFetching(true)
+    setFetchError(null)
+
+    try {
+      const article = await api.wikipedia.fetch(wikipediaUrl)
+
+      setTitle(article.title)
+      setContentImmediate(article.content)
+      setPublisher('Wikipedia')
+      setPublicationDate(article.timestamp.split('T')[0])
+      setAuthor('')
+    } catch (error) {
+      console.error('Failed to fetch Wikipedia article:', error)
+      setFetchError(error instanceof Error ? error.message : 'Failed to fetch Wikipedia article')
+    } finally {
+      setIsFetching(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -35,7 +61,8 @@ export function IngestPage() {
       await createText({
         title,
         content,
-        source: 'paste',
+        source: wikipediaUrl ? 'wikipedia' : 'paste',
+        sourceUrl: wikipediaUrl || undefined,
         author: author || undefined,
         publicationDate: publicationDate || undefined,
         publisher: publisher || undefined,
@@ -150,6 +177,40 @@ export function IngestPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-6">
                 <h2 className="text-lg font-semibold mb-4">Metadata</h2>
+
+                <div className="space-y-2">
+                  <Label htmlFor="wikipediaUrl">Wikipedia URL (optional)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="wikipediaUrl"
+                      value={wikipediaUrl}
+                      onChange={(e) => setWikipediaUrl(e.target.value)}
+                      placeholder="https://en.wikipedia.org/wiki/..."
+                      disabled={isLoading || isFetching}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleFetchWikipedia}
+                      disabled={isLoading || isFetching || !wikipediaUrl.trim()}
+                      variant="outline"
+                    >
+                      {isFetching ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        </>
+                      ) : (
+                        'Fetch Article'
+                      )}
+                    </Button>
+                  </div>
+                  {fetchError && (
+                    <p className="text-sm text-destructive">{fetchError}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Paste a Wikipedia URL and click "Fetch Article" to auto-fill the form, or manually enter text below.
+                  </p>
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="title">

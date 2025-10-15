@@ -3,3 +3,4 @@ pub mod reading;
 pub mod flashcards;
 pub mod review;
 pub mod folder;
+pub mod wikipedia;

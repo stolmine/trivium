@@ -10,7 +10,8 @@ import type {
   Paragraph,
   ReviewFilter,
   ReviewStats,
-  LimitStatus
+  LimitStatus,
+  WikipediaArticle
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -162,6 +163,11 @@ export const api = {
     },
     calculateProgress: async (folderId: string): Promise<number> => {
       return await invoke('calculate_folder_progress', { folderId });
+    },
+  },
+  wikipedia: {
+    fetch: async (url: string): Promise<WikipediaArticle> => {
+      return await invoke('fetch_wikipedia_article', { url });
     },
   },
 };

@@ -100,7 +100,9 @@
       "Bash(shasum:*)",
       "Bash(timeout 30 npm run tauri dev:*)",
       "Bash(pkill:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "WebFetch(domain:www.mediawiki.org)",
+      "WebFetch(domain:stackoverflow.com)"
     ],
     "deny": [],
     "ask": []
