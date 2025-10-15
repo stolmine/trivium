@@ -70,6 +70,11 @@ export function ReviewHubPage() {
     return folder?.name || folderId;
   };
 
+  const getTextName = (textId: number): string => {
+    const text = texts.find(t => t.id === textId);
+    return text?.title || textId.toString();
+  };
+
   const handleStartReview = () => {
     const filter = buildFilter();
     const params = new URLSearchParams({
@@ -147,7 +152,9 @@ export function ReviewHubPage() {
                         onValueChange={(value) => setText(parseInt(value))}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select text..." />
+                          <SelectValue placeholder="Select text...">
+                            {config.textId ? getTextName(config.textId) : "Select text..."}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {texts.map(text => (

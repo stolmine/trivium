@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 6 Complete ✅ + Critical Bug Fixes
+## Current Status: Phase 6 Complete ✅ + Critical Bug Fixes (All Resolved)
 
 **Branch**: `5_reviewFilter`
-**Last Updated**: 2025-10-15 (Review Filtering, Bug Fixes, SQLx Migration Repair)
+**Last Updated**: 2025-10-15 (Review Filtering, 10 Bug Fixes, SQLx Migration Repair)
 
 ---
 
@@ -585,6 +585,17 @@
   - **Prevention**: Created SQLx best practices guide (see SQLX_MIGRATION_GUIDE.md)
   - **Key Learning**: Never modify migrations after they're applied - always create new ones
   - **Status**: Fixed, app starts cleanly without errors
+
+- ✅ **FIXED**: Text dropdown shows blank after selection
+  - **Issue**: Text selection dropdown in review config showed nothing after selecting a text
+  - **Root Cause**: SelectValue component not displaying custom content for selected text
+    - Same issue as folder dropdown had initially
+    - Missing getTextName() helper function
+  - **Fix**: Applied same pattern as folder dropdown:
+    - Added getTextName() helper to lookup text title from ID
+    - Modified SelectValue to display text name using children prop
+  - **Files Modified**: `src/routes/review/index.tsx`
+  - **Status**: Fixed, text dropdown now shows human-readable titles
 
 ### Database
 - ✅ FSRS crate dependency conflict resolved via manual implementation

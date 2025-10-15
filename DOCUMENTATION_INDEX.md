@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-15 (Phase 6 Complete + Critical Bug Fixes + SQLx Migration Repair)
+Last Updated: 2025-10-15 (Phase 6 Complete + 10 Critical Bug Fixes + SQLx Migration Repair)
 
 ---
 
@@ -53,7 +53,7 @@ Last Updated: 2025-10-15 (Phase 6 Complete + Critical Bug Fixes + SQLx Migration
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings + Critical Bug Fixes), current capabilities, upcoming phases, detailed bug fix documentation (6 major issues resolved), testing status, and next actions
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings + 10 Critical Bug Fixes), current capabilities, upcoming phases, detailed bug fix documentation (10 major issues resolved), testing status, and next actions
 **Last Updated**: 2025-10-15
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
