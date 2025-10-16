@@ -44,7 +44,7 @@ export function FolderSelect({ value, onChange, folders }: FolderSelectProps) {
   const displayValue = value === null
     ? '(Root - No folder)'
     : selectedFolder
-      ? `${'  '.repeat(selectedFolder.depth)}${selectedFolder.depth > 0 ? '→ ' : ''}${selectedFolder.name}`
+      ? `${'  '.repeat(selectedFolder.depth)}${'→'.repeat(selectedFolder.depth)}${selectedFolder.depth > 0 ? ' ' : ''}${selectedFolder.name}`
       : 'Select a folder...'
 
   return (
@@ -62,7 +62,8 @@ export function FolderSelect({ value, onChange, folders }: FolderSelectProps) {
         {flatFolders.map((folder) => (
           <SelectItem key={folder.id} value={folder.id}>
             {'  '.repeat(folder.depth)}
-            {folder.depth > 0 && '→ '}
+            {'→'.repeat(folder.depth)}
+            {folder.depth > 0 && ' '}
             {folder.name}
           </SelectItem>
         ))}

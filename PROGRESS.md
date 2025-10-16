@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 10 Complete ✅ - Library Search + Folder Selection in Ingest
+## Current Status: Phase 10 Complete ✅ - Library Search + Folder Selection + Post-Phase 10 Improvements
 
 **Branch**: `9_features`
-**Last Updated**: 2025-10-16 (Phase 10: Library Search with keyboard navigation + Folder selection during text import)
+**Last Updated**: 2025-10-16 (Phase 10: Library Search with keyboard navigation + Folder selection during text import + Hierarchical folder selection improvements)
 
 ---
 
@@ -122,9 +122,11 @@
 24. **Session Statistics**: Track unique cards completed vs total review actions
 25. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
 26. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
-27. **Session Limits**: Configure cards per session (10-100 cards)
-28. **Live Filter Stats**: See due/new card counts update based on selected filter
-29. **Persistent State**: All data saved to database, persists across sessions
+27. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
+28. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
+29. **Session Limits**: Configure cards per session (10-100 cards)
+30. **Live Filter Stats**: See due/new card counts update based on selected filter
+31. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -661,6 +663,119 @@
 - `6a35073` - Implement Phase 8 Polish: UX improvements and missing features (9 polish fixes)
 - `793bb4d` - Fix sidebar progress updates with cache invalidation listener system
 - `035542a` - Fix folder progress updates in sidebar by invalidating folder cache
+
+---
+
+### ✅ Phase 9: Text Search Feature (Branch 9_features) - COMPLETE
+**Completed**: 2025-10-16
+**Branch**: `9_features`
+
+**Text Search Implementation**:
+- ✅ Real-time in-document search with match highlighting (yellow/orange)
+- ✅ Keyboard shortcuts (Ctrl+F to open, Enter/Shift+Enter to navigate)
+- ✅ Next/previous navigation with wraparound
+- ✅ Case-sensitive and whole-word options
+- ✅ UTF-16 awareness for emoji/CJK support
+- ✅ Smooth scrolling to matches
+- ✅ Debounced input (300ms)
+- ✅ Auto-select on focus
+- ✅ Sub-segment highlighting precision
+- ✅ Seamless integration with read/unread highlighting
+
+**Performance Optimizations**:
+- ✅ 50-80% fewer searches with React.memo
+- ✅ Efficient re-rendering strategy
+- ✅ Position space handling for accurate highlighting
+
+**Files Created**:
+- `src/lib/components/reading/SearchBar.tsx`
+- `src/lib/stores/search.ts`
+- `src/lib/utils/textSearch.ts`
+- `src/lib/hooks/useSearchEffect.ts`
+
+**Files Modified**:
+- `src/routes/read/[id].tsx` (integrated SearchBar)
+- `src/lib/components/reading/ReadHighlighter.tsx` (added search highlighting)
+
+**Success Criteria Met**:
+- ✅ Professional search experience comparable to browser Ctrl+F
+- ✅ No performance lag with large documents
+- ✅ Accurate highlighting with Unicode text
+- ✅ Intuitive keyboard navigation
+
+**Commits**:
+- `b4f72f5` - Implement Phase 9: Professional text search feature with optimizations
+
+---
+
+### ✅ Phase 10: Library Search + Folder Selection (Branch 9_features) - COMPLETE
+**Completed**: 2025-10-16
+**Branch**: `9_features`
+
+**Library Search Implementation**:
+- ✅ Real-time search through article/text titles and folder names
+- ✅ Tree filtering with debounced input (300ms)
+- ✅ Case-sensitive and whole-word options
+- ✅ Yellow highlighting of matching text
+- ✅ Keyboard shortcuts (Shift+Cmd/Ctrl+F)
+- ✅ Match counter showing number of results
+- ✅ Keyboard navigation (Arrow Up/Down, Enter to open)
+- ✅ Blue ring visual indicator for selected match
+- ✅ Auto-scroll to keep selected item visible
+
+**Folder Selection in Ingest**:
+- ✅ Optional folder picker during text import
+- ✅ Hierarchical dropdown with visual indentation
+- ✅ Scrollable max-height (300px)
+- ✅ Proper display of folder names (not UUIDs)
+- ✅ Arrow indicators for nested folders
+
+**Post-Phase 10 Improvements (2025-10-16)**:
+- ✅ **Review Configuration Folder Selection**: Replaced flat folder Select with hierarchical FolderSelect component
+  - Consistent UX across ingest modal and review configuration
+  - Removed helper functions getFolderName and flattenFolders (33 lines reduced)
+  - File: `src/routes/review/index.tsx:110-114`
+- ✅ **Multi-Level Arrow Indicators**: Enhanced FolderSelect to show multiple arrows based on depth
+  - Depth 1: → Folder name
+  - Depth 2: →→ Folder name
+  - Depth 3: →→→ Folder name
+  - File: `src/lib/components/folders/FolderSelect.tsx:47,65`
+  - Improved visual hierarchy understanding for deeply nested structures
+
+**Architectural Decisions**:
+- Frontend filtering (no backend queries) for instant results
+- Separate components (LibrarySearchBar, FolderSelect)
+- New librarySearch store for state management
+- Recursive tree filtering algorithm
+
+**Files Created**:
+- `src/lib/components/library/LibrarySearchBar.tsx`
+- `src/lib/components/folders/FolderSelect.tsx`
+- `src/lib/stores/librarySearch.ts`
+- `src/lib/utils/librarySearch.ts`
+
+**Files Modified**:
+- `src/components/shell/Sidebar.tsx` (added search button)
+- `src/components/library/LibraryTree.tsx` (filtering logic)
+- `src/components/library/FolderNode.tsx` (highlighting)
+- `src/components/library/TextNode.tsx` (highlighting)
+- `src/routes/read/[id].tsx` (folder selection)
+- `src/routes/ingest/index.tsx` (folder selection)
+- `src/routes/review/index.tsx` (hierarchical folder selection)
+
+**Success Criteria Met**:
+- ✅ Library search filters tree in real-time
+- ✅ Folder selection works in both ingest and review configuration
+- ✅ Consistent hierarchical display across all folder selectors
+- ✅ Keyboard navigation fully functional
+- ✅ Visual hierarchy clear with multi-level arrows
+
+**Implementation Time**: 6-7 hours with parallel agents
+
+**Commits**:
+- `2051872` - Implement Phase 10: Library search feature with keyboard navigation
+- `4be45bd` - Add folder selection to ingest UI with improved dropdown UX
+- Additional commits for post-phase improvements
 
 ---
 

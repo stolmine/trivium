@@ -867,6 +867,38 @@ This feature will significantly improve usability for users with large libraries
 
 ---
 
+## Post-Phase 10 Improvements (2025-10-16)
+
+### Review Configuration Folder Selection
+After Phase 10 completion, the review configuration was updated to use the same hierarchical folder selection as the ingest modal for consistency.
+
+**Changes:**
+- Replaced flat folder `<Select>` in review configuration with `FolderSelect` component
+- File: `src/routes/review/index.tsx:110-114`
+- Removed helper functions `getFolderName` and `flattenFolders` (33 lines reduced)
+- Now shows hierarchical structure with arrows and indentation
+- Consistent UX across both ingest and review configuration
+
+### Multi-Level Arrow Indicators
+Enhanced the `FolderSelect` component to show multiple arrows based on nesting depth for better visual hierarchy.
+
+**Changes:**
+- File: `src/lib/components/folders/FolderSelect.tsx:47,65`
+- Updated arrow logic from single conditional `{folder.depth > 0 && '→ '}` to repeated `{'→'.repeat(folder.depth)}`
+- Visual result:
+  - Depth 0: No arrows
+  - Depth 1: → Folder name
+  - Depth 2: →→ Folder name
+  - Depth 3: →→→ Folder name
+- Applied in both trigger display and dropdown items
+
+**Impact:**
+- Improved visual hierarchy understanding
+- Better UX for deeply nested folder structures
+- Consistent across ingest modal and review configuration
+
+---
+
 **Implementation Team:** TBD
 **Review Date:** TBD
 **Approved By:** Pending approval

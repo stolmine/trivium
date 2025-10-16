@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Search + Folder Selection Complete! 🔍📚📁)
+Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Search + Folder Selection Complete + Post-Phase 10 Improvements! 🔍📚📁)
 
 ---
 
@@ -61,8 +61,8 @@ Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Searc
 **Last Updated**: 2025-10-16 (Updated with optimizations and bug fixes)
 
 ### `/Users/why/repos/trivium/PHASE_10_LIBRARY_SEARCH.md`
-**Description**: Comprehensive implementation plan and completion documentation for Phase 10 library search and folder selection features. **Library Search**: Real-time search through article/text titles and folder names, tree filtering with debounced input (300ms), case-sensitive and whole-word options, yellow highlighting of matching text, keyboard shortcuts (Shift+Cmd/Ctrl+F), match counter, keyboard navigation (Arrow Up/Down, Enter to open), blue ring visual indicator for selected match, auto-scroll to keep selected visible. **Folder Selection in Ingest**: Optional folder picker during text import with hierarchical dropdown, scrollable max-height (300px), proper display of folder names (not UUIDs), visual indentation with arrows for nested folders. Architectural decisions: frontend filtering (no backend queries), separate components (LibrarySearchBar, FolderSelect), new librarySearch store, recursive tree filtering, SQLx query cache updated for folder_id field. Files: 5 created (LibrarySearchBar, FolderSelect, librarySearch store/utils, SQLx cache), 9 modified (Sidebar, LibraryTree, FolderNode, TextNode, read route, ingest route, article types, text models/commands). Implementation time: 6-7 hours with parallel agents
-**Last Updated**: 2025-10-16 (Completed with all features and bug fixes)
+**Description**: Comprehensive implementation plan and completion documentation for Phase 10 library search and folder selection features. **Library Search**: Real-time search through article/text titles and folder names, tree filtering with debounced input (300ms), case-sensitive and whole-word options, yellow highlighting of matching text, keyboard shortcuts (Shift+Cmd/Ctrl+F), match counter, keyboard navigation (Arrow Up/Down, Enter to open), blue ring visual indicator for selected match, auto-scroll to keep selected visible. **Folder Selection in Ingest**: Optional folder picker during text import with hierarchical dropdown, scrollable max-height (300px), proper display of folder names (not UUIDs), visual indentation with arrows for nested folders. **Post-Phase 10 Improvements**: Review configuration updated to use hierarchical FolderSelect component (consistent with ingest modal), multi-level arrow indicators based on nesting depth (→, →→, →→→). Architectural decisions: frontend filtering (no backend queries), separate components (LibrarySearchBar, FolderSelect), new librarySearch store, recursive tree filtering, SQLx query cache updated for folder_id field. Files: 5 created (LibrarySearchBar, FolderSelect, librarySearch store/utils, SQLx cache), 9 modified (Sidebar, LibraryTree, FolderNode, TextNode, read route, ingest route, article types, text models/commands). Implementation time: 6-7 hours with parallel agents
+**Last Updated**: 2025-10-16 (Completed with all features, bug fixes, and post-phase improvements)
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
