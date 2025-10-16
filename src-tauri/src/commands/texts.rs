@@ -24,7 +24,8 @@ pub async fn create_text(
     let db = db.lock().await;
     let pool = db.pool();
 
-    let content_length = request.content.chars().count() as i64;
+    // Use UTF-16 code units to match JavaScript's string.length
+    let content_length = request.content.encode_utf16().count() as i64;
     let now = Utc::now();
 
     let result = sqlx::query!(

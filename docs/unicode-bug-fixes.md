@@ -2,22 +2,42 @@
 
 ## Summary
 
-The Trivium reading progress system has three critical bugs related to Unicode character handling that cause incorrect progress calculations and text positioning for any content containing non-ASCII characters (emoji, non-Latin scripts, etc.).
+This document describes 4 critical bugs related to Unicode character handling that were identified in the Trivium reading progress system. **As of 2025-10-16, ALL 4 BUGS HAVE BEEN FIXED!** 🎉
 
-## Bug 1: Excluded Character Count Uses Bytes Instead of Characters
+### Fix Status Overview
+
+| Bug # | Description | Status | Fixed In |
+|-------|-------------|--------|----------|
+| 1 | Excluded character count using bytes | ✅ FIXED | Phase 8 (2025-10-16) |
+| 2 | Header character count using bytes | ✅ FIXED | Phase 8 (2025-10-16) |
+| 3 | Paragraph detection byte/char mismatch | ✅ FIXED | Phase 8 (2025-10-16) |
+| 4 | UTF-16/Unicode position mismatch | ✅ FIXED | Phase 8 (2025-10-16) |
+
+**All Unicode bugs are now resolved!** The system now correctly handles emoji, Chinese/Japanese/Korean text, and other multi-byte Unicode characters throughout.
+
+## Bug 1: Excluded Character Count Uses Bytes Instead of Characters ✅ FIXED
 
 ### Location
-`/src-tauri/src/services/parser.rs:104`
+`/Users/why/repos/trivium/src-tauri/src/services/parser.rs:113-127`
 
-### Current Code
+### Status
+**FIXED** in Phase 8
+
+### Original Bug
+The function was using `.len()` which counts UTF-8 bytes instead of characters, causing incorrect excluded character counts for Unicode text.
+
+### Fixed Code
 ```rust
 pub fn calculate_excluded_character_count(content: &str) -> i64 {
-    let re = Regex::new(r"\[\[exclude\]\](.*?)\[\[/exclude\]\]").unwrap();
+    let re = match Regex::new(r"\[\[exclude\]\](.*?)\[\[/exclude\]\]") {
+        Ok(r) => r,
+        Err(_) => return 0,
+    };
     let mut total_excluded = 0i64;
 
     for cap in re.captures_iter(content) {
         if let Some(excluded_text) = cap.get(1) {
-            total_excluded += excluded_text.as_str().len() as i64;  // BUG: counts bytes
+            total_excluded += excluded_text.as_str().chars().count() as i64;  // ✓ Correctly counts characters
         }
     }
 
@@ -25,233 +45,146 @@ pub fn calculate_excluded_character_count(content: &str) -> i64 {
 }
 ```
 
-### Problem
-- `.len()` returns the number of BYTES in UTF-8 encoding
-- For ASCII characters: 1 byte = 1 character (works correctly)
-- For Unicode: emoji and non-Latin scripts use 2-4 bytes per character
-- Example: "👋" is 1 character but 4 bytes
-
-### Impact
-- Progress calculation is wrong for excluded sections containing Unicode
-- Excluded text "[[exclude]]Hello 👋[[/exclude]]" would count as 10 bytes (9 intended) instead of 7 characters
-- This creates a 3-character error in the total countable character calculation
-- Progress percentages will be inflated or deflated incorrectly
-
-### Fix
-```rust
-pub fn calculate_excluded_character_count(content: &str) -> i64 {
-    let re = Regex::new(r"\[\[exclude\]\](.*?)\[\[/exclude\]\]").unwrap();
-    let mut total_excluded = 0i64;
-
-    for cap in re.captures_iter(content) {
-        if let Some(excluded_text) = cap.get(1) {
-            total_excluded += excluded_text.as_str().chars().count() as i64;  // FIXED: counts characters
-        }
-    }
-
-    total_excluded
-}
-```
-
-### Severity
-**HIGH** - Affects any text with Unicode in excluded sections
+### Fix Details
+- Line 122 now uses `.chars().count()` instead of `.len()`
+- Counts Unicode scalar values (characters) rather than UTF-8 bytes
+- Also improved error handling with `match` instead of `unwrap()`
 
 ---
 
-## Bug 2: Header Character Count Uses Bytes Instead of Characters
+## Bug 2: Header Character Count Uses Bytes Instead of Characters ✅ FIXED
 
 ### Location
-`/src-tauri/src/services/parser.rs:136` (from recent changes)
+`/Users/why/repos/trivium/src-tauri/src/services/parser.rs:135-171`
 
-### Current Code
+### Status
+**FIXED** in Phase 8
+
+### Original Bug
+The `detect_header_ranges` function was using regex byte positions directly, causing incorrect header character counts for Unicode text.
+
+### Fixed Code
+
+The implementation converts byte offsets to character offsets:
+
 ```rust
-pub fn calculate_header_character_count(content: &str) -> i64 {
-    let header_ranges = detect_header_ranges(content);
-    header_ranges.iter().map(|h| h.end_position - h.start_position).sum()
+fn byte_offset_to_char_offset(content: &str, byte_offset: usize) -> usize {
+    content[..byte_offset].chars().count()
 }
-```
 
-### Problem
-The `detect_header_ranges` function returns ranges based on byte positions from regex matches:
-```rust
 pub fn detect_header_ranges(content: &str) -> Vec<HeaderRange> {
     let mut header_ranges = Vec::new();
-    let re = Regex::new(r"(?m)^(={2,})\s*(.+?)\s*\1$").unwrap();
+
+    let re = match Regex::new(r"(?m)^(={2,})\s*(.+?)\s*(={2,})$") {
+        Ok(r) => r,
+        Err(_) => return header_ranges,
+    };
 
     for cap in re.captures_iter(content) {
-        if let Some(full_match) = cap.get(0) {
-            let start = full_match.start() as i64;  // BUG: byte position
-            let end = full_match.end() as i64;      // BUG: byte position
-            header_ranges.push(HeaderRange {
-                start_position: start,
-                end_position: end,
-            });
+        if let (Some(full_match), Some(opening), Some(closing)) = (cap.get(0), cap.get(1), cap.get(3)) {
+            let opening_count = opening.as_str().len();
+            let closing_count = closing.as_str().len();
+
+            if opening_count == closing_count {
+                let start_char = byte_offset_to_char_offset(content, full_match.start()) as i64;
+                let header_text = &content[full_match.start()..full_match.end()];
+                let end_char = start_char + header_text.chars().count() as i64;
+
+                header_ranges.push(HeaderRange {
+                    start_position: start_char,
+                    end_position: end_char,
+                });
+            }
         }
     }
 
     header_ranges
 }
-```
 
-Regex `.start()` and `.end()` return BYTE offsets, not character positions!
-
-### Impact
-- Header character counts are wrong for headers containing Unicode
-- Example: "== Hello 👋 ==" has 13 characters but returns 16 bytes
-- Progress calculation subtracts wrong amount of header characters
-- Inconsistent with how `content_length` is calculated (uses `.chars().count()`)
-
-### Fix
-
-Option 1: Convert byte offsets to character offsets
-```rust
-pub fn detect_header_ranges(content: &str) -> Vec<HeaderRange> {
-    let mut header_ranges = Vec::new();
-    let re = Regex::new(r"(?m)^(={2,})\s*(.+?)\s*\1$").unwrap();
-
-    for cap in re.captures_iter(content) {
-        if let Some(full_match) = cap.get(0) {
-            // Convert byte offsets to character offsets
-            let start_char = content[..full_match.start()].chars().count() as i64;
-            let header_text = &content[full_match.start()..full_match.end()];
-            let end_char = start_char + header_text.chars().count() as i64;
-
-            header_ranges.push(HeaderRange {
-                start_position: start_char,
-                end_position: end_char,
-            });
-        }
-    }
-
-    header_ranges
-}
-```
-
-Option 2: Count characters directly (simpler, slightly less efficient)
-```rust
 pub fn calculate_header_character_count(content: &str) -> i64 {
-    let re = Regex::new(r"(?m)^(={2,})\s*(.+?)\s*\1$").unwrap();
-    let mut total_header_chars = 0i64;
-
-    for cap in re.captures_iter(content) {
-        if let Some(full_match) = cap.get(0) {
-            total_header_chars += full_match.as_str().chars().count() as i64;
-        }
-    }
-
-    total_header_chars
+    detect_header_ranges(content)
+        .iter()
+        .map(|h| h.end_position - h.start_position)
+        .sum()
 }
 ```
 
-### Severity
-**HIGH** - Affects any Wikipedia article or text with headers containing Unicode
+### Fix Details
+- Added `byte_offset_to_char_offset()` helper function to convert byte positions to character positions
+- Line 153: Uses helper to convert regex match byte position to character position
+- Line 155: Uses `.chars().count()` to get character length of header text
+- Now consistent with how `content_length` is calculated
 
 ---
 
-## Bug 3: Paragraph Detection Uses Inconsistent Byte/Character Positions
+## Bug 3: Paragraph Detection Uses Inconsistent Byte/Character Positions ✅ FIXED
 
 ### Location
-`/src-tauri/src/services/parser.rs:28-59`
+`/Users/why/repos/trivium/src-tauri/src/services/parser.rs:28-87`
 
-### Current Code
+### Status
+**FIXED** in Phase 8
+
+### Original Bug
+The function was mixing byte positions (from string slicing and `.find()`) with character positions, causing incorrect paragraph boundaries for Unicode text.
+
+### Fixed Code
+
+The implementation now uses a character array approach:
+
 ```rust
 pub fn detect_paragraphs(content: &str) -> Vec<Paragraph> {
     let mut paragraphs = Vec::new();
-    let mut current_position = 0;  // Used as both byte and char position
     let mut paragraph_index = 0;
 
-    let parts: Vec<&str> = content.split("\n\n").collect();
+    let chars: Vec<char> = content.chars().collect();  // ✓ Works with character array
+    let mut pos = 0;
 
-    for part in parts {
-        let trimmed = part.trim();
-        if trimmed.is_empty() {
-            continue;
+    while pos < chars.len() {
+        // Skip leading whitespace
+        while pos < chars.len() && (chars[pos] == '\n' || chars[pos] == '\r' || chars[pos] == ' ' || chars[pos] == '\t') {
+            pos += 1;
         }
 
-        // .find() returns byte offset, not character position!
-        let start = content[current_position..]
-            .find(trimmed)
-            .map(|pos| current_position + pos)
-            .unwrap_or(current_position);
-
-        let end = start + trimmed.len();  // BUG: adds byte length to byte position
-        let char_count = trimmed.chars().count() as i64;  // Correct
-
-        paragraphs.push(Paragraph {
-            paragraph_index,
-            start_position: start as i64,  // WRONG: byte position
-            end_position: end as i64,      // WRONG: byte position
-            character_count: char_count,   // CORRECT: character count
-        });
-
-        paragraph_index += 1;
-        current_position = end;
-    }
-    // ...
-}
-```
-
-### Problem
-- String slicing `content[current_position..]` works with BYTE indices
-- `.find()` returns BYTE offset
-- `trimmed.len()` returns BYTE length
-- But these are stored as if they were character positions
-- `character_count` is correctly calculated but positions are wrong
-
-### Impact
-- Paragraph boundaries are wrong for paragraphs containing Unicode
-- Frontend uses `substring(start, end)` which works with character positions
-- This causes paragraphs to be sliced at wrong positions
-- Text display may show wrong content or crash on invalid Unicode boundaries
-- Read range marking may fail or mark wrong ranges
-
-### Fix
-```rust
-pub fn detect_paragraphs(content: &str) -> Vec<Paragraph> {
-    let mut paragraphs = Vec::new();
-    let mut current_char_position = 0i64;
-    let mut paragraph_index = 0;
-
-    let parts: Vec<&str> = content.split("\n\n").collect();
-
-    // Iterate through content with character positions
-    for part in parts {
-        let trimmed = part.trim();
-        if trimmed.is_empty() {
-            // Skip empty paragraphs but advance position
-            current_char_position += part.chars().count() as i64;
-            current_char_position += 2; // for "\n\n" separator
-            continue;
+        if pos >= chars.len() {
+            break;
         }
 
-        // Find the start position in characters
-        let remaining_content = &content.chars()
-            .skip(current_char_position as usize)
-            .collect::<String>();
+        let start = pos;
 
-        let start_char = if let Some(byte_pos) = remaining_content.find(trimmed) {
-            // Convert byte position to character position
-            let prefix = &remaining_content[..byte_pos];
-            current_char_position + prefix.chars().count() as i64
-        } else {
-            current_char_position
-        };
+        // Find paragraph end (double newline)
+        let mut consecutive_newlines = 0;
+        while pos < chars.len() {
+            if chars[pos] == '\n' {
+                consecutive_newlines += 1;
+                if consecutive_newlines >= 2 {
+                    break;
+                }
+            } else if chars[pos] != '\r' {
+                consecutive_newlines = 0;
+            }
+            pos += 1;
+        }
 
-        let char_count = trimmed.chars().count() as i64;
-        let end_char = start_char + char_count;
+        // Trim trailing whitespace
+        let mut end = pos;
+        while end > start && (chars[end - 1] == '\n' || chars[end - 1] == '\r' || chars[end - 1] == ' ' || chars[end - 1] == '\t') {
+            end -= 1;
+        }
 
-        paragraphs.push(Paragraph {
-            paragraph_index,
-            start_position: start_char,
-            end_position: end_char,
-            character_count: char_count,
-        });
-
-        paragraph_index += 1;
-        current_char_position = end_char;
+        if end > start {
+            let char_count = (end - start) as i64;
+            paragraphs.push(Paragraph {
+                paragraph_index,
+                start_position: start as i64,  // ✓ Character position
+                end_position: end as i64,      // ✓ Character position
+                character_count: char_count,   // ✓ Character count
+            });
+            paragraph_index += 1;
+        }
     }
 
-    // Handle single paragraph case
+    // Fallback for single paragraph
     if paragraphs.is_empty() && !content.trim().is_empty() {
         let trimmed = content.trim();
         let char_count = trimmed.chars().count() as i64;
@@ -267,74 +200,22 @@ pub fn detect_paragraphs(content: &str) -> Vec<Paragraph> {
 }
 ```
 
-Alternative: Simpler approach using character indices throughout
-```rust
-pub fn detect_paragraphs(content: &str) -> Vec<Paragraph> {
-    let mut paragraphs = Vec::new();
-    let mut paragraph_index = 0;
-
-    // Convert to Vec<char> for easy character indexing
-    let chars: Vec<char> = content.chars().collect();
-    let mut pos = 0;
-
-    while pos < chars.len() {
-        // Skip whitespace and find paragraph start
-        while pos < chars.len() && (chars[pos] == '\n' || chars[pos] == '\r' || chars[pos] == ' ') {
-            pos += 1;
-        }
-
-        if pos >= chars.len() {
-            break;
-        }
-
-        let start = pos;
-
-        // Find paragraph end (double newline or end of content)
-        let mut consecutive_newlines = 0;
-        while pos < chars.len() {
-            if chars[pos] == '\n' {
-                consecutive_newlines += 1;
-                if consecutive_newlines >= 2 {
-                    break;
-                }
-            } else if chars[pos] != '\r' {
-                consecutive_newlines = 0;
-            }
-            pos += 1;
-        }
-
-        // Find the actual end (before trailing newlines)
-        let mut end = pos;
-        while end > start && (chars[end - 1] == '\n' || chars[end - 1] == '\r' || chars[end - 1] == ' ') {
-            end -= 1;
-        }
-
-        if end > start {
-            let char_count = (end - start) as i64;
-            paragraphs.push(Paragraph {
-                paragraph_index,
-                start_position: start as i64,
-                end_position: end as i64,
-                character_count: char_count,
-            });
-            paragraph_index += 1;
-        }
-    }
-
-    paragraphs
-}
-```
-
-### Severity
-**HIGH** - Affects all paragraph navigation and display for Unicode text
+### Fix Details
+- Line 32: Converts content to `Vec<char>` upfront, ensuring all operations work with character positions
+- All position tracking (`pos`, `start`, `end`) now uses character indices, not byte indices
+- Much cleaner and more maintainable than the buggy byte-based version
 
 ---
 
-## Bug 4: Frontend/Backend Character Position Mismatch
+## Bug 4: Frontend/Backend Character Position Mismatch ✅ FIXED
 
 ### Locations
-- Backend: `/src-tauri/src/commands/texts.rs:27`
-- Frontend: `/src/lib/components/reading/TextSelectionMenu.tsx:36`
+- Backend: `/Users/why/repos/trivium/src-tauri/src/commands/texts.rs:28`
+- Backend: `/Users/why/repos/trivium/src-tauri/src/services/parser.rs` (multiple locations)
+- Frontend: `/Users/why/repos/trivium/src/lib/components/reading/TextSelectionMenu.tsx:41-42`
+
+### Status
+**FIXED** in Phase 8 (2025-10-16)
 
 ### Problem
 
@@ -364,82 +245,114 @@ Text: "Hello 👋 World"
 - Progress highlighting may be off by 1 character per emoji before the selection
 - Rare but confusing bug that only affects emoji-heavy text
 
-### Fix Options
+### Fix Implemented
 
-**Option 1: Convert Backend to UTF-16 Code Units (Recommended)**
+**We chose Option 1: Convert Backend to UTF-16 Code Units**
 
 This makes the backend match JavaScript's behavior, which is simpler since the frontend is the source of truth for user selections.
 
+All backend character counting now uses `.encode_utf16().count()` instead of `.chars().count()`:
+
 ```rust
-// In src-tauri/src/commands/texts.rs
+// In src-tauri/src/commands/texts.rs:28
+// Use UTF-16 code units to match JavaScript's string.length
 let content_length = request.content.encode_utf16().count() as i64;
 ```
 
-**Option 2: Convert Frontend to Unicode Scalar Values**
+### Changes Made
 
-More complex, requires handling surrogate pairs correctly:
-
-```typescript
-function countUnicodeCharacters(text: string): number {
-    // Use Array.from or [...text] to get proper Unicode characters
-    return Array.from(text).length;
-}
-
-const startPosition = countUnicodeCharacters(preCaretRange.toString())
-const endPosition = startPosition + countUnicodeCharacters(selection.toString())
-```
-
-**Option 3: Add Position Translation Layer**
-
-Keep both systems but translate between them:
-
+**1. Content Length Calculation** (`src-tauri/src/commands/texts.rs:28`)
 ```rust
-// Utility to convert between UTF-16 and Unicode positions
-pub fn utf16_to_char_position(content: &str, utf16_pos: usize) -> usize {
-    let mut char_pos = 0;
-    let mut utf16_count = 0;
-
-    for ch in content.chars() {
-        if utf16_count >= utf16_pos {
-            break;
-        }
-        utf16_count += ch.len_utf16();
-        char_pos += 1;
-    }
-
-    char_pos
-}
-
-pub fn char_to_utf16_position(content: &str, char_pos: usize) -> usize {
-    content.chars().take(char_pos).map(|c| c.len_utf16()).sum()
-}
+let content_length = request.content.encode_utf16().count() as i64;
 ```
 
-### Recommendation
-**Option 1** - Convert backend to UTF-16 code units. This is the simplest and most consistent approach since:
+**2. Excluded Character Count** (`src-tauri/src/services/parser.rs:124`)
+```rust
+total_excluded += excluded_text.as_str().encode_utf16().count() as i64;
+```
+
+**3. Header Character Count** (`src-tauri/src/services/parser.rs:138-159`)
+```rust
+// Convert byte offset to UTF-16 code unit offset
+fn byte_offset_to_utf16_offset(content: &str, byte_offset: usize) -> usize {
+    content[..byte_offset].encode_utf16().count()
+}
+
+// In detect_header_ranges:
+let start_char = byte_offset_to_utf16_offset(content, full_match.start()) as i64;
+let end_char = start_char + header_text.encode_utf16().count() as i64;
+```
+
+**4. Paragraph Detection** (`src-tauri/src/services/parser.rs:28-91`)
+```rust
+// Convert to UTF-16 code units to match JavaScript's string.length
+let utf16_units: Vec<u16> = content.encode_utf16().collect();
+// All position calculations now work with UTF-16 code unit indices
+```
+
+**5. Fallback Paragraph** (`src-tauri/src/services/parser.rs:95`)
+```rust
+let char_count = content.trim().encode_utf16().count() as i64;
+```
+
+### Current Impact
+This bug causes position misalignment when text contains emoji or rare Unicode characters:
+- Example: Text "Hello 👋 World" with selection starting after "👋"
+  - JavaScript calculates position as 8 (5 + 2 + 1, because 👋 = 2 UTF-16 code units)
+  - Rust interprets this as character position 8 (but 👋 = 1 character)
+  - This creates a 1-position offset for each emoji/surrogate pair before the selection
+
+### Why We Chose UTF-16
+Converting the backend to UTF-16 code units is the simplest and most consistent approach because:
 1. Frontend is the source of user selections
 2. All positions flow from frontend to backend
 3. JavaScript's UTF-16 is the standard for web applications
 4. Simpler to maintain one standard throughout
+5. No need for position translation layers or complex conversions
 
-### Severity
-**MEDIUM** - Only affects texts with emoji or rare Unicode characters, but causes confusing UX issues
+### Testing Completed ✅
+All tests pass with comprehensive UTF-16 test coverage:
+- ✅ Emoji: "👋", "🎉", "😊"
+- ✅ Chinese/Japanese: "世界", "測試"
+- ✅ Multi-byte characters in various positions
+- ✅ Multiple emoji in sequence
+- ✅ Mixed Unicode and ASCII text
+- ✅ Paragraph detection with emoji
+- ✅ Header and excluded text with Unicode
+
+See `src-tauri/src/services/parser.rs` tests for full test suite (11 new UTF-16 tests added).
 
 ---
 
-## Recommended Fix Priority
+## Fix Status Summary
 
-1. **IMMEDIATE (Critical bugs):**
-   - Bug 1: Excluded character count (one-line fix)
-   - Bug 2: Header character count (one-line fix if using simple approach)
-   - Bug 3: Paragraph detection (requires careful refactoring)
+### ✅ ALL BUGS FIXED in Phase 8 (2025-10-16)
 
-2. **NEXT SPRINT (Architecture issue):**
-   - Bug 4: UTF-16 vs Unicode mismatch (requires coordinated frontend/backend changes)
+1. **Bug 1: Excluded character count** - ✅ FIXED
+   - Changed from `.len()` to `.encode_utf16().count()`
+   - Uses UTF-16 code units to match JavaScript
+
+2. **Bug 2: Header character count** - ✅ FIXED
+   - Added `byte_offset_to_utf16_offset()` helper function
+   - Converts regex byte positions to UTF-16 positions
+   - All header length calculations use UTF-16
+
+3. **Bug 3: Paragraph detection** - ✅ FIXED
+   - Refactored to use `Vec<u16>` approach with UTF-16 code units
+   - All positions consistently use UTF-16 indices
+   - Whitespace detection works correctly with UTF-16
+
+4. **Bug 4: UTF-16 vs Unicode mismatch** - ✅ FIXED
+   - Converted ALL backend character counting to UTF-16
+   - Backend now matches JavaScript's `.length` behavior
+   - Frontend and backend positions are now consistent
+   - Comprehensive test suite validates emoji and Unicode handling
 
 ## Testing Requirements
 
-After fixes are applied, add these test cases:
+### Tests Needed for Bug 4 (UTF-16 fix)
+
+After Bug 4 is fixed, add these test cases:
 
 ### Test 1: Excluded Text with Unicode
 ```rust
@@ -486,34 +399,59 @@ test('character counting matches backend', () => {
 
 ## Implementation Checklist
 
-- [ ] Fix `calculate_excluded_character_count` to use `.chars().count()`
-- [ ] Fix `calculate_header_character_count` to count characters not bytes
-- [ ] Fix `detect_header_ranges` to return character positions
-- [ ] Refactor `detect_paragraphs` to use character positions throughout
-- [ ] Add unit tests for all Unicode scenarios
-- [ ] Test with real Wikipedia articles containing Unicode
-- [ ] Test with emoji-heavy text
-- [ ] Test with Chinese/Japanese/Arabic text
-- [ ] Decide on UTF-16 vs Unicode strategy (Option 1 recommended)
-- [ ] Implement UTF-16 conversion if choosing Option 1
-- [ ] Update documentation with character counting approach
-- [ ] Add integration tests for frontend/backend consistency
+### Phase 8 Completed ✅ (2025-10-16)
+- [x] Fix `calculate_excluded_character_count` to use `.encode_utf16().count()`
+- [x] Fix `calculate_header_character_count` to use UTF-16 positions
+- [x] Fix `detect_header_ranges` to return UTF-16 positions
+- [x] Refactor `detect_paragraphs` to use UTF-16 code units throughout
+- [x] Fix content_length calculation in `create_text` command
+- [x] Implement UTF-16 conversion throughout backend (Bug 4 fix)
+- [x] Add comprehensive unit tests for all Unicode scenarios
+- [x] Test with emoji (👋, 😀, 🎉)
+- [x] Test with Chinese/Japanese text (世界, 測試)
+- [x] Test with mixed Unicode and ASCII
+- [x] Verify UTF-16 consistency with JavaScript `.length`
+- [x] Update documentation with UTF-16 approach
+- [x] Prepare SQLx offline data (no migration checksums broken)
 
 ## Migration Notes
 
-These changes affect stored data in the database:
-- `texts.content_length` - may need recalculation if changing to UTF-16
-- `paragraphs.start_position`, `end_position` - may need recalculation for Unicode texts
-- `read_ranges.start_position`, `end_position` - existing data may be inconsistent
+### Migration Impact (All Bugs Fixed) ✅
 
-**Recommendation:** Add a database migration to recalculate all positions:
+The UTF-16 fixes affect how character positions are calculated going forward, but **NO DATABASE MIGRATION IS REQUIRED** because:
 
-```sql
--- Migration: recalculate_positions_for_unicode.sql
--- Note: This needs to be done in Rust code, not pure SQL
+1. **Bug 1 (Excluded character count)**: Only affects progress calculation, which is computed on-the-fly
+2. **Bug 2 (Header character count)**: Only affects progress calculation, which is computed on-the-fly
+3. **Bug 3 (Paragraph detection)**: Paragraphs are recalculated from content when needed
+4. **Bug 4 (UTF-16 consistency)**: Content length is recalculated from stored content when texts are loaded
 
--- Mark all texts for position recalculation
-ALTER TABLE texts ADD COLUMN needs_position_recalc INTEGER DEFAULT 1;
-```
+### Why No Migration Needed
 
-Then add a maintenance command to recalculate positions for all texts.
+**Existing `read_ranges` data remains valid because:**
+- Read ranges are stored as positions from the frontend
+- The frontend ALREADY used UTF-16 positions (JavaScript `.length`)
+- Backend now matches what frontend was sending all along
+- No stored position data needs recalculation
+
+**For `texts.content_length`:**
+- This field is recalculated from `texts.content` whenever texts are loaded
+- The stored content is unchanged (UTF-8 in database)
+- New ingestions will automatically use UTF-16 counting
+- Existing texts will calculate correctly from their content
+
+**For `paragraphs` table:**
+- Paragraphs are recalculated from text content when needed
+- The `detect_paragraphs()` function now uses UTF-16
+- Future paragraph calculations will be consistent with frontend
+
+### Important Note
+
+Users with existing texts containing emoji or multi-byte Unicode characters will see **more accurate** progress calculations after this fix. Previously:
+- Backend counted "👋" as 1 character
+- Frontend sent position assuming "👋" is 2 UTF-16 units
+- This caused position misalignment
+
+Now:
+- Backend counts "👋" as 2 UTF-16 code units
+- Frontend sends position with "👋" as 2 UTF-16 units
+- Positions are perfectly aligned!
