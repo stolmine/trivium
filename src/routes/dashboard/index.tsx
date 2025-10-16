@@ -1,6 +1,7 @@
 import { ContinueReadingCard } from '../../components/dashboard/ContinueReadingCard';
 import { DueReviewCard } from '../../components/dashboard/DueReviewCard';
 import { StatsCard } from '../../components/dashboard/StatsCard';
+import { QuickImportCard } from '../../components/dashboard/QuickImportCard';
 import { RecentActivity } from '../../components/dashboard/RecentActivity';
 
 export function DashboardPage() {
@@ -12,6 +13,7 @@ export function DashboardPage() {
         <ContinueReadingCard />
         <DueReviewCard />
         <StatsCard />
+        <QuickImportCard />
       </div>
 
       <div className="max-w-4xl">

@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 11 Complete ✅ - Sidebar UI Improvements + Validation Polish
+## Current Status: Phase 11.5 Complete ✅ - Quick Import Dashboard Tile
 
 **Branch**: `9_features`
-**Last Updated**: 2025-10-16 (Phase 11: Comprehensive sidebar UI improvements with 8 major features + 5 validation polish improvements)
+**Last Updated**: 2025-10-16 (Phase 11.5: Quick Import dashboard tile for streamlined content ingestion)
 
 ---
 
@@ -100,41 +100,42 @@
 2. **Import from Wikipedia**: Paste Wikipedia URLs and auto-fetch clean article content
 3. **Select Folder on Import**: Choose destination folder during text import (optional)
 4. **Quick Ingest Access**: Click FilePlus button in library header or press Ctrl+N
-5. **Browse Library**: View all imported texts with reading progress percentages
-6. **Organize Content**: Create folders and organize texts hierarchically
-7. **Quick Folder Creation**: Press Ctrl+Shift+N to create new folder
-8. **Unique Naming Protection**: System prevents duplicate folder/text names in same location
-9. **Search Library**: Real-time search of titles/folders (Shift+Cmd/Ctrl+F)
-10. **Navigate Search Results**: Arrow keys to navigate, Enter to open text
-11. **Keyboard Navigation**: Arrow keys to navigate library tree (Up/Down/Left/Right/Enter)
-12. **Expand/Collapse All**: Toggle button or Ctrl+Shift+E to expand/collapse all folders
-13. **Click to Expand Folders**: Click anywhere on folder row to expand/collapse
-14. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
-15. **Read Content**: Open and read full text articles with visual progress tracking
-16. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
-17. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
-18. **Visual Feedback**: Read text appears as white on black (inverse styling)
-19. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
-20. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
-21. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
-22. **Preview Cards**: Live preview with complete sentence context
-23. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
-24. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
-25. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
-26. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
-27. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
-28. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
-29. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
-30. **Session Statistics**: Track unique cards completed vs total review actions
-31. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
-32. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
-33. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
-34. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
-35. **Session Limits**: Configure cards per session (10-100 cards)
-36. **Live Filter Stats**: See due/new card counts update based on selected filter
-37. **Better Dropdown Positioning**: All dropdowns appear directly under trigger buttons
-38. **Auto-Scroll Navigation**: Selected items automatically scroll into view
-39. **Persistent State**: All data saved to database, persists across sessions
+5. **Quick Import Dashboard Tile**: Pre-configure folder and Wikipedia URL from dashboard, then import
+6. **Browse Library**: View all imported texts with reading progress percentages
+7. **Organize Content**: Create folders and organize texts hierarchically
+8. **Quick Folder Creation**: Press Ctrl+Shift+N to create new folder
+9. **Unique Naming Protection**: System prevents duplicate folder/text names in same location
+10. **Search Library**: Real-time search of titles/folders (Shift+Cmd/Ctrl+F)
+11. **Navigate Search Results**: Arrow keys to navigate, Enter to open text
+12. **Keyboard Navigation**: Arrow keys to navigate library tree (Up/Down/Left/Right/Enter)
+13. **Expand/Collapse All**: Toggle button or Ctrl+Shift+E to expand/collapse all folders
+14. **Click to Expand Folders**: Click anywhere on folder row to expand/collapse
+15. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
+16. **Read Content**: Open and read full text articles with visual progress tracking
+17. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
+18. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+19. **Visual Feedback**: Read text appears as white on black (inverse styling)
+20. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
+21. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
+22. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
+23. **Preview Cards**: Live preview with complete sentence context
+24. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
+25. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
+26. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
+27. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
+28. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
+29. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+30. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+31. **Session Statistics**: Track unique cards completed vs total review actions
+32. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
+33. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
+34. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
+35. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
+36. **Session Limits**: Configure cards per session (10-100 cards)
+37. **Live Filter Stats**: See due/new card counts update based on selected filter
+38. **Better Dropdown Positioning**: All dropdowns appear directly under trigger buttons
+39. **Auto-Scroll Navigation**: Selected items automatically scroll into view
+40. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -905,6 +906,58 @@
 - `src/components/shell/Sidebar.tsx` - Hotkey fix + folder validation feedback
 - `src/routes/ingest/index.tsx` - Ingest validation feedback + loadLibrary + Shift+Enter fix
 - `src/components/library/FolderContextMenu.tsx` - Debug logs for subfolder operations
+
+---
+
+### ✅ Phase 11.5: Quick Import Dashboard Tile (Branch 9_features) - COMPLETE
+**Completed**: 2025-10-16
+**Branch**: `9_features`
+
+**Quick Import Dashboard Feature**:
+- ✅ **QuickImportCard Component**: New dashboard tile for streamlined content ingestion
+  - Optional folder picker with hierarchical dropdown (pre-selects destination)
+  - Optional Wikipedia URL input (pre-fills article content)
+  - Two action buttons:
+    - "Import with Settings": Navigates to ingest form with pre-filled data
+    - "Just Import": Opens blank ingest form
+  - Consistent card styling with existing dashboard tiles
+  - FileText icon and descriptive UI
+
+- ✅ **Ingest Route Enhancement**: Location state support for pre-filled data
+  - Reads `location.state` for `wikipediaUrl` and `selectedFolderId`
+  - Auto-fetches Wikipedia content if URL is pre-filled
+  - Maintains backward compatibility (works without state)
+  - Seamless integration with existing validation and submission logic
+
+- ✅ **Dashboard Layout Update**: 4-tile responsive grid
+  - Added QuickImportCard to dashboard alongside existing tiles
+  - Grid layout: ContinueReading, DueReview, Stats, QuickImport
+  - Responsive design maintains consistency
+
+**Files Created**:
+- `src/components/dashboard/QuickImportCard.tsx` - Quick import dashboard component
+
+**Files Modified**:
+- `src/routes/ingest/index.tsx` - Added location state handling for pre-filled data
+- `src/routes/dashboard/index.tsx` - Added QuickImportCard to dashboard grid
+
+**Success Criteria Met**:
+- ✅ Quick Import tile appears on dashboard
+- ✅ Folder selection works with hierarchical dropdown
+- ✅ Wikipedia URL pre-fills ingest form
+- ✅ "Import with Settings" navigates with state
+- ✅ "Just Import" opens blank form
+- ✅ Auto-fetch triggers when Wikipedia URL is pre-filled
+- ✅ Maintains backward compatibility
+- ✅ All features compile without errors
+
+**User-Facing Features Added**: 1 new dashboard tile
+- **Quick Import Dashboard Tile**: Fast access to content import with optional pre-configuration
+
+**Implementation Time**: ~30 minutes
+
+**Commits**:
+- Quick import dashboard tile implementation on `9_features` branch
 
 ---
 

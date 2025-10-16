@@ -383,5 +383,10 @@ All validation improvements verified:
 ## Related Documentation
 
 - **Phase 10**: Library Search + Folder Selection (`PHASE_10_LIBRARY_SEARCH.md`)
+- **Phase 11.5**: Quick Import Dashboard Tile (documented in `PROGRESS.md`)
 - **Architecture**: Frontend architecture (`architecture-frontend.md`)
 - **Progress Tracker**: Development progress (`PROGRESS.md`)
+
+## Note on Phase 11.5
+
+Phase 11.5 (Quick Import Dashboard Tile) was a small follow-up enhancement that built on Phase 11's improvements. It added a new dashboard card for quick content ingestion with optional folder and Wikipedia URL pre-configuration. See `PROGRESS.md` for details.

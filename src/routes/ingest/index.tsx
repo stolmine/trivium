@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
 import { useFolderStore } from '../../lib/stores/folder'
@@ -16,6 +16,12 @@ import { FolderSelect } from '@/lib/components/folders/FolderSelect'
 
 export function IngestPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const initialState = location.state as {
+    wikipediaUrl?: string;
+    selectedFolderId?: string;
+  } | undefined
+
   const [title, setTitle] = useState('')
   const {
     content,
@@ -28,11 +34,13 @@ export function IngestPage() {
   const [author, setAuthor] = useState('')
   const [publicationDate, setPublicationDate] = useState('')
   const [publisher, setPublisher] = useState('')
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(
+    initialState?.selectedFolderId || null
+  )
   const { createText, isLoading } = useReadingStore()
   const { texts, loadLibrary } = useLibraryStore()
   const { folderTree, loadFolderTree } = useFolderStore()
-  const [wikipediaUrl, setWikipediaUrl] = useState('')
+  const [wikipediaUrl, setWikipediaUrl] = useState(initialState?.wikipediaUrl || '')
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [titleError, setTitleError] = useState<string | null>(null)
@@ -125,6 +133,12 @@ export function IngestPage() {
     loadFolderTree()
     loadLibrary()
   }, [loadFolderTree, loadLibrary])
+
+  useEffect(() => {
+    if (initialState?.wikipediaUrl && !content) {
+      handleFetchWikipedia()
+    }
+  }, [])
 
   useEffect(() => {
     const trimmedTitle = title.trim()
