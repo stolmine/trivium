@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 8 Complete ✅ - Polish and Bug Fixes
+## Current Status: Phase 10 Complete ✅ - Library Search + Folder Selection in Ingest
 
-**Branch**: `8_polish`
-**Last Updated**: 2025-10-16 (Phase 8: ALL 4 Unicode Bugs FIXED! Clickable Links, Card Preview Fixes, Header Marking, UTF-16 Position Consistency - 41 Tests Passing)
+**Branch**: `9_features`
+**Last Updated**: 2025-10-16 (Phase 10: Library Search with keyboard navigation + Folder selection during text import)
 
 ---
 
@@ -98,29 +98,33 @@
 ### What Users Can Do Now:
 1. **Import Text**: Paste or type text with metadata (title, author, publisher, etc.)
 2. **Import from Wikipedia**: Paste Wikipedia URLs and auto-fetch clean article content
-3. **Browse Library**: View all imported texts with reading progress percentages
-4. **Organize Content**: Create folders and organize texts hierarchically
-5. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
-6. **Read Content**: Open and read full text articles with visual progress tracking
-7. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
-8. **Visual Feedback**: Read text appears as white on black (inverse styling)
-9. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
-10. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
-11. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
-12. **Preview Cards**: Live preview with complete sentence context
-13. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
-14. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
-15. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
-16. **Review Cards**: Spaced repetition review system with FSRS-6 algorithm
-17. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
-18. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
-19. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
-20. **Session Statistics**: Track unique cards completed vs total review actions
-21. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
-22. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
-23. **Session Limits**: Configure cards per session (10-100 cards)
-24. **Live Filter Stats**: See due/new card counts update based on selected filter
-25. **Persistent State**: All data saved to database, persists across sessions
+3. **Select Folder on Import**: Choose destination folder during text import (optional)
+4. **Browse Library**: View all imported texts with reading progress percentages
+5. **Organize Content**: Create folders and organize texts hierarchically
+6. **Search Library**: Real-time search of titles/folders (Shift+Cmd/Ctrl+F)
+7. **Navigate Search Results**: Arrow keys to navigate, Enter to open text
+8. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
+9. **Read Content**: Open and read full text articles with visual progress tracking
+10. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
+11. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+12. **Visual Feedback**: Read text appears as white on black (inverse styling)
+13. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
+14. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
+15. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
+16. **Preview Cards**: Live preview with complete sentence context
+17. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
+18. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
+19. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
+20. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
+21. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
+22. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+23. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+24. **Session Statistics**: Track unique cards completed vs total review actions
+25. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
+26. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
+27. **Session Limits**: Configure cards per session (10-100 cards)
+28. **Live Filter Stats**: See due/new card counts update based on selected filter
+29. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend

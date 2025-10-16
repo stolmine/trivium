@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO texts (\n            title, source, source_url, content, content_length,\n            ingested_at, updated_at, metadata,\n            author, publication_date, publisher, access_date, doi, isbn, folder_id\n        )\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 15
+    },
+    "nullable": []
+  },
+  "hash": "8d1559131f4403848372b69e12737fdeac9e0a2baab6740f39e3b61507ff5b71"
+}

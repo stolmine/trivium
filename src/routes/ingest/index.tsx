@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
+import { useFolderStore } from '../../lib/stores/folder'
 import {
   Button,
   Input,
@@ -11,6 +12,7 @@ import {
 import { ChevronLeft, X, Loader2 } from 'lucide-react'
 import { useTextHistory } from '../../hooks/useTextHistory'
 import { api } from '../../lib/utils/tauri'
+import { FolderSelect } from '@/lib/components/folders/FolderSelect'
 
 export function IngestPage() {
   const navigate = useNavigate()
@@ -26,8 +28,10 @@ export function IngestPage() {
   const [author, setAuthor] = useState('')
   const [publicationDate, setPublicationDate] = useState('')
   const [publisher, setPublisher] = useState('')
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const { createText, isLoading } = useReadingStore()
   const { loadLibrary } = useLibraryStore()
+  const { folderTree, loadFolderTree } = useFolderStore()
   const [wikipediaUrl, setWikipediaUrl] = useState('')
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -66,6 +70,7 @@ export function IngestPage() {
         author: author || undefined,
         publicationDate: publicationDate || undefined,
         publisher: publisher || undefined,
+        folderId: selectedFolderId,
       })
 
       // Refresh the library store so sidebar updates immediately
@@ -110,6 +115,10 @@ export function IngestPage() {
   const handleWrapExclude = () => {
     wrapSelection('[[exclude]]', '[[/exclude]]')
   }
+
+  useEffect(() => {
+    loadFolderTree()
+  }, [loadFolderTree])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -257,6 +266,18 @@ export function IngestPage() {
                     placeholder="Enter the publisher's name"
                     disabled={isLoading}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="folder">Folder (optional)</Label>
+                  <FolderSelect
+                    value={selectedFolderId}
+                    onChange={setSelectedFolderId}
+                    folders={folderTree}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Select a folder to organize this text. Leave empty for root level.
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t">

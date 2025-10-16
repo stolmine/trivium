@@ -33,9 +33,9 @@ pub async fn create_text(
         INSERT INTO texts (
             title, source, source_url, content, content_length,
             ingested_at, updated_at, metadata,
-            author, publication_date, publisher, access_date, doi, isbn
+            author, publication_date, publisher, access_date, doi, isbn, folder_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         request.title,
         request.source,
@@ -50,7 +50,8 @@ pub async fn create_text(
         request.publisher,
         request.access_date,
         request.doi,
-        request.isbn
+        request.isbn,
+        request.folder_id
     )
     .execute(pool)
     .await

@@ -64,4 +64,5 @@ pub struct CreateTextRequest {
     pub access_date: Option<String>,
     pub doi: Option<String>,
     pub isbn: Option<String>,
+    pub folder_id: Option<String>,
 }
