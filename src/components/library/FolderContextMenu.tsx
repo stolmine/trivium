@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FolderPlus, Edit2, Trash2 } from 'lucide-react';
 import {
   ContextMenu,
@@ -67,6 +67,20 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
       console.error('Error deleting folder:', error);
     }
   };
+
+  useEffect(() => {
+    if (!showDeleteDialog) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteDialog]);
 
   return (
     <>

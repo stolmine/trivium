@@ -92,6 +92,20 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     }
   }
 
+  useEffect(() => {
+    if (!deleteDialogOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && flashcardToDelete !== null) {
+        e.preventDefault()
+        handleConfirmDelete()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [deleteDialogOpen, flashcardToDelete])
+
   const toggleCardExpansion = (flashcardId: number) => {
     setExpandedCardIds((prev) => {
       const next = new Set(prev)

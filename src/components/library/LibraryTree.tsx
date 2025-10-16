@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { FileText } from 'lucide-react';
+import { FileText, Folder } from 'lucide-react';
 import { useLibraryStore, type SortOption } from '../../stores/library';
-import { buildTree } from '../../lib/tree-utils';
+import { buildTree, isFolderDescendant } from '../../lib/tree-utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
 import type { Text } from '../../lib/types/article';
@@ -31,7 +31,8 @@ const sortTexts = (texts: Text[], sortBy: SortOption): Text[] => {
 };
 
 export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
-  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder } = useLibraryStore();
+  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder } = useLibraryStore();
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
     loadLibrary();
@@ -57,16 +58,31 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
     const draggedData = active.data.current;
     const droppedData = over.data.current;
 
-    if (!draggedData || draggedData.type !== 'text') return;
+    if (!draggedData) return;
 
-    if (droppedData && droppedData.type === 'folder') {
-      const text = draggedData.text as Text;
-      const folderId = droppedData.folder.id;
+    if (draggedData.type === 'text') {
+      if (droppedData && droppedData.type === 'folder') {
+        const text = draggedData.text as Text;
+        const folderId = droppedData.folder.id;
+        moveTextToFolder(text.id, folderId);
+      } else if (over.id === 'root-drop-zone') {
+        const text = draggedData.text as Text;
+        moveTextToFolder(text.id, null);
+      }
+    }
 
-      moveTextToFolder(text.id, folderId);
-    } else if (over.id === 'root-drop-zone') {
-      const text = draggedData.text as Text;
-      moveTextToFolder(text.id, null);
+    if (draggedData.type === 'folder') {
+      const folder = draggedData.folder;
+
+      if (droppedData && droppedData.type === 'folder') {
+        const parentId = droppedData.folder.id;
+
+        if (!isFolderDescendant(folders, parentId, folder.id)) {
+          moveFolder(folder.id, parentId);
+        }
+      } else if (over.id === 'root-drop-zone') {
+        moveFolder(folder.id, null);
+      }
     }
   };
 
@@ -113,7 +129,14 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
   }
 
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={(e) => setActiveId(String(e.active.id))}
+      onDragEnd={(e) => {
+        handleDragEnd(e);
+        setActiveId(null);
+      }}
+    >
       <div className="space-y-1 px-2">
         {tree.map((node) => {
           if (node.type === 'folder') {
@@ -124,10 +147,21 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
         })}
       </div>
       <DragOverlay>
-        <div className="bg-sidebar-accent text-sidebar-accent-foreground px-3 py-2 rounded-md shadow-lg text-sm flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          <span>Moving text...</span>
-        </div>
+        {activeId ? (
+          <div className="bg-sidebar-accent text-sidebar-accent-foreground px-3 py-2 rounded-md shadow-lg text-sm flex items-center gap-2">
+            {String(activeId).startsWith('folder-drag-') ? (
+              <>
+                <Folder className="h-4 w-4" />
+                <span>Moving folder...</span>
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4" />
+                <span>Moving text...</span>
+              </>
+            )}
+          </div>
+        ) : null}
       </DragOverlay>
     </DndContext>
   );

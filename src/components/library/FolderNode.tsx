@@ -1,5 +1,5 @@
 import { Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
 import { useLibraryStore } from '../../stores/library';
 import { shouldReduceMotion } from '../../lib/animations';
@@ -32,6 +32,14 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
     },
   });
 
+  const draggable = useDraggable({
+    id: `folder-drag-${folder.id}`,
+    data: {
+      type: 'folder',
+      folder,
+    },
+  });
+
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     toggleFolder(folder.id);
@@ -49,8 +57,18 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
     <div>
       <FolderContextMenu folderId={folder.id} folderName={folder.name}>
         <div
-          ref={setNodeRef}
-          style={indentStyle}
+          ref={(node) => {
+            setNodeRef(node);
+            draggable.setNodeRef(node);
+          }}
+          {...draggable.attributes}
+          {...draggable.listeners}
+          style={{
+            ...indentStyle,
+            ...(draggable.transform ? {
+              transform: `translate3d(${draggable.transform.x}px, ${draggable.transform.y}px, 0)`,
+            } : undefined)
+          }}
           className={cn(
             'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
@@ -58,6 +76,7 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
               : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
             isOver && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
+            draggable.isDragging && 'opacity-50',
             !shouldReduceMotion() && 'transition-colors duration-150'
           )}
           onClick={handleSelect}

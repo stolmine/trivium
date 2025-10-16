@@ -72,6 +72,7 @@ pub fn run() {
             commands::folder::rename_folder,
             commands::folder::delete_folder,
             commands::folder::move_text_to_folder,
+            commands::folder::move_folder,
             commands::folder::get_texts_in_folder,
             commands::folder::calculate_folder_progress,
             commands::wikipedia::fetch_wikipedia_article

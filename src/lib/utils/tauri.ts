@@ -158,6 +158,9 @@ export const api = {
     moveText: async (textId: number, folderId: string | null): Promise<void> => {
       return await invoke('move_text_to_folder', { textId, folderId });
     },
+    moveFolder: async (folderId: string, parentId: string | null): Promise<void> => {
+      return await invoke('move_folder', { folderId, parentId });
+    },
     getTextsInFolder: async (folderId: string): Promise<any[]> => {
       return await invoke('get_texts_in_folder', { folderId });
     },

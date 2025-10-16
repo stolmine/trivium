@@ -27,7 +27,7 @@ export function ReviewHubPage() {
     loadFolderTree();
     loadTexts();
     fetchStats();
-  }, [config]);
+  }, [config, folderTree.length]);
 
   const loadTexts = async () => {
     try {

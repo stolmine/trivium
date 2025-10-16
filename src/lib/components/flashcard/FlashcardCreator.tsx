@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { useTextHistory } from '../../../hooks/useTextHistory'
 import { useFlashcardStore } from '../../stores/flashcard'
 import {
   Dialog,
@@ -29,12 +30,18 @@ export function FlashcardCreator({
   textId,
   selectedText,
 }: FlashcardCreatorProps) {
-  const [clozeText, setClozeText] = useState('')
+  const {
+    content: clozeText,
+    setContent: setClozeText,
+    setContentImmediate: setClozeTextImmediate,
+    textareaRef,
+    undo,
+    redo,
+  } = useTextHistory({ initialValue: selectedText, debounceMs: 500 })
   const [previewHtml, setPreviewHtml] = useState('')
   const [previewClozeNumber, setPreviewClozeNumber] = useState(1)
   const [showPreview, setShowPreview] = useState(false)
   const { createFlashcard, getPreview, isLoading } = useFlashcardStore()
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (open && selectedText) {
@@ -95,7 +102,7 @@ export function FlashcardCreator({
         before + selectedText + after +
         clozeText.substring(end)
 
-      setClozeText(newContent)
+      setClozeTextImmediate(newContent)
 
       setTimeout(() => {
         textarea.focus()
@@ -128,6 +135,21 @@ export function FlashcardCreator({
           handleWrapCloze()
           return
         }
+
+        // Add Ctrl+Z for undo
+        if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          e.preventDefault()
+          undo()
+          return
+        }
+
+        // Add Ctrl+Shift+Z or Ctrl+Y for redo
+        if ((e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey) ||
+            (e.key === 'y' && (e.ctrlKey || e.metaKey))) {
+          e.preventDefault()
+          redo()
+          return
+        }
       }
 
       // Shift+Enter to submit form (works anywhere in modal)
@@ -157,7 +179,7 @@ export function FlashcardCreator({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [open, clozeText, previewClozeNumber, isLoading])
+  }, [open, clozeText, previewClozeNumber, isLoading, undo, redo])
 
   useEffect(() => {
     if (clozeText && hasClozes(clozeText)) {

@@ -200,6 +200,35 @@ pub async fn move_text_to_folder(
 }
 
 #[tauri::command]
+pub async fn move_folder(
+    folder_id: String,
+    parent_id: Option<String>,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    let result = sqlx::query!(
+        r#"
+        UPDATE folders
+        SET parent_id = ?
+        WHERE id = ?
+        "#,
+        parent_id,
+        folder_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to move folder: {}", e))?;
+
+    if result.rows_affected() == 0 {
+        return Err("Folder not found".to_string());
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn get_texts_in_folder(
     folder_id: Option<String>,
     db: State<'_, Arc<Mutex<Database>>>,

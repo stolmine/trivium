@@ -22,6 +22,7 @@ interface LibraryState {
   renameFolder: (id: string, name: string) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
   moveTextToFolder: (textId: number, folderId: string | null) => Promise<void>;
+  moveFolder: (folderId: string, parentId: string | null) => Promise<void>;
   renameText: (id: number, title: string) => Promise<void>;
   deleteText: (id: number) => Promise<void>;
 }
@@ -125,6 +126,17 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     } catch (error) {
       console.error('Failed to move text to folder:', error);
       throw error; // Let the caller handle the error
+    }
+  },
+
+  moveFolder: async (folderId: string, parentId: string | null) => {
+    try {
+      await api.folders.moveFolder(folderId, parentId);
+      const tree = await api.folders.getAll();
+      set({ folders: tree });
+    } catch (error) {
+      console.error('Failed to move folder:', error);
+      throw error;
     }
   },
 
