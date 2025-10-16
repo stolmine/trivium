@@ -36,6 +36,17 @@ pub struct Text {
     pub access_date: Option<String>,
     pub doi: Option<String>,
     pub isbn: Option<String>,
+
+    /// Foreign key reference to folders.id (TEXT/UUID format)
+    ///
+    /// IMPORTANT: This MUST be Option<String>, not Option<i64>!
+    /// The folders.id column uses TEXT to store UUIDs like "550e8400-e29b-41d4-a716-446655440000"
+    /// Changing this to i64 will cause:
+    /// - Compilation errors (type mismatch in SQLx queries)
+    /// - Runtime failures (cannot join INTEGER to TEXT)
+    /// - Foreign key constraint violations
+    ///
+    /// See migration 20251015000002_fix_texts_folder_id.sql for schema details.
     pub folder_id: Option<String>,
 }
 

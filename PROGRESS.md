@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 6.5 Complete ✅ - Wikipedia Article Parsing Integration
+## Current Status: Phase 6.5 Complete ✅ - Merged to Main
 
-**Branch**: `5_reviewFilter`
-**Last Updated**: 2025-10-15 (Wikipedia Parsing, Review Filtering, Bug Fixes Complete)
+**Branch**: `7_touchUp3`
+**Last Updated**: 2025-10-16 (Phase 6.5 merged: Wikipedia Parsing, Review Filtering, 11 Critical Bug Fixes + Permanent folder_id Type Fix)
 
 ---
 
@@ -404,7 +404,8 @@
 
 ### ✅ Phase 6.5: Wikipedia Article Parsing Integration - COMPLETE
 **Completed**: 2025-10-15
-**Branch**: `5_reviewFilter`
+**Merged to Main**: 2025-10-16
+**Branch**: `main` (formerly `5_reviewFilter`)
 
 **Wikipedia Integration**:
 - ✅ Wikipedia URL field in ingest form with "Fetch Article" button
@@ -477,6 +478,7 @@
 
 **Commits**:
 - Wikipedia parsing integration commits on `5_reviewFilter` branch
+- Merged to `main` branch on 2025-10-16
 
 ---
 
@@ -676,6 +678,33 @@
   - **Files Modified**: `src/routes/review/index.tsx`
   - **Status**: Fixed, text dropdown now shows human-readable titles
 
+- ✅ **FIXED**: Cyclical folder_id type mismatch causing compilation/runtime failures
+  - **Issue**: folder_id field kept being changed between `Option<i64>` and `Option<String>`, causing cyclical failures
+    - Changing to `Option<i64>` → compiles but breaks runtime (folders.id is TEXT/UUID)
+    - Changing to `Option<String>` → fixes runtime but breaks compile (SQLx saw INTEGER in schema)
+  - **Root Cause**: Phantom migration records - migrations marked as "applied" but never executed
+    - Migration 20251015000002 should have changed `folder_id` from INTEGER → TEXT
+    - Migration record was manually inserted into `_sqlx_migrations` table
+    - Actual database schema remained as `folder_id INTEGER`
+    - SQLx compile-time checking correctly detected the type mismatch
+  - **Fix**: Properly executed the phantom migrations:
+    - Deleted phantom migration records from `_sqlx_migrations` table
+    - Re-ran migrations 20251015000001-002 with `cargo sqlx migrate run`
+    - Schema now correctly shows `folder_id TEXT` (matches folders.id UUID format)
+    - Regenerated SQLx offline cache with `cargo sqlx prepare`
+    - Added comprehensive documentation to Text.folder_id field explaining type requirements
+  - **Prevention**:
+    - Documentation warns against changing to `Option<i64>`
+    - Explains foreign key relationship: texts.folder_id (TEXT) → folders.id (TEXT)
+    - References migration file for schema verification
+    - SQLx offline cache now committed to prevent future mismatches
+  - **Files Modified**:
+    - `src-tauri/src/models/text.rs` (added documentation)
+    - Database schema (folder_id INTEGER → TEXT via migrations)
+    - `.sqlx/` cache directory (regenerated with correct types)
+  - **Commits**: `54fbc85` - Fix folder_id type mismatch permanently
+  - **Status**: Fixed permanently with documentation to prevent recurrence
+
 ### Database
 - ✅ FSRS crate dependency conflict resolved via manual implementation
   - **Resolution**: Implemented FSRS-5 algorithm manually in Rust
@@ -764,7 +793,8 @@
 4. ✅ Fix NaN values in stats display
 5. ✅ Update documentation with Phase 6 completion
 6. ✅ Implement Wikipedia article parsing integration
-7. Merge `5_reviewFilter` branch to `main`
+7. ✅ Merge `5_reviewFilter` branch to `main` (completed 2025-10-16)
+8. ✅ Update documentation for Phase 6.5 merge
 
 ### Short Term (Next):
 1. **Ready to start Phase 7** (Future Enhancements)
@@ -851,5 +881,6 @@
 
 ---
 
-**Last Updated**: 2025-10-15
+**Last Updated**: 2025-10-16
 **Next Review**: After Phase 7 planning
+**Current Branch**: main (Phase 6.5 merged)
