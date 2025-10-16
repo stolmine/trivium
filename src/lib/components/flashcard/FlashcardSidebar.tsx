@@ -104,8 +104,9 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     })
   }
 
-  const extractContext = (clozeText: string): string => {
-    const clozeMatch = clozeText.match(/\{\{c\d+::[^}]+\}\}/)
+  const extractContext = (clozeText: string, targetClozeNumber: number): string => {
+    const clozeRegex = new RegExp(`\\{\\{c${targetClozeNumber}::[^}]+\\}\\}`)
+    const clozeMatch = clozeText.match(clozeRegex)
     if (!clozeMatch) return clozeText
 
     const clozePosition = clozeMatch.index || 0
@@ -152,7 +153,7 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
 
     // Fall back to word-based context if no clear sentence boundaries
     const words = clozeText.split(/\s+/)
-    const clozeWordIndex = words.findIndex((word) => word.includes('{{c'))
+    const clozeWordIndex = words.findIndex((word) => word.includes(`{{c${targetClozeNumber}::`))
 
     if (clozeWordIndex === -1) return clozeText
 
@@ -171,12 +172,12 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
   const renderClozePreview = (flashcard: Flashcard) => {
     const parts = flashcard.clozeText.split(/(\{\{c\d+::[^}]+\}\})/g)
     return parts.map((part, idx) => {
-      const match = part.match(/\{\{c(\d+)::([^}]+)\}\}/)
+      const match = part.match(/\{\{c(\d+)::([^}:]+)(?:::([^}]+))?\}\}/)
       if (match) {
         if (parseInt(match[1]) === flashcard.clozeNumber) {
           return (
             <span key={idx} className="bg-blue-100 text-blue-800 px-1 rounded">
-              [{match[2]}]
+              [...]
             </span>
           )
         }
@@ -282,7 +283,7 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
           <div className="space-y-3">
             {sortedFlashcards.map((flashcard) => {
               const isExpanded = expandedCardIds.has(flashcard.id)
-              const contextText = extractContext(flashcard.clozeText)
+              const contextText = extractContext(flashcard.clozeText, flashcard.clozeNumber)
 
               return (
                 <div

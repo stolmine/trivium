@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
+import { useSettingsStore } from '../../lib/stores/settings'
 import {
   Button,
   DropdownMenu,
@@ -19,7 +20,7 @@ import {
 } from '../../lib/components/ui'
 import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges } from '../../lib/components/reading'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
-import { ChevronLeft, MoreVertical, Edit2, Trash2 } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Edit2, Trash2, Link } from 'lucide-react'
 
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
@@ -41,6 +42,7 @@ export function ReadPage() {
     setExcludedRanges
   } = useReadingStore()
   const { renameText, deleteText } = useLibraryStore()
+  const { linksEnabled, toggleLinks } = useSettingsStore()
 
   useEffect(() => {
     if (id) {
@@ -170,6 +172,15 @@ export function ReadPage() {
                 <div className="text-sm text-muted-foreground">
                   Progress: <span className="font-medium">{totalProgress.toFixed(0)}%</span>
                 </div>
+                <Button
+                  variant={linksEnabled ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={toggleLinks}
+                  title={linksEnabled ? 'Links enabled (Ctrl+L)' : 'Links disabled (Ctrl+L)'}
+                  aria-label={linksEnabled ? 'Disable links' : 'Enable links'}
+                >
+                  <Link className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -213,6 +224,7 @@ export function ReadPage() {
                 <ReadHighlighter
                   content={currentText.content}
                   readRanges={readRanges}
+                  linksEnabled={linksEnabled}
                 />
               </TextSelectionMenu>
             </article>

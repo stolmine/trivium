@@ -123,6 +123,10 @@ fn html_to_plain_text(html: &str) -> Result<String> {
         "style",
         "script",
         ".noexcerpt",
+        ".geo-default",
+        ".geo-dms",
+        ".geo-dec",
+        ".geo",
     ];
 
     let mut result = Vec::new();
@@ -134,6 +138,9 @@ fn html_to_plain_text(html: &str) -> Result<String> {
     }
 
     let text = result.join("\n");
+    let text = remove_css_artifacts(&text);
+    let text = remove_wayback_artifacts(&text);
+    let text = remove_coordinate_artifacts(&text);
     Ok(text)
 }
 
@@ -196,6 +203,18 @@ fn extract_text_recursive(
     }
 }
 
+fn is_image_url(url: &str) -> bool {
+    let lower = url.to_lowercase();
+    lower.ends_with(".jpg") ||
+    lower.ends_with(".jpeg") ||
+    lower.ends_with(".png") ||
+    lower.ends_with(".gif") ||
+    lower.ends_with(".svg") ||
+    lower.ends_with(".webp") ||
+    lower.ends_with(".bmp") ||
+    lower.ends_with(".ico")
+}
+
 fn get_text_with_links(node: scraper::element_ref::ElementRef) -> String {
     let mut result = String::new();
     for child in node.children() {
@@ -203,13 +222,57 @@ fn get_text_with_links(node: scraper::element_ref::ElementRef) -> String {
             result.push_str(text);
         } else if let Some(elem) = scraper::ElementRef::wrap(child) {
             if elem.value().name() == "a" {
-                result.push_str(&elem.text().collect::<String>());
+                let link_text = elem.text().collect::<String>();
+                if let Some(href) = elem.value().attr("href") {
+                    let full_url = if href.starts_with("/wiki/") {
+                        format!("https://en.wikipedia.org{}", href)
+                    } else if href.starts_with("http://") || href.starts_with("https://") {
+                        href.to_string()
+                    } else {
+                        link_text.clone()
+                    };
+
+                    if is_image_url(&full_url) {
+                        continue;
+                    }
+
+                    if link_text.trim().is_empty() {
+                        continue;
+                    }
+
+                    if full_url != link_text {
+                        result.push_str(&format!("[{}]({})", link_text, full_url));
+                    } else {
+                        result.push_str(&link_text);
+                    }
+                } else {
+                    result.push_str(&link_text);
+                }
             } else {
                 result.push_str(&get_text_with_links(elem));
             }
         }
     }
     result
+}
+
+fn remove_css_artifacts(text: &str) -> String {
+    let css_pattern = Regex::new(r"\.mw-parser-output[^}]*\{[^}]*\}").unwrap();
+    let inline_style_pattern = Regex::new(r"\{[^}]*:[^}]*\}").unwrap();
+
+    let text = css_pattern.replace_all(text, "");
+    let text = inline_style_pattern.replace_all(&text, "");
+    text.to_string()
+}
+
+fn remove_wayback_artifacts(text: &str) -> String {
+    let wayback_pattern = Regex::new(r"Archived\s+\d+\s+\w+\s+\d+\s+at\s+the\s+Wayback\s+Machine").unwrap();
+    wayback_pattern.replace_all(text, "").to_string()
+}
+
+fn remove_coordinate_artifacts(text: &str) -> String {
+    let coord_pattern = Regex::new(r"\d+°\d+′[NS]\s+\d+°\d+′[EW][^a-zA-Z]*").unwrap();
+    coord_pattern.replace_all(text, "").to_string()
 }
 
 fn matches_selector(node: scraper::element_ref::ElementRef, selector: &Selector) -> bool {
@@ -225,11 +288,23 @@ fn clean_empty_sections(text: &str) -> String {
     let mut result = Vec::new();
     let mut i = 0;
 
+    let skip_sections = vec![
+        "External links",
+        "See also",
+        "References",
+        "Notes",
+        "Further reading",
+    ];
+
     while i < lines.len() {
         let line = lines[i];
 
         if line.starts_with("==") && line.ends_with("==") {
             let section_header = line;
+            let section_title = line.trim_matches(|c| c == '=' || c == ' ');
+
+            let should_skip = skip_sections.iter().any(|&skip| section_title == skip);
+
             i += 1;
 
             let mut section_content = Vec::new();
@@ -240,6 +315,10 @@ fn clean_empty_sections(text: &str) -> String {
                 }
                 section_content.push(next_line);
                 i += 1;
+            }
+
+            if should_skip {
+                continue;
             }
 
             let has_content = section_content
@@ -428,5 +507,79 @@ mod tests {
         let text = "This text has no references.";
         let stripped = strip_reference_indicators(text);
         assert_eq!(stripped, "This text has no references.");
+    }
+
+    #[test]
+    fn test_html_to_plain_text_preserves_mw_parser_output_content() {
+        let html = r#"
+            <div class="mw-parser-output">
+                <p>This is the main content of the article.</p>
+                <p>It should be preserved.</p>
+            </div>
+        "#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(result.contains("This is the main content"));
+        assert!(result.contains("It should be preserved"));
+    }
+
+    #[test]
+    fn test_remove_css_artifacts_removes_mw_parser_output_css() {
+        let text = ".mw-parser-output{color:red;font-size:12px}\nActual content here\n.mw-parser-output .special{margin:10px}";
+        let cleaned = remove_css_artifacts(text);
+        assert!(!cleaned.contains(".mw-parser-output{"));
+        assert!(!cleaned.contains("color:red"));
+        assert!(cleaned.contains("Actual content here"));
+    }
+
+    #[test]
+    fn test_html_to_plain_text_removes_unwanted_elements() {
+        let html = r#"
+            <div class="mw-parser-output">
+                <p>Article content.</p>
+                <div class="infobox">This should be removed</div>
+                <p>More content.</p>
+                <table><tr><td>Table content to remove</td></tr></table>
+            </div>
+        "#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(result.contains("Article content"));
+        assert!(result.contains("More content"));
+        assert!(!result.contains("This should be removed"));
+        assert!(!result.contains("Table content"));
+    }
+
+    #[test]
+    fn test_is_image_url_detects_common_formats() {
+        assert!(is_image_url("https://example.com/image.jpg"));
+        assert!(is_image_url("https://example.com/image.jpeg"));
+        assert!(is_image_url("https://example.com/image.png"));
+        assert!(is_image_url("https://example.com/image.gif"));
+        assert!(is_image_url("https://example.com/image.svg"));
+        assert!(is_image_url("https://example.com/image.webp"));
+        assert!(is_image_url("/wiki/File:Example.PNG"));
+        assert!(!is_image_url("https://example.com/article"));
+        assert!(!is_image_url("https://en.wikipedia.org/wiki/Article"));
+    }
+
+    #[test]
+    fn test_get_text_with_links_filters_image_links() {
+        let html = r#"<p>Text with <a href="https://example.com/image.jpg"></a> and <a href="https://example.com/article">link</a>.</p>"#;
+        let document = Html::parse_fragment(html);
+        let p_selector = Selector::parse("p").unwrap();
+        let p_elem = document.select(&p_selector).next().unwrap();
+        let result = get_text_with_links(p_elem);
+        assert!(!result.contains(".jpg"));
+        assert!(result.contains("[link](https://example.com/article)"));
+    }
+
+    #[test]
+    fn test_get_text_with_links_filters_empty_links() {
+        let html = r#"<p>Text with <a href="https://example.com/page"></a> and <a href="https://example.com/other">text</a>.</p>"#;
+        let document = Html::parse_fragment(html);
+        let p_selector = Selector::parse("p").unwrap();
+        let p_elem = document.select(&p_selector).next().unwrap();
+        let result = get_text_with_links(p_elem);
+        assert!(!result.contains("[]("));
+        assert!(result.contains("[text](https://example.com/other)"));
     }
 }

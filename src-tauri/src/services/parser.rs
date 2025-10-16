@@ -27,44 +27,59 @@ pub struct Paragraph {
 
 pub fn detect_paragraphs(content: &str) -> Vec<Paragraph> {
     let mut paragraphs = Vec::new();
-    let mut current_position = 0;
     let mut paragraph_index = 0;
 
-    let parts: Vec<&str> = content.split("\n\n").collect();
+    let chars: Vec<char> = content.chars().collect();
+    let mut pos = 0;
 
-    for part in parts {
-        let trimmed = part.trim();
-
-        if trimmed.is_empty() {
-            continue;
+    while pos < chars.len() {
+        while pos < chars.len() && (chars[pos] == '\n' || chars[pos] == '\r' || chars[pos] == ' ' || chars[pos] == '\t') {
+            pos += 1;
         }
 
-        let start = content[current_position..]
-            .find(trimmed)
-            .map(|pos| current_position + pos)
-            .unwrap_or(current_position);
+        if pos >= chars.len() {
+            break;
+        }
 
-        let end = start + trimmed.len();
-        let char_count = trimmed.chars().count() as i64;
+        let start = pos;
 
-        paragraphs.push(Paragraph {
-            paragraph_index,
-            start_position: start as i64,
-            end_position: end as i64,
-            character_count: char_count,
-        });
+        let mut consecutive_newlines = 0;
+        while pos < chars.len() {
+            if chars[pos] == '\n' {
+                consecutive_newlines += 1;
+                if consecutive_newlines >= 2 {
+                    break;
+                }
+            } else if chars[pos] != '\r' {
+                consecutive_newlines = 0;
+            }
+            pos += 1;
+        }
 
-        paragraph_index += 1;
-        current_position = end;
+        let mut end = pos;
+        while end > start && (chars[end - 1] == '\n' || chars[end - 1] == '\r' || chars[end - 1] == ' ' || chars[end - 1] == '\t') {
+            end -= 1;
+        }
+
+        if end > start {
+            let char_count = (end - start) as i64;
+            paragraphs.push(Paragraph {
+                paragraph_index,
+                start_position: start as i64,
+                end_position: end as i64,
+                character_count: char_count,
+            });
+            paragraph_index += 1;
+        }
     }
 
     if paragraphs.is_empty() && !content.trim().is_empty() {
-        let trimmed = content.trim();
+        let char_count = content.trim().chars().count() as i64;
         paragraphs.push(Paragraph {
             paragraph_index: 0,
             start_position: 0,
-            end_position: trimmed.len() as i64,
-            character_count: trimmed.chars().count() as i64,
+            end_position: char_count,
+            character_count: char_count,
         });
     }
 
@@ -96,14 +111,128 @@ pub async fn store_paragraphs(
 }
 
 pub fn calculate_excluded_character_count(content: &str) -> i64 {
-    let re = Regex::new(r"\[\[exclude\]\](.*?)\[\[/exclude\]\]").unwrap();
+    let re = match Regex::new(r"\[\[exclude\]\](.*?)\[\[/exclude\]\]") {
+        Ok(r) => r,
+        Err(_) => return 0,
+    };
     let mut total_excluded = 0i64;
 
     for cap in re.captures_iter(content) {
         if let Some(excluded_text) = cap.get(1) {
-            total_excluded += excluded_text.as_str().len() as i64;
+            total_excluded += excluded_text.as_str().chars().count() as i64;
         }
     }
 
     total_excluded
+}
+
+#[derive(Debug, Clone)]
+pub struct HeaderRange {
+    pub start_position: i64,
+    pub end_position: i64,
+}
+
+fn byte_offset_to_char_offset(content: &str, byte_offset: usize) -> usize {
+    content[..byte_offset].chars().count()
+}
+
+pub fn detect_header_ranges(content: &str) -> Vec<HeaderRange> {
+    let mut header_ranges = Vec::new();
+
+    let re = match Regex::new(r"(?m)^(={2,})\s*(.+?)\s*(={2,})$") {
+        Ok(r) => r,
+        Err(_) => return header_ranges,
+    };
+
+    for cap in re.captures_iter(content) {
+        if let (Some(full_match), Some(opening), Some(closing)) = (cap.get(0), cap.get(1), cap.get(3)) {
+            let opening_count = opening.as_str().len();
+            let closing_count = closing.as_str().len();
+
+            if opening_count == closing_count {
+                let start_char = byte_offset_to_char_offset(content, full_match.start()) as i64;
+                let header_text = &content[full_match.start()..full_match.end()];
+                let end_char = start_char + header_text.chars().count() as i64;
+
+                header_ranges.push(HeaderRange {
+                    start_position: start_char,
+                    end_position: end_char,
+                });
+            }
+        }
+    }
+
+    header_ranges
+}
+
+pub fn calculate_header_character_count(content: &str) -> i64 {
+    let header_ranges = detect_header_ranges(content);
+    header_ranges.iter().map(|h| h.end_position - h.start_position).sum()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_detect_header_ranges_h2() {
+        let content = "Some text\n\n== Header 2 ==\n\nMore text";
+        let headers = detect_header_ranges(content);
+        assert_eq!(headers.len(), 1);
+        assert!(headers[0].end_position > headers[0].start_position);
+    }
+
+    #[test]
+    fn test_detect_header_ranges_h3() {
+        let content = "Text\n\n=== Header 3 ===\n\nContent";
+        let headers = detect_header_ranges(content);
+        assert_eq!(headers.len(), 1);
+    }
+
+    #[test]
+    fn test_detect_header_ranges_h4() {
+        let content = "Text\n\n==== Header 4 ====\n\nContent";
+        let headers = detect_header_ranges(content);
+        assert_eq!(headers.len(), 1);
+    }
+
+    #[test]
+    fn test_detect_header_ranges_multiple() {
+        let content = r#"
+== Header 2 ==
+
+Content
+
+=== Header 3 ===
+
+More content
+
+==== Header 4 ====
+
+Final content
+"#;
+        let headers = detect_header_ranges(content);
+        assert_eq!(headers.len(), 3);
+    }
+
+    #[test]
+    fn test_detect_header_ranges_mismatched_equals() {
+        let content = "Text\n\n=== Not A Header ==\n\nContent";
+        let headers = detect_header_ranges(content);
+        assert_eq!(headers.len(), 0);
+    }
+
+    #[test]
+    fn test_detect_header_ranges_no_panic() {
+        let content = "== Valid Header ==\n=== Also Valid ===\n==== Another ====";
+        let headers = detect_header_ranges(content);
+        assert_eq!(headers.len(), 3);
+    }
+
+    #[test]
+    fn test_calculate_header_character_count() {
+        let content = "Text\n\n== Header ==\n\nContent";
+        let count = calculate_header_character_count(content);
+        assert!(count > 0);
+    }
 }

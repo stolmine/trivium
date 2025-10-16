@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSettingsStore } from '../lib/stores/settings';
 
 export interface KeyboardShortcut {
   key: string;
@@ -56,6 +57,7 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
 
 export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: () => void) {
   const navigate = useNavigate();
+  const { toggleLinks } = useSettingsStore();
 
   const handleNavigation = (path: string) => () => navigate(path);
 
@@ -65,6 +67,13 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       ctrlKey: true,
       action: onToggleSidebar,
       description: 'Toggle sidebar',
+      category: 'view',
+    },
+    {
+      key: 'l',
+      ctrlKey: true,
+      action: toggleLinks,
+      description: 'Toggle clickable links in reading view',
       category: 'view',
     },
     {

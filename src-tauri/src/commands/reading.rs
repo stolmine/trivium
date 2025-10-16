@@ -94,7 +94,8 @@ pub async fn calculate_text_progress(
 
     let total_chars = text_result.content_length;
     let excluded_chars = parser::calculate_excluded_character_count(&text_result.content);
-    let countable_chars = total_chars - excluded_chars;
+    let header_chars = parser::calculate_header_character_count(&text_result.content);
+    let countable_chars = total_chars - excluded_chars - header_chars;
 
     if countable_chars <= 0 {
         return Ok(0.0);

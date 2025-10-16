@@ -26,16 +26,32 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed) return
 
-    const range = selection.getRangeAt(0)
     const articleElement = document.getElementById('article-content')
     if (!articleElement) return
 
-    const preCaretRange = range.cloneRange()
-    preCaretRange.selectNodeContents(articleElement)
-    preCaretRange.setEnd(range.startContainer, range.startOffset)
-    const startPosition = preCaretRange.toString().length
+    const range = selection.getRangeAt(0)
 
-    const endPosition = startPosition + selection.toString().length
+    const preRange = document.createRange()
+    preRange.selectNodeContents(articleElement)
+    preRange.setEnd(range.startContainer, range.startOffset)
+
+    const textBeforeSelection = preRange.toString()
+    const selectedText = selection.toString()
+
+    const startPosition = textBeforeSelection.length
+    const endPosition = startPosition + selectedText.length
+
+    // DEBUG LOGGING
+    console.log('=== TextSelectionMenu: handleToggleRead ===')
+    console.log('Article DOM length:', articleElement.textContent?.length)
+    console.log('Article innerHTML sample (first 200 chars):', articleElement.innerHTML.substring(0, 200))
+    console.log('Article textContent sample (first 200 chars):', articleElement.textContent?.substring(0, 200))
+    console.log('Selected text:', `"${selectedText}"`)
+    console.log('Selected text length:', selectedText.length)
+    console.log('Calculated positions:', { startPosition, endPosition })
+    console.log('Text at positions in DOM:', `"${articleElement.textContent?.substring(startPosition, endPosition)}"`)
+    console.log('Does selected text match DOM text at positions?', selectedText === articleElement.textContent?.substring(startPosition, endPosition))
+    console.log('=========================================')
 
     if (isRangeExcluded(startPosition, endPosition)) {
       console.log('Cannot mark excluded text as read')

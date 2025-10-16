@@ -285,3 +285,40 @@
   display: block;
   border-radius: 0.25rem;
 }
+
+.read-header {
+  background-color: rgba(128, 128, 128, 0.2);
+  color: var(--muted-foreground);
+  padding: 0 4px;
+  border-radius: 4px;
+  font-style: italic;
+}
+
+.clickable-link {
+  color: hsl(217, 91%, 60%) !important;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.clickable-link:hover {
+  color: hsl(217, 91%, 50%) !important;
+  text-decoration-thickness: 2px;
+}
+
+.clickable-link:active {
+  color: hsl(217, 91%, 40%) !important;
+}
+
+.dark .clickable-link {
+  color: hsl(217, 91%, 70%) !important;
+}
+
+.dark .clickable-link:hover {
+  color: hsl(217, 91%, 80%) !important;
+}
+
+.dark .clickable-link:active {
+  color: hsl(217, 91%, 60%) !important;
+}
