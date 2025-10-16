@@ -2,8 +2,8 @@
 
 ## Current Status: Phase 6.5 Complete ✅ - Merged to Main
 
-**Branch**: `main`
-**Last Updated**: 2025-10-16 (Phase 6.5 merged: Wikipedia Parsing, Review Filtering, 10 Critical Bug Fixes)
+**Branch**: `7_touchUp3`
+**Last Updated**: 2025-10-16 (Phase 6.5 merged: Wikipedia Parsing, Review Filtering, 11 Critical Bug Fixes + Permanent folder_id Type Fix)
 
 ---
 
@@ -677,6 +677,33 @@
     - Modified SelectValue to display text name using children prop
   - **Files Modified**: `src/routes/review/index.tsx`
   - **Status**: Fixed, text dropdown now shows human-readable titles
+
+- ✅ **FIXED**: Cyclical folder_id type mismatch causing compilation/runtime failures
+  - **Issue**: folder_id field kept being changed between `Option<i64>` and `Option<String>`, causing cyclical failures
+    - Changing to `Option<i64>` → compiles but breaks runtime (folders.id is TEXT/UUID)
+    - Changing to `Option<String>` → fixes runtime but breaks compile (SQLx saw INTEGER in schema)
+  - **Root Cause**: Phantom migration records - migrations marked as "applied" but never executed
+    - Migration 20251015000002 should have changed `folder_id` from INTEGER → TEXT
+    - Migration record was manually inserted into `_sqlx_migrations` table
+    - Actual database schema remained as `folder_id INTEGER`
+    - SQLx compile-time checking correctly detected the type mismatch
+  - **Fix**: Properly executed the phantom migrations:
+    - Deleted phantom migration records from `_sqlx_migrations` table
+    - Re-ran migrations 20251015000001-002 with `cargo sqlx migrate run`
+    - Schema now correctly shows `folder_id TEXT` (matches folders.id UUID format)
+    - Regenerated SQLx offline cache with `cargo sqlx prepare`
+    - Added comprehensive documentation to Text.folder_id field explaining type requirements
+  - **Prevention**:
+    - Documentation warns against changing to `Option<i64>`
+    - Explains foreign key relationship: texts.folder_id (TEXT) → folders.id (TEXT)
+    - References migration file for schema verification
+    - SQLx offline cache now committed to prevent future mismatches
+  - **Files Modified**:
+    - `src-tauri/src/models/text.rs` (added documentation)
+    - Database schema (folder_id INTEGER → TEXT via migrations)
+    - `.sqlx/` cache directory (regenerated with correct types)
+  - **Commits**: `54fbc85` - Fix folder_id type mismatch permanently
+  - **Status**: Fixed permanently with documentation to prevent recurrence
 
 ### Database
 - ✅ FSRS crate dependency conflict resolved via manual implementation

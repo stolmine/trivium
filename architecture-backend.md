@@ -1,5 +1,12 @@
 # Backend Architecture - Trivium
 
+> **⚠️ Note**: This document contains outdated schema information. The actual implementation differs:
+> - Folders use TEXT (UUID) primary keys, not INTEGER AUTOINCREMENT
+> - Texts have a direct `folder_id TEXT` column (foreign key to folders.id)
+> - No separate `text_folders` junction table (replaced by folder_id column)
+> - See migration files in `src-tauri/migrations/` for current schema
+> - Last schema change: 2025-10-16 (folder_id INTEGER → TEXT via migration 20251015000002)
+
 ## Technology Stack
 
 ### Core Technologies
