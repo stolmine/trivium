@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-15 (Phase 6.5 Complete: Wikipedia Parsing Integration + Review Filtering + 10 Critical Bug Fixes + SQLx Migration Repair)
+Last Updated: 2025-10-16 (Phase 6.5 Merged to Main: Wikipedia Parsing Integration + Review Filtering + 10 Critical Bug Fixes + SQLx Migration Repair)
 
 ---
 
@@ -25,12 +25,12 @@ Last Updated: 2025-10-15 (Phase 6.5 Complete: Wikipedia Parsing Integration + Re
 ## Architecture & Design
 
 ### `/Users/why/repos/trivium/architecture-backend.md`
-**Description**: Comprehensive backend architecture documentation covering technology stack (Rust/Tauri/SQLite), complete database schema (10+ tables), all command modules, models, services, and FSRS algorithm integration details
-**Last Updated**: 2025-10-12
+**Description**: Comprehensive backend architecture documentation covering technology stack (Rust/Tauri/SQLite), complete database schema (10+ tables), all command modules (including Wikipedia integration - Phase 6.5), models, services (FSRS-5 algorithm, Wikipedia HTML parsing), and complete project structure
+**Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/architecture-frontend.md`
-**Description**: Frontend architecture specifications with React/TypeScript/Zustand stack, complete state management patterns, component hierarchies for all major features (reading, flashcards, folders, stats), and keyboard shortcuts system
-**Last Updated**: 2025-10-12
+**Description**: Frontend architecture specifications with React/TypeScript/Zustand stack, complete state management patterns, component hierarchies for all major features (reading, flashcards, folders, stats), Wikipedia integration implementation (Phase 6.5), Tauri API wrappers, and keyboard shortcuts system
+**Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/ARCHITECTURE_GAP_ANALYSIS.md`
 **Description**: Detailed gap analysis between UI specifications and current implementation. Identifies critical new requirements (folder system, granular read/unread tracking, paragraph detection, resizable layouts) with database schema changes and implementation priorities across 6 phases
@@ -53,8 +53,8 @@ Last Updated: 2025-10-15 (Phase 6.5 Complete: Wikipedia Parsing Integration + Re
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 10 Critical Bug Fixes), current capabilities, upcoming phases, detailed bug fix documentation (10 major issues resolved), testing status, and next actions
-**Last Updated**: 2025-10-15
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 10 Critical Bug Fixes - now merged to main), current capabilities (25+ user-facing features), upcoming phases, detailed bug fix documentation (10 major issues resolved), testing status, and next actions
+**Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones

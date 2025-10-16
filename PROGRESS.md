@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 6.5 Complete ✅ - Wikipedia Article Parsing Integration
+## Current Status: Phase 6.5 Complete ✅ - Merged to Main
 
-**Branch**: `5_reviewFilter`
-**Last Updated**: 2025-10-15 (Wikipedia Parsing, Review Filtering, Bug Fixes Complete)
+**Branch**: `main`
+**Last Updated**: 2025-10-16 (Phase 6.5 merged: Wikipedia Parsing, Review Filtering, 10 Critical Bug Fixes)
 
 ---
 
@@ -404,7 +404,8 @@
 
 ### ✅ Phase 6.5: Wikipedia Article Parsing Integration - COMPLETE
 **Completed**: 2025-10-15
-**Branch**: `5_reviewFilter`
+**Merged to Main**: 2025-10-16
+**Branch**: `main` (formerly `5_reviewFilter`)
 
 **Wikipedia Integration**:
 - ✅ Wikipedia URL field in ingest form with "Fetch Article" button
@@ -477,6 +478,7 @@
 
 **Commits**:
 - Wikipedia parsing integration commits on `5_reviewFilter` branch
+- Merged to `main` branch on 2025-10-16
 
 ---
 
@@ -764,7 +766,8 @@
 4. ✅ Fix NaN values in stats display
 5. ✅ Update documentation with Phase 6 completion
 6. ✅ Implement Wikipedia article parsing integration
-7. Merge `5_reviewFilter` branch to `main`
+7. ✅ Merge `5_reviewFilter` branch to `main` (completed 2025-10-16)
+8. ✅ Update documentation for Phase 6.5 merge
 
 ### Short Term (Next):
 1. **Ready to start Phase 7** (Future Enhancements)
@@ -851,5 +854,6 @@
 
 ---
 
-**Last Updated**: 2025-10-15
+**Last Updated**: 2025-10-16
 **Next Review**: After Phase 7 planning
+**Current Branch**: main (Phase 6.5 merged)

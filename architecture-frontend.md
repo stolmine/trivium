@@ -899,8 +899,19 @@ function IngestModal({ isOpen, onClose }) {
           </TabsContent>
 
           <TabsContent value="wikipedia">
-            <Input placeholder="Wikipedia URL" />
-            <Button>Auto-Parse Article</Button>
+            {/* Phase 6.5 - Implemented */}
+            <Input
+              placeholder="Wikipedia URL (e.g., https://en.wikipedia.org/wiki/Title)"
+              value={wikipediaUrl}
+              onChange={(e) => setWikipediaUrl(e.target.value)}
+            />
+            <Button
+              onClick={handleFetchWikipedia}
+              disabled={isFetching}
+            >
+              {isFetching ? 'Fetching...' : 'Fetch Article'}
+            </Button>
+            {/* Auto-populates content, title, publisher, publicationDate, source */}
           </TabsContent>
         </Tabs>
 
@@ -913,6 +924,59 @@ function IngestModal({ isOpen, onClose }) {
   );
 }
 ```
+
+### Wikipedia Integration (Phase 6.5)
+
+Wikipedia article fetching with HTML parsing for clean content extraction:
+
+```tsx
+// src/lib/utils/tauri.ts
+export const wikipedia = {
+  fetch: async (url: string): Promise<WikipediaArticle> => {
+    return await invoke('fetch_wikipedia_article', { url });
+  }
+};
+
+// src/lib/types/wikipedia.ts
+export interface WikipediaArticle {
+  title: string;
+  content: string;
+  source_url: string;
+  publisher: string;
+  publication_date: string;
+}
+
+// Usage in ingest form
+const handleFetchWikipedia = async () => {
+  setIsFetching(true);
+  try {
+    const article = await wikipedia.fetch(wikipediaUrl);
+
+    // Auto-populate all form fields
+    setContent(article.content);
+    setMetadata({
+      title: article.title,
+      publisher: article.publisher,
+      publicationDate: article.publication_date,
+      source: article.source_url,
+      // Other fields remain empty
+    });
+  } catch (error) {
+    console.error('Failed to fetch Wikipedia article:', error);
+    // Show user-friendly error message
+  } finally {
+    setIsFetching(false);
+  }
+};
+```
+
+**Features**:
+- HTML-to-text parsing with CSS selector-based filtering
+- Removes infoboxes, navigation, references, and tables
+- Preserves section headings and instrumentation lists
+- Link text content preserved (not removed)
+- Automatic metadata population
+- Error handling with user feedback
 
 ## Resizable Panel Layout
 

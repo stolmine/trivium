@@ -265,25 +265,51 @@ let easy_state = &scheduling_cards.easy;
 
 ## Wikipedia API Integration
 
-### Fetching Article Content
+### Fetching and Parsing Article Content
+
+Wikipedia integration uses the Parse API with HTML parsing for superior content extraction:
 
 ```rust
 use reqwest::Client;
+use scraper::{Html, Selector};
 
 #[tauri::command]
-async fn fetch_wikipedia_article(title: String) -> Result<String, String> {
+async fn fetch_wikipedia_article(url: String) -> Result<WikipediaArticle, String> {
+    // Extract page title from URL
+    let title = extract_title_from_url(&url)?;
+
+    // Fetch HTML from Wikipedia Parse API
     let client = Client::new();
-    let url = format!(
-        "https://en.wikipedia.org/w/api.php?action=query&prop=extracts&titles={}&explaintext=1&format=json",
+    let api_url = format!(
+        "https://en.wikipedia.org/w/api.php?action=parse&page={}&prop=text&format=json",
         urlencoding::encode(&title)
     );
 
-    let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
-    let wiki_response: WikiResponse = response.json().await.map_err(|e| e.to_string())?;
+    let response = client.get(&api_url).send().await.map_err(|e| e.to_string())?;
+    let parse_response: ParseResponse = response.json().await.map_err(|e| e.to_string())?;
 
-    Ok(wiki_response.extract())
+    // Parse HTML and extract clean text
+    let html = Html::parse_document(&parse_response.parse.text);
+    let content = extract_clean_text(&html)?;
+
+    Ok(WikipediaArticle {
+        title,
+        content,
+        source_url: url,
+        publisher: "Wikipedia".to_string(),
+        publication_date: chrono::Utc::now().format("%Y-%m-%d").to_string(),
+    })
 }
 ```
+
+**Key Features (Phase 6.5 - Complete)**:
+- HTML-to-text parsing with `scraper` crate
+- CSS selector-based content filtering
+- Removes infoboxes, navigation, references, and tables
+- Preserves section headings and instrumentation lists
+- Link text extraction (not removed)
+- Clean whitespace normalization
+- Automatic metadata population
 
 ## Project Structure
 
@@ -296,8 +322,9 @@ src-tauri/src/
 │   ├── reading.rs        # Reading progress, ranges, paragraphs
 │   ├── flashcards.rs     # Flashcard commands
 │   ├── review.rs         # Review/SRS commands with filtering
-│   ├── folders.rs        # Folder management (NEW)
-│   └── stats.rs          # Statistics aggregation (NEW)
+│   ├── folders.rs        # Folder management
+│   ├── wikipedia.rs      # Wikipedia fetching command (Phase 6.5)
+│   └── stats.rs          # Statistics aggregation
 ├── models/
 │   ├── mod.rs
 │   ├── text.rs
@@ -309,10 +336,10 @@ src-tauri/src/
 │   └── stats.rs          # Stats models (NEW)
 ├── services/
 │   ├── mod.rs
-│   ├── srs.rs            # FSRS logic
-│   ├── wikipedia.rs      # Wikipedia API
+│   ├── srs.rs            # FSRS-5 algorithm implementation
+│   ├── wikipedia.rs      # Wikipedia HTML parsing (Phase 6.5)
 │   ├── parser.rs         # Text parsing, paragraph detection, MLA parsing
-│   └── range_calculator.rs  # Read range merging and calculation (NEW)
+│   └── range_calculator.rs  # Read range merging and calculation
 └── db/
     ├── mod.rs
     └── migrations/
