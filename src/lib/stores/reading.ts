@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { Text, CreateTextRequest, ReadRange, Paragraph, ExcludedRange } from '../types';
 import { api } from '../utils/tauri';
-import { invalidateProgressCache } from '../hooks/useTextProgress';
+import { invalidateProgressCache, invalidateFolderProgressCache } from '../hooks/useTextProgress';
 
 interface ReadingState {
   texts: Text[];
@@ -97,6 +97,11 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
       invalidateProgressCache(textId);
+      // Invalidate folder progress cache if text belongs to a folder
+      const currentText = get().currentText;
+      if (currentText?.folderId) {
+        invalidateFolderProgressCache(currentText.folderId);
+      }
     } catch (error) {
       console.error('Failed to mark range as read:', error);
       set({
@@ -112,6 +117,11 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
       invalidateProgressCache(textId);
+      // Invalidate folder progress cache if text belongs to a folder
+      const currentText = get().currentText;
+      if (currentText?.folderId) {
+        invalidateFolderProgressCache(currentText.folderId);
+      }
     } catch (error) {
       console.error('Failed to unmark range as read:', error);
       set({
