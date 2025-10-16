@@ -35,6 +35,7 @@ export function IngestPage() {
   const [wikipediaUrl, setWikipediaUrl] = useState('')
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [titleError, setTitleError] = useState<string | null>(null)
 
   const handleFetchWikipedia = async () => {
     if (!wikipediaUrl.trim()) return
@@ -62,21 +63,8 @@ export function IngestPage() {
     e.preventDefault()
 
     const trimmedTitle = title.trim()
-    if (!trimmedTitle) {
-      alert('Please enter a title')
+    if (!trimmedTitle || titleError) {
       return
-    }
-
-    const duplicateText = texts.find(
-      t => t.folderId === selectedFolderId &&
-      t.title.toLowerCase() === trimmedTitle.toLowerCase()
-    )
-
-    if (duplicateText) {
-      const confirmed = confirm(
-        `A text titled "${trimmedTitle}" already exists in this folder. Do you want to import anyway with the same name?`
-      )
-      if (!confirmed) return
     }
 
     try {
@@ -135,7 +123,36 @@ export function IngestPage() {
 
   useEffect(() => {
     loadFolderTree()
-  }, [loadFolderTree])
+    loadLibrary()
+  }, [loadFolderTree, loadLibrary])
+
+  useEffect(() => {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      setTitleError(null)
+      return
+    }
+
+    console.log('[Ingest Validation] Checking for duplicates:', {
+      title: trimmedTitle,
+      selectedFolderId,
+      totalTexts: texts.length,
+      textsInFolder: texts.filter(t => t.folderId === selectedFolderId).length
+    })
+
+    const duplicateText = texts.find(
+      t => t.folderId === selectedFolderId &&
+      t.title.toLowerCase() === trimmedTitle.toLowerCase()
+    )
+
+    if (duplicateText) {
+      console.log('[Ingest Validation] Duplicate found:', duplicateText)
+      setTitleError('A text with this title already exists in this folder')
+    } else {
+      console.log('[Ingest Validation] No duplicate found')
+      setTitleError(null)
+    }
+  }, [title, texts, selectedFolderId])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -147,7 +164,7 @@ export function IngestPage() {
 
       if (e.key === 'Enter' && e.shiftKey) {
         e.preventDefault()
-        if (title && content) {
+        if (title && content && !titleError) {
           handleSubmit(e as unknown as React.FormEvent)
         }
         return
@@ -176,7 +193,7 @@ export function IngestPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [content, title, undo, redo])
+  }, [content, title, titleError, undo, redo])
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -250,6 +267,9 @@ export function IngestPage() {
                     required
                     disabled={isLoading}
                   />
+                  {titleError && (
+                    <p className="text-sm text-destructive">{titleError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -365,7 +385,7 @@ export function IngestPage() {
             <Button
               type="submit"
               onClick={handleSubmit}
-              disabled={isLoading || !title || !content}
+              disabled={isLoading || !title || !content || !!titleError}
             >
               {isLoading ? 'Importing...' : 'Import to Library'}
             </Button>

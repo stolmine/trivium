@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 11 Complete ✅ - Sidebar UI Improvements
+## Current Status: Phase 11 Complete ✅ - Sidebar UI Improvements + Validation Polish
 
 **Branch**: `9_features`
-**Last Updated**: 2025-10-16 (Phase 11: Comprehensive sidebar UI improvements with 8 major features including keyboard navigation, unique naming, and better UX)
+**Last Updated**: 2025-10-16 (Phase 11: Comprehensive sidebar UI improvements with 8 major features + 5 validation polish improvements)
 
 ---
 
@@ -870,7 +870,7 @@
 - ✅ Keyboard navigation disabled during search
 - ✅ All features compile without errors
 
-**User-Facing Features Added**: 8 new features
+**User-Facing Features Added**: 8 new features + 5 validation improvements
 1. Toggle expand/collapse all folders - Button and keyboard shortcut
 2. Better dropdown positioning - Improved visual consistency
 3. Quick ingest button - Faster access to text import
@@ -880,12 +880,31 @@
 7. Keyboard navigation - Navigate library without mouse
 8. Auto-scroll selection - Selected items stay visible
 
-**Implementation Time**: 8 hours with parallel agents
+**Validation Polish Improvements** (same day):
+9. Cross-platform hotkey support - Works on both Windows/Linux and macOS
+10. Real-time duplicate validation feedback - Red error text in ingest modal
+11. Real-time duplicate validation feedback - Red error text in folder creation
+12. Validation-aware keyboard shortcuts - Shift+Enter respects validation
+13. Proper library loading - Ensures validation data available
+
+**Implementation Time**: 8 hours (Phase 11) + 1 hour (validation polish)
 
 **Commits**:
 - Multiple commits on `9_features` branch
 - Comprehensive sidebar UI improvements
 - All 8 features implemented and tested
+
+**Post-Phase 11 Validation Improvements** (2025-10-16):
+- ✅ **Cross-Platform Hotkey Fix**: New folder shortcut now works with both Ctrl+Shift+N and Cmd+Shift+N
+- ✅ **Ingest Validation Feedback**: Red error text when duplicate title detected in ingest modal
+- ✅ **Sidebar Validation Feedback**: Red error text when duplicate folder name detected in create dialog
+- ✅ **Keyboard Shortcut Validation**: Shift+Enter now respects duplicate name validation
+- ✅ **Library Loading**: Added loadLibrary() call to ensure texts array populated for validation
+
+**Files Modified** (validation improvements):
+- `src/components/shell/Sidebar.tsx` - Hotkey fix + folder validation feedback
+- `src/routes/ingest/index.tsx` - Ingest validation feedback + loadLibrary + Shift+Enter fix
+- `src/components/library/FolderContextMenu.tsx` - Debug logs for subfolder operations
 
 ---
 

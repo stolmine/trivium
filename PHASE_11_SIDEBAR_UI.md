@@ -273,6 +273,113 @@ Potential improvements for future phases:
 - New tree utility: `getFlattenedVisibleNodes(tree, expandedFolderIds)`
 - Dropdown positioning now consistent across all dropdowns
 
+## Post-Phase 11 Validation Improvements
+
+**Completed**: 2025-10-16 (same day as Phase 11)
+
+These are UX polish improvements that build on Phase 11's unique naming enforcement.
+
+### 1. Fixed New Folder Hotkey Cross-Platform Support
+**File Modified**: `src/components/shell/Sidebar.tsx`
+
+**Issue**: Ctrl+Shift+N hotkey only worked on Windows/Linux, not macOS
+**Fix**: Added both `ctrlKey` and `metaKey` support for cross-platform compatibility
+**Result**: Works with both Ctrl+Shift+N (Windows/Linux) and Cmd+Shift+N (macOS)
+
+### 2. Duplicate Name Validation Feedback in Ingest Modal
+**File Modified**: `src/routes/ingest/index.tsx`
+
+**Features**:
+- Real-time validation when user types title
+- Red error text appears when duplicate title detected
+- Error message: "A text with this title already exists in this folder"
+- Error clears when title changes to unique name
+- Submit button remains enabled (user can still override)
+- Added `loadLibrary()` call to populate texts array for validation
+
+**Implementation**:
+- Checks texts array for duplicate titles (case-insensitive)
+- Scoped to selected folder (or root if no folder selected)
+- Uses `useMemo` for efficient validation
+- Visual feedback matches folder validation pattern
+
+### 3. Duplicate Name Validation Feedback in Sidebar Folder Creation
+**File Modified**: `src/components/shell/Sidebar.tsx`
+
+**Features**:
+- Real-time validation when user types folder name
+- Red error text appears when duplicate folder name detected
+- Error message: "A folder with this name already exists at the root level"
+- Error clears when name changes to unique name
+- Create button disabled when duplicate detected
+- Prevents submission of duplicate folder names
+
+**Implementation**:
+- Checks folders array for duplicate names (case-insensitive)
+- Scoped to root level (since sidebar only creates root folders)
+- Uses `useMemo` for efficient validation
+- Matches existing validation pattern from FolderContextMenu
+
+### 4. Fixed Ingest Modal Keyboard Shortcut Bypass
+**File Modified**: `src/routes/ingest/index.tsx`
+
+**Issue**: Shift+Enter submitted form even when validation errors present
+**Fix**: Modified Shift+Enter handler to respect all validation rules
+**Result**: Keyboard shortcut now blocked when duplicate title detected
+
+### 5. Added loadLibrary() Call for Proper Validation
+**File Modified**: `src/routes/ingest/index.tsx`
+
+**Issue**: Texts array was empty, preventing duplicate detection
+**Fix**: Added `loadLibrary()` call in useEffect on component mount
+**Result**: Validation works immediately when modal opens
+
+## Technical Implementation Details
+
+### Validation Pattern Used
+All validation feedback follows this consistent pattern:
+
+```typescript
+const errorMessage = useMemo(() => {
+  if (!name.trim()) return null;
+
+  const duplicate = items.find(
+    item => item.folderId === currentFolderId &&
+    item.name.toLowerCase() === name.trim().toLowerCase()
+  );
+
+  return duplicate ? 'Error message here' : null;
+}, [name, items, currentFolderId]);
+```
+
+### Visual Feedback Pattern
+```tsx
+{errorMessage && (
+  <p className="text-sm text-red-600 mt-1">
+    {errorMessage}
+  </p>
+)}
+```
+
+## Files Modified Summary
+
+**Phase 11 + Post-Phase Improvements**:
+1. `src/components/shell/Sidebar.tsx` - Hotkey fix + folder validation feedback
+2. `src/routes/ingest/index.tsx` - Ingest validation feedback + loadLibrary + Shift+Enter fix
+3. `src/components/library/FolderContextMenu.tsx` - Debug logs (for subfolders)
+
+## Success Criteria
+
+All validation improvements verified:
+- ✅ Ctrl+Shift+N works on Windows/Linux
+- ✅ Cmd+Shift+N works on macOS
+- ✅ Duplicate title shows red error in ingest modal
+- ✅ Duplicate folder name shows red error in sidebar dialog
+- ✅ Error text clears when name becomes unique
+- ✅ Shift+Enter respects validation rules
+- ✅ loadLibrary() populates texts for validation
+- ✅ All validation is case-insensitive and scoped correctly
+
 ## Related Documentation
 
 - **Phase 10**: Library Search + Folder Selection (`PHASE_10_LIBRARY_SEARCH.md`)

@@ -61,9 +61,31 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [allFoldersExpanded, setAllFoldersExpanded] = useState(false);
+  const [folderError, setFolderError] = useState<string | null>(null);
 
   const width = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
   const transitionStyle = shouldReduceMotion() ? {} : getTransitionStyle('width', 300);
+
+  useEffect(() => {
+    if (!showCreateFolderDialog) return;
+
+    const trimmedName = newFolderName.trim();
+    if (!trimmedName) {
+      setFolderError(null);
+      return;
+    }
+
+    const duplicateFolder = folders.find(
+      f => f.parentId === null &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      setFolderError('A folder with this name already exists');
+    } else {
+      setFolderError(null);
+    }
+  }, [newFolderName, folders, showCreateFolderDialog]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -101,7 +123,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key === 'n') {
+      if (e.shiftKey && (e.metaKey || e.ctrlKey) && (e.key === 'n' || e.key === 'N')) {
         e.preventDefault();
         setShowCreateFolderDialog(true);
       }
@@ -131,13 +153,14 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     const trimmedName = newFolderName.trim();
     if (!trimmedName) return;
 
+    if (folderError) return;
+
     const duplicateFolder = folders.find(
       f => f.parentId === null &&
       f.name.toLowerCase() === trimmedName.toLowerCase()
     );
 
     if (duplicateFolder) {
-      alert('A folder with this name already exists at this level.');
       return;
     }
 
@@ -327,7 +350,13 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
         </Button>
       </div>
 
-      <Dialog open={showCreateFolderDialog} onOpenChange={setShowCreateFolderDialog}>
+      <Dialog open={showCreateFolderDialog} onOpenChange={(open) => {
+        setShowCreateFolderDialog(open);
+        if (!open) {
+          setFolderError(null);
+          setNewFolderName('');
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Folder</DialogTitle>
@@ -347,13 +376,16 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
                 }}
                 autoFocus
               />
+              {folderError && (
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{folderError}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setShowCreateFolderDialog(false)}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+            <Button type="button" onClick={handleCreateFolder} disabled={!newFolderName.trim() || !!folderError}>
               Create
             </Button>
           </DialogFooter>
