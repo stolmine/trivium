@@ -119,7 +119,8 @@ export function ReadPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+      // Only trigger on Ctrl/Cmd+F WITHOUT Shift (Shift+Ctrl/Cmd+F is for library search)
+      if (!e.shiftKey && (e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         openSearch()
 

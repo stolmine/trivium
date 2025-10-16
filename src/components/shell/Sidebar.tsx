@@ -1,5 +1,5 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap } from 'lucide-react';
-import { useState } from 'react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
 import { useLibraryStore, type SortOption } from '../../stores/library';
@@ -7,6 +7,9 @@ import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 import { SIDEBAR_WIDTH, getTransitionStyle, shouldReduceMotion } from '../../lib/animations';
 import { cn } from '../../lib/utils';
 import { LibraryTree } from '../library/LibraryTree';
+import { LibrarySearchBar } from '../library/LibrarySearchBar';
+import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
+import { searchLibrary } from '../../lib/utils/librarySearch';
 
 interface NavItem {
   id: string;
@@ -46,12 +49,50 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
-  const { createFolder, sortBy, setSortBy } = useLibraryStore();
+  const { folders, texts, createFolder, sortBy, setSortBy } = useLibraryStore();
+  const {
+    isOpen: isSearchOpen,
+    query,
+    caseSensitive,
+    wholeWord,
+    openSearch,
+    setMatches
+  } = useLibrarySearchStore();
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
   const width = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
   const transitionStyle = shouldReduceMotion() ? {} : getTransitionStyle('width', 300);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Shift+Ctrl/Cmd+F opens library search (Ctrl/Cmd+F without Shift is for text search)
+      if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        openSearch();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [openSearch]);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setMatches([], []);
+      return;
+    }
+
+    const results = searchLibrary(folders, texts, query, {
+      caseSensitive,
+      wholeWord
+    });
+
+    setMatches(
+      Array.from(results.matchedTextIds),
+      Array.from(results.matchedFolderIds)
+    );
+  }, [query, caseSensitive, wholeWord, folders, texts, setMatches]);
 
   const handleCreateFolder = async () => {
     if (newFolderName.trim()) {
@@ -131,6 +172,16 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
                 Library
               </button>
               <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={openSearch}
+                  title="Search library (Shift+Ctrl+F)"
+                  aria-label="Search library"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -174,6 +225,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
               </div>
             </div>
           )}
+          {isSearchOpen && !sidebarCollapsed && <LibrarySearchBar />}
           <LibraryTree collapsed={sidebarCollapsed} />
         </div>
       </nav>

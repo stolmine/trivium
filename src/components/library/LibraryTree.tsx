@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { FileText, Folder } from 'lucide-react';
+import { FileText, Folder, Search } from 'lucide-react';
 import { useLibraryStore, type SortOption } from '../../stores/library';
+import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { buildTree, isFolderDescendant } from '../../lib/tree-utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
 import type { Text } from '../../lib/types/article';
+import type { TreeNode } from '../../lib/types/folder';
 
 interface LibraryTreeProps {
   collapsed?: boolean;
@@ -30,8 +32,49 @@ const sortTexts = (texts: Text[], sortBy: SortOption): Text[] => {
   }
 };
 
+const filterTreeByMatches = (
+  nodes: TreeNode[],
+  matchedTextIds: number[],
+  matchedFolderIds: string[]
+): TreeNode[] => {
+  const textIdSet = new Set(matchedTextIds);
+  const folderIdSet = new Set(matchedFolderIds);
+
+  const filterNode = (node: TreeNode): TreeNode | null => {
+    if (node.type === 'text') {
+      const text = node.data as Text;
+      return textIdSet.has(text.id) ? node : null;
+    }
+
+    if (node.type === 'folder') {
+      const filteredChildren = node.children
+        .map(filterNode)
+        .filter((child): child is TreeNode => child !== null);
+
+      const folderMatches = folderIdSet.has(node.id);
+      const hasMatchingChildren = filteredChildren.length > 0;
+
+      if (folderMatches || hasMatchingChildren) {
+        return {
+          ...node,
+          children: filteredChildren
+        };
+      }
+
+      return null;
+    }
+
+    return null;
+  };
+
+  return nodes
+    .map(filterNode)
+    .filter((node): node is TreeNode => node !== null);
+};
+
 export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
-  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder } = useLibraryStore();
+  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, expandedFolderIds, toggleFolder } = useLibraryStore();
+  const { isOpen, query, matchedTextIds, matchedFolderIds, currentMatchIndex } = useLibrarySearchStore();
   const [activeId, setActiveId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,9 +89,40 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
     })
   );
 
-  // Always call hooks before any conditional returns
   const sortedTexts = useMemo(() => sortTexts(texts, sortBy), [texts, sortBy]);
   const tree = useMemo(() => buildTree(folders, sortedTexts), [folders, sortedTexts]);
+
+  const isSearchActive = isOpen && query.trim().length > 0;
+
+  const filteredTree = useMemo(() => {
+    if (!isSearchActive) {
+      return tree;
+    }
+    return filterTreeByMatches(tree, matchedTextIds, matchedFolderIds);
+  }, [tree, isSearchActive, matchedTextIds, matchedFolderIds]);
+
+  useEffect(() => {
+    if (isSearchActive && filteredTree.length > 0) {
+      const foldersToExpand = new Set<string>();
+
+      const collectFolderIds = (nodes: TreeNode[]) => {
+        for (const node of nodes) {
+          if (node.type === 'folder') {
+            foldersToExpand.add(node.id);
+            collectFolderIds(node.children);
+          }
+        }
+      };
+
+      collectFolderIds(filteredTree);
+
+      foldersToExpand.forEach((folderId) => {
+        if (!expandedFolderIds.has(folderId)) {
+          toggleFolder(folderId);
+        }
+      });
+    }
+  }, [isSearchActive, filteredTree, expandedFolderIds, toggleFolder]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -104,7 +178,17 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
     );
   }
 
-  if (tree.length === 0) {
+  if (filteredTree.length === 0) {
+    if (isSearchActive) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <Search className="h-12 w-12 text-muted-foreground mb-3 opacity-50" />
+          <p className="text-sm text-muted-foreground">No matches found</p>
+          <p className="text-xs text-muted-foreground mt-1">Try a different search query</p>
+        </div>
+      );
+    }
+
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
         <FileText className="h-12 w-12 text-muted-foreground mb-3 opacity-50" />
@@ -114,14 +198,22 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
     );
   }
 
+  const highlightQuery = isSearchActive ? query : null;
+
+  // Get the currently selected text ID based on currentMatchIndex
+  const selectedTextId = isSearchActive && matchedTextIds.length > 0 && currentMatchIndex < matchedTextIds.length
+    ? matchedTextIds[currentMatchIndex]
+    : null;
+
   if (collapsed) {
     return (
       <div className="space-y-1 px-2">
-        {tree.map((node) => {
+        {filteredTree.map((node) => {
           if (node.type === 'folder') {
-            return <FolderNode key={node.id} node={node} depth={0} collapsed={true} />;
+            return <FolderNode key={node.id} node={node} depth={0} collapsed={true} highlightQuery={highlightQuery} />;
           } else {
-            return <TextNode key={node.id} text={node.data as Text} depth={0} collapsed={true} />;
+            const text = node.data as Text;
+            return <TextNode key={node.id} text={text} depth={0} collapsed={true} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />;
           }
         })}
       </div>
@@ -138,11 +230,12 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
       }}
     >
       <div className="space-y-1 px-2">
-        {tree.map((node) => {
+        {filteredTree.map((node) => {
           if (node.type === 'folder') {
-            return <FolderNode key={node.id} node={node} depth={0} />;
+            return <FolderNode key={node.id} node={node} depth={0} highlightQuery={highlightQuery} selectedTextId={selectedTextId} />;
           } else {
-            return <TextNode key={node.id} text={node.data as Text} depth={0} />;
+            const text = node.data as Text;
+            return <TextNode key={node.id} text={text} depth={0} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />;
           }
         })}
       </div>

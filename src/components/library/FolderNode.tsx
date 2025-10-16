@@ -10,13 +10,44 @@ import type { TreeNode } from '../../lib/types/folder';
 import type { Folder as FolderType } from '../../lib/types/folder';
 import type { Text } from '../../lib/types/article';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text: string, query: string | null): React.ReactNode {
+  if (!query || query.trim().length === 0) {
+    return text;
+  }
+
+  try {
+    const escapedQuery = escapeRegex(query);
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <mark key={index} style={{ backgroundColor: '#fef08a', color: 'inherit' }}>
+            {part}
+          </mark>
+        );
+      }
+      return part;
+    });
+  } catch (e) {
+    return text;
+  }
+}
+
 interface FolderNodeProps {
   node: TreeNode;
   depth: number;
   collapsed?: boolean;
+  highlightQuery?: string | null;
+  selectedTextId?: number | null;
 }
 
-export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) {
+export function FolderNode({ node, depth, collapsed = false, highlightQuery = null, selectedTextId = null }: FolderNodeProps) {
   const { expandedFolderIds, selectedItemId, toggleFolder, selectItem } = useLibraryStore();
 
   const folder = node.data as FolderType;
@@ -107,7 +138,7 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
           {!collapsed && (
             <>
               <span className="truncate flex-1" title={folder.name}>
-                {folder.name}
+                {highlightText(folder.name, highlightQuery)}
               </span>
               {progress !== null && progress > 0 && (
                 <span className="text-xs text-muted-foreground ml-auto pl-2 flex-shrink-0">
@@ -123,10 +154,11 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
         <div>
           {node.children.map((child) => {
             if (child.type === 'folder') {
-              return <FolderNode key={child.id} node={child} depth={depth + 1} />;
+              return <FolderNode key={child.id} node={child} depth={depth + 1} highlightQuery={highlightQuery} selectedTextId={selectedTextId} />;
             } else {
+              const text = child.data as Text;
               return (
-                <TextNode key={child.id} text={child.data as Text} depth={depth + 1} />
+                <TextNode key={child.id} text={text} depth={depth + 1} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />
               );
             }
           })}

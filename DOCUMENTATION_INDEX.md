@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 9: Text Search Feature Complete! 🔍)
+Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Search Planning! 🔍📚)
 
 ---
 
@@ -59,6 +59,10 @@ Last Updated: 2025-10-16 (Phase 9: Text Search Feature Complete! 🔍)
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
 **Last Updated**: 2025-10-16 (Updated with optimizations and bug fixes)
+
+### `/Users/why/repos/trivium/PHASE_10_LIBRARY_SEARCH.md`
+**Description**: Comprehensive implementation plan for Phase 10 library search feature. Search through article/text titles (not content) with optional folder name search, real-time tree filtering, debounced input (300ms), case-sensitive and whole-word options, highlighting matching text in titles, keyboard shortcuts (Shift+Cmd/Ctrl+F), and match counter. Architectural decisions: frontend filtering (no backend), separate LibrarySearchBar component, new librarySearch store, tree filtering with ancestor visibility, and auto-expand folders containing matches. Includes detailed file creation/modification plan (4 new files, 5 modified files), step-by-step implementation guide (9 steps), technical considerations (hierarchical tree filtering, performance for 1000+ texts, UTF-16 support), comprehensive testing checklist, and estimated 4-6 hours implementation time. Mirrors successful Phase 9 patterns while adapting for hierarchical tree structure
+**Last Updated**: 2025-10-16 (Created)
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -154,12 +158,12 @@ Last Updated: 2025-10-16 (Phase 9: Text Search Feature Complete! 🔍)
 
 ## Statistics
 
-**Total Documentation Files**: 29 markdown files
-**Total Lines of Documentation**: ~21,500+ lines
+**Total Documentation Files**: 30 markdown files
+**Total Lines of Documentation**: ~22,300+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 4 files (includes Phase 9 text search)
+- Project Planning: 5 files (includes Phase 9 text search + Phase 10 library search plan)
 - Setup & Configuration: 4 files (includes SQLx guide)
 - Feature-Specific: 3 files
 - Design System: 1 file
