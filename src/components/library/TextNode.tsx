@@ -55,16 +55,15 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
   const nodeId = `text-${text.id}`;
   const isSelected = selectedItemId === nodeId;
 
-  // Auto-scroll to selected search result
   useEffect(() => {
-    if (isSearchSelected && nodeRef.current) {
+    if ((isSearchSelected || isSelected) && nodeRef.current) {
       nodeRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
         inline: 'nearest'
       });
     }
-  }, [isSearchSelected]);
+  }, [isSearchSelected, isSelected]);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: nodeId,

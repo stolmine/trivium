@@ -150,3 +150,25 @@ export function getNodeById(nodes: TreeNode[], nodeId: string): TreeNode | null 
 
   return null;
 }
+
+export function getFlattenedVisibleNodes(
+  tree: TreeNode[],
+  expandedFolderIds: Set<string>
+): TreeNode[] {
+  const result: TreeNode[] = [];
+
+  function traverse(nodes: TreeNode[]) {
+    for (const node of nodes) {
+      result.push(node);
+
+      if (node.type === 'folder' &&
+          expandedFolderIds.has(node.id) &&
+          node.children.length > 0) {
+        traverse(node.children);
+      }
+    }
+  }
+
+  traverse(tree);
+  return result;
+}

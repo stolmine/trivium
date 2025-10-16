@@ -30,7 +30,7 @@ export function IngestPage() {
   const [publisher, setPublisher] = useState('')
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const { createText, isLoading } = useReadingStore()
-  const { loadLibrary } = useLibraryStore()
+  const { texts, loadLibrary } = useLibraryStore()
   const { folderTree, loadFolderTree } = useFolderStore()
   const [wikipediaUrl, setWikipediaUrl] = useState('')
   const [isFetching, setIsFetching] = useState(false)
@@ -61,9 +61,27 @@ export function IngestPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      alert('Please enter a title')
+      return
+    }
+
+    const duplicateText = texts.find(
+      t => t.folderId === selectedFolderId &&
+      t.title.toLowerCase() === trimmedTitle.toLowerCase()
+    )
+
+    if (duplicateText) {
+      const confirmed = confirm(
+        `A text titled "${trimmedTitle}" already exists in this folder. Do you want to import anyway with the same name?`
+      )
+      if (!confirmed) return
+    }
+
     try {
       await createText({
-        title,
+        title: trimmedTitle,
         content,
         source: wikipediaUrl ? 'wikipedia' : 'paste',
         sourceUrl: wikipediaUrl || undefined,
@@ -73,7 +91,6 @@ export function IngestPage() {
         folderId: selectedFolderId,
       })
 
-      // Refresh the library store so sidebar updates immediately
       await loadLibrary()
 
       navigate('/library')

@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Search + Folder Selection Complete + Post-Phase 10 Improvements! 🔍📚📁)
+Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Search + Folder Selection Complete! Phase 11: Sidebar UI Improvements Complete! 🔍📚📁✨)
 
 ---
 
@@ -53,8 +53,8 @@ Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Searc
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁), current capabilities (39+ user-facing features including library search with keyboard navigation and folder selection during import), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-16 (Updated with Phase 10 library search and folder selection)
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements** ✨), current capabilities (47+ user-facing features including keyboard navigation, expand/collapse all, unique naming enforcement, click-to-expand folders, and better dropdown positioning), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-16 (Updated with Phase 11 sidebar UI improvements)
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
@@ -63,6 +63,10 @@ Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Searc
 ### `/Users/why/repos/trivium/PHASE_10_LIBRARY_SEARCH.md`
 **Description**: Comprehensive implementation plan and completion documentation for Phase 10 library search and folder selection features. **Library Search**: Real-time search through article/text titles and folder names, tree filtering with debounced input (300ms), case-sensitive and whole-word options, yellow highlighting of matching text, keyboard shortcuts (Shift+Cmd/Ctrl+F), match counter, keyboard navigation (Arrow Up/Down, Enter to open), blue ring visual indicator for selected match, auto-scroll to keep selected visible. **Folder Selection in Ingest**: Optional folder picker during text import with hierarchical dropdown, scrollable max-height (300px), proper display of folder names (not UUIDs), visual indentation with arrows for nested folders. **Post-Phase 10 Improvements**: Review configuration updated to use hierarchical FolderSelect component (consistent with ingest modal), multi-level arrow indicators based on nesting depth (→, →→, →→→). Architectural decisions: frontend filtering (no backend queries), separate components (LibrarySearchBar, FolderSelect), new librarySearch store, recursive tree filtering, SQLx query cache updated for folder_id field. Files: 5 created (LibrarySearchBar, FolderSelect, librarySearch store/utils, SQLx cache), 9 modified (Sidebar, LibraryTree, FolderNode, TextNode, read route, ingest route, article types, text models/commands). Implementation time: 6-7 hours with parallel agents
 **Last Updated**: 2025-10-16 (Completed with all features, bug fixes, and post-phase improvements)
+
+### `/Users/why/repos/trivium/PHASE_11_SIDEBAR_UI.md`
+**Description**: Complete implementation documentation for Phase 11 sidebar UI improvements. **8 Major Features**: (1) Expand all/collapse all toggle button replacing dropdown with single Ctrl+Shift+E hotkey, (2) Fixed dropdown positioning globally - all dropdowns now appear directly under trigger buttons, (3) New ingest button in library header with FilePlus icon, (4) New folder keyboard shortcut (Ctrl+Shift+N), (5) Unique naming enforcement for folders (within same parent) and texts (within same folder) with case-insensitive validation, (6) Folder click to expand/collapse - entire folder row is clickable, (7) macOS Finder-style keyboard navigation with arrow keys (Up/Down navigate, Right expands, Left collapses, Enter opens), auto-scroll selected items into view, disabled during search. Technical details: getFlattenedVisibleNodes() helper function, new store methods (expandAllFolders, collapseAllFolders, selectNextItem, selectPreviousItem, expandSelectedFolder, collapseSelectedFolder), keyboard event handling in LibraryTree, validation pattern for duplicate detection. Files modified: 10 components (Sidebar, dropdown-menu, LibraryTree, FolderNode, TextNode, FolderContextMenu, TextContextMenu, ingest route, library store, tree-utils). Implementation time: 8 hours with parallel agents
+**Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -158,12 +162,12 @@ Last Updated: 2025-10-16 (Phase 9: Text Search Complete! Phase 10: Library Searc
 
 ## Statistics
 
-**Total Documentation Files**: 30 markdown files
-**Total Lines of Documentation**: ~22,300+ lines
+**Total Documentation Files**: 31 markdown files
+**Total Lines of Documentation**: ~22,700+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 5 files (includes Phase 9 text search + Phase 10 library search plan)
+- Project Planning: 6 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI)
 - Setup & Configuration: 4 files (includes SQLx guide)
 - Feature-Specific: 3 files
 - Design System: 1 file

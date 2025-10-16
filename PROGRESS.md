@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 10 Complete ✅ - Library Search + Folder Selection + Post-Phase 10 Improvements
+## Current Status: Phase 11 Complete ✅ - Sidebar UI Improvements
 
 **Branch**: `9_features`
-**Last Updated**: 2025-10-16 (Phase 10: Library Search with keyboard navigation + Folder selection during text import + Hierarchical folder selection improvements)
+**Last Updated**: 2025-10-16 (Phase 11: Comprehensive sidebar UI improvements with 8 major features including keyboard navigation, unique naming, and better UX)
 
 ---
 
@@ -99,34 +99,42 @@
 1. **Import Text**: Paste or type text with metadata (title, author, publisher, etc.)
 2. **Import from Wikipedia**: Paste Wikipedia URLs and auto-fetch clean article content
 3. **Select Folder on Import**: Choose destination folder during text import (optional)
-4. **Browse Library**: View all imported texts with reading progress percentages
-5. **Organize Content**: Create folders and organize texts hierarchically
-6. **Search Library**: Real-time search of titles/folders (Shift+Cmd/Ctrl+F)
-7. **Navigate Search Results**: Arrow keys to navigate, Enter to open text
-8. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
-9. **Read Content**: Open and read full text articles with visual progress tracking
-10. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
-11. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
-12. **Visual Feedback**: Read text appears as white on black (inverse styling)
-13. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
-14. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
-15. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
-16. **Preview Cards**: Live preview with complete sentence context
-17. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
-18. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
-19. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
-20. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
-21. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
-22. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
-23. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
-24. **Session Statistics**: Track unique cards completed vs total review actions
-25. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
-26. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
-27. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
-28. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
-29. **Session Limits**: Configure cards per session (10-100 cards)
-30. **Live Filter Stats**: See due/new card counts update based on selected filter
-31. **Persistent State**: All data saved to database, persists across sessions
+4. **Quick Ingest Access**: Click FilePlus button in library header or press Ctrl+N
+5. **Browse Library**: View all imported texts with reading progress percentages
+6. **Organize Content**: Create folders and organize texts hierarchically
+7. **Quick Folder Creation**: Press Ctrl+Shift+N to create new folder
+8. **Unique Naming Protection**: System prevents duplicate folder/text names in same location
+9. **Search Library**: Real-time search of titles/folders (Shift+Cmd/Ctrl+F)
+10. **Navigate Search Results**: Arrow keys to navigate, Enter to open text
+11. **Keyboard Navigation**: Arrow keys to navigate library tree (Up/Down/Left/Right/Enter)
+12. **Expand/Collapse All**: Toggle button or Ctrl+Shift+E to expand/collapse all folders
+13. **Click to Expand Folders**: Click anywhere on folder row to expand/collapse
+14. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
+15. **Read Content**: Open and read full text articles with visual progress tracking
+16. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
+17. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+18. **Visual Feedback**: Read text appears as white on black (inverse styling)
+19. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
+20. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
+21. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
+22. **Preview Cards**: Live preview with complete sentence context
+23. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
+24. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
+25. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
+26. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
+27. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
+28. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+29. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+30. **Session Statistics**: Track unique cards completed vs total review actions
+31. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
+32. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
+33. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
+34. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
+35. **Session Limits**: Configure cards per session (10-100 cards)
+36. **Live Filter Stats**: See due/new card counts update based on selected filter
+37. **Better Dropdown Positioning**: All dropdowns appear directly under trigger buttons
+38. **Auto-Scroll Navigation**: Selected items automatically scroll into view
+39. **Persistent State**: All data saved to database, persists across sessions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -776,6 +784,108 @@
 - `2051872` - Implement Phase 10: Library search feature with keyboard navigation
 - `4be45bd` - Add folder selection to ingest UI with improved dropdown UX
 - Additional commits for post-phase improvements
+
+---
+
+### ✅ Phase 11: Sidebar UI Improvements (Branch 9_features) - COMPLETE
+**Completed**: 2025-10-16
+**Branch**: `9_features`
+
+**Sidebar UI Improvements**:
+- ✅ **Expand All/Collapse All Toggle**: Replaced dropdown with single toggle button
+  - ChevronsDown (↓↓) when collapsed, ChevronsUp (↑↑) when expanded
+  - Single keyboard shortcut: Ctrl+Shift+E toggles between states
+  - Dynamic tooltip reflects current state
+  - Store methods: expandAllFolders(), collapseAllFolders()
+
+- ✅ **Fixed Dropdown Positioning**: Global fix to dropdown component
+  - All dropdowns now appear directly under trigger buttons
+  - Trigger button remains fully visible
+  - Affects sidebar sort, library sort, flashcard sort, and read page dropdowns
+  - Added `relative inline-block` wrapper with `top-full mt-1` positioning
+
+- ✅ **New Ingest Button**: FilePlus button in library header
+  - Navigates to /ingest page
+  - Tooltip: "New ingest (Ctrl+N)"
+  - Consistent styling with other header buttons
+
+- ✅ **New Folder Keyboard Shortcut**: Ctrl+Shift+N
+  - Opens create folder dialog
+  - Tooltip updated on folder button
+
+- ✅ **Unique Naming Enforcement**: Validation across all operations
+  - Folders: Unique names within same parent (case-insensitive)
+  - Texts: Unique titles within same folder (case-insensitive)
+  - Alert messages for create/rename operations
+  - Confirmation dialog for ingest (allows override)
+  - Enforced in: root folder creation, subfolder creation, folder rename, text rename, text ingest
+
+- ✅ **Folder Click to Expand**: Entire folder row toggles expansion
+  - Click anywhere on folder row to expand/collapse
+  - Chevron becomes visual indicator only
+  - Empty folders only update selection
+  - More intuitive interaction matching file explorer conventions
+
+- ✅ **macOS Finder-Style Keyboard Navigation**: Complete navigation system
+  - Arrow Up/Down: Navigate between visible items (wraps at edges)
+  - Arrow Right: Expand folder or select first child if already expanded
+  - Arrow Left: Collapse folder
+  - Enter: Open text or toggle folder
+  - Auto-scroll selected item into view
+  - Disabled during search (doesn't interfere)
+  - Focus management with tabIndex={0}
+  - Accessibility attributes (role="tree", aria-label)
+
+**Technical Implementation**:
+- New helper function: getFlattenedVisibleNodes() in tree-utils.ts
+- Store methods: selectNextItem(), selectPreviousItem(), expandSelectedFolder(), collapseSelectedFolder()
+- Keyboard event handling in LibraryTree.tsx
+- Auto-scroll in FolderNode.tsx and TextNode.tsx
+- Validation pattern: case-insensitive, scoped to parent/folder, excludes current item
+
+**Files Modified**:
+1. `src/stores/library.ts` - Navigation methods, expand/collapse all
+2. `src/lib/tree-utils.ts` - Flattened visible nodes helper
+3. `src/components/shell/Sidebar.tsx` - Toggle button, ingest button, folder hotkey, validation
+4. `src/lib/components/ui/dropdown-menu.tsx` - Positioning fix
+5. `src/components/library/LibraryTree.tsx` - Keyboard navigation handler
+6. `src/components/library/FolderNode.tsx` - Click to expand, auto-scroll
+7. `src/components/library/TextNode.tsx` - Auto-scroll updates
+8. `src/components/library/FolderContextMenu.tsx` - Unique naming validation
+9. `src/components/library/TextContextMenu.tsx` - Unique naming validation
+10. `src/routes/ingest/index.tsx` - Unique naming validation
+
+**Success Criteria Met**:
+- ✅ Toggle button switches between expand all and collapse all
+- ✅ Single hotkey (Ctrl+Shift+E) toggles state
+- ✅ Dropdowns appear directly under trigger buttons
+- ✅ New ingest button navigates to ingest page
+- ✅ Ctrl+Shift+N opens create folder dialog
+- ✅ Duplicate folder names prevented (within same parent)
+- ✅ Duplicate text names prevented (within same folder)
+- ✅ Clicking folder name expands/collapses folder
+- ✅ Arrow keys navigate library tree
+- ✅ Enter opens texts/toggles folders
+- ✅ Selected items auto-scroll into view
+- ✅ Keyboard navigation disabled during search
+- ✅ All features compile without errors
+
+**User-Facing Features Added**: 8 new features
+1. Toggle expand/collapse all folders - Button and keyboard shortcut
+2. Better dropdown positioning - Improved visual consistency
+3. Quick ingest button - Faster access to text import
+4. New folder keyboard shortcut - Streamlined folder creation
+5. Unique naming enforcement - Prevents confusion and conflicts
+6. Click-to-expand folders - More intuitive interaction
+7. Keyboard navigation - Navigate library without mouse
+8. Auto-scroll selection - Selected items stay visible
+
+**Implementation Time**: 8 hours with parallel agents
+
+**Commits**:
+- Multiple commits on `9_features` branch
+- Comprehensive sidebar UI improvements
+- All 8 features implemented and tested
 
 ---
 

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { FileText, Folder, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useLibraryStore, type SortOption } from '../../stores/library';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
-import { buildTree, isFolderDescendant } from '../../lib/tree-utils';
+import { buildTree, isFolderDescendant, getNodeById } from '../../lib/tree-utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
 import type { Text } from '../../lib/types/article';
@@ -73,9 +74,11 @@ const filterTreeByMatches = (
 };
 
 export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
-  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, expandedFolderIds, toggleFolder } = useLibraryStore();
+  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, expandedFolderIds, toggleFolder, selectedItemId, selectNextItem, selectPreviousItem, expandSelectedFolder, collapseSelectedFolder } = useLibraryStore();
   const { isOpen, query, matchedTextIds, matchedFolderIds, currentMatchIndex } = useLibrarySearchStore();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadLibrary();
@@ -123,6 +126,67 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
       });
     }
   }, [isSearchActive, filteredTree, expandedFolderIds, toggleFolder]);
+
+  useEffect(() => {
+    const container = treeContainerRef.current;
+    if (!container || collapsed) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (document.activeElement !== container) return;
+
+      if (isSearchActive) return;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          selectNextItem();
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          selectPreviousItem();
+          break;
+
+        case 'ArrowRight':
+          e.preventDefault();
+          expandSelectedFolder();
+          break;
+
+        case 'ArrowLeft':
+          e.preventDefault();
+          collapseSelectedFolder();
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          if (selectedItemId) {
+            const selectedNode = getNodeById(filteredTree, selectedItemId);
+
+            if (selectedNode?.type === 'text') {
+              const text = selectedNode.data as Text;
+              navigate(`/read/${text.id}`);
+            } else if (selectedNode?.type === 'folder') {
+              toggleFolder(selectedItemId);
+            }
+          }
+          break;
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+    return () => container.removeEventListener('keydown', handleKeyDown);
+  }, [
+    collapsed,
+    isSearchActive,
+    selectedItemId,
+    selectNextItem,
+    selectPreviousItem,
+    expandSelectedFolder,
+    collapseSelectedFolder,
+    toggleFolder,
+    navigate,
+    filteredTree,
+  ]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -229,7 +293,13 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
         setActiveId(null);
       }}
     >
-      <div className="space-y-1 px-2">
+      <div
+        ref={treeContainerRef}
+        tabIndex={0}
+        className="space-y-1 px-2 outline-none focus:outline-none"
+        role="tree"
+        aria-label="Library navigation tree"
+      >
         {filteredTree.map((node) => {
           if (node.type === 'folder') {
             return <FolderNode key={node.id} node={node} depth={0} highlightQuery={highlightQuery} selectedTextId={selectedTextId} />;

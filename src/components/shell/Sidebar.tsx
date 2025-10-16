@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -49,7 +49,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
-  const { folders, texts, createFolder, sortBy, setSortBy } = useLibraryStore();
+  const { folders, texts, createFolder, sortBy, setSortBy, expandAllFolders, collapseAllFolders } = useLibraryStore();
   const {
     isOpen: isSearchOpen,
     query,
@@ -60,6 +60,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   } = useLibrarySearchStore();
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [allFoldersExpanded, setAllFoldersExpanded] = useState(false);
 
   const width = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
   const transitionStyle = shouldReduceMotion() ? {} : getTransitionStyle('width', 300);
@@ -76,6 +77,38 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [openSearch]);
+
+  const handleToggleExpandAll = () => {
+    if (allFoldersExpanded) {
+      collapseAllFolders();
+      setAllFoldersExpanded(false);
+    } else {
+      expandAllFolders();
+      setAllFoldersExpanded(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.shiftKey && (e.metaKey || e.ctrlKey) && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        handleToggleExpandAll();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [allFoldersExpanded, handleToggleExpandAll]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        setShowCreateFolderDialog(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -95,15 +128,25 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   }, [query, caseSensitive, wholeWord, folders, texts, setMatches]);
 
   const handleCreateFolder = async () => {
-    if (newFolderName.trim()) {
-      try {
-        await createFolder(newFolderName.trim());
-        setNewFolderName('');
-        setShowCreateFolderDialog(false);
-      } catch (error) {
-        // Error already logged in store, could add toast notification here
-        console.error('Error creating folder:', error);
-      }
+    const trimmedName = newFolderName.trim();
+    if (!trimmedName) return;
+
+    const duplicateFolder = folders.find(
+      f => f.parentId === null &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      alert('A folder with this name already exists at this level.');
+      return;
+    }
+
+    try {
+      await createFolder(trimmedName);
+      setNewFolderName('');
+      setShowCreateFolderDialog(false);
+    } catch (error) {
+      console.error('Error creating folder:', error);
     }
   };
 
@@ -176,6 +219,16 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0"
+                  onClick={() => navigate('/ingest')}
+                  title="New ingest (Ctrl+N)"
+                  aria-label="Create new text"
+                >
+                  <FilePlus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
                   onClick={openSearch}
                   title="Search library (Shift+Ctrl+F)"
                   aria-label="Search library"
@@ -215,10 +268,24 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={handleToggleExpandAll}
+                  title={allFoldersExpanded ? "Collapse all folders (Ctrl+Shift+E)" : "Expand all folders (Ctrl+Shift+E)"}
+                  aria-label={allFoldersExpanded ? "Collapse all folders" : "Expand all folders"}
+                >
+                  {allFoldersExpanded ? (
+                    <ChevronsUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronsDown className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowCreateFolderDialog(true)}
                   className="h-6 w-6 p-0"
                   aria-label="Create new folder"
-                  title="Create new folder"
+                  title="Create folder (Ctrl+Shift+N)"
                 >
                   <FolderPlus className="h-4 w-4" />
                 </Button>

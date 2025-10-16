@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
@@ -54,6 +55,17 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
   const isExpanded = expandedFolderIds.has(folder.id);
   const isSelected = selectedItemId === folder.id;
   const { progress } = useFolderProgress(folder.id);
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isSelected && nodeRef.current) {
+      nodeRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    }
+  }, [isSelected]);
 
   const { setNodeRef, isOver } = useDroppable({
     id: folder.id,
@@ -71,18 +83,16 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
     },
   });
 
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleFolder(folder.id);
-  };
+  const hasChildren = node.children.length > 0;
 
-  const handleSelect = () => {
+  const handleClick = () => {
+    if (hasChildren) {
+      toggleFolder(folder.id);
+    }
     selectItem(folder.id);
   };
 
   const indentStyle = collapsed ? {} : { paddingLeft: `${depth * 16 + 8}px` };
-
-  const hasChildren = node.children.length > 0;
 
   return (
     <div>
@@ -91,6 +101,9 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
           ref={(node) => {
             setNodeRef(node);
             draggable.setNodeRef(node);
+            if (node) {
+              (nodeRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+            }
           }}
           {...draggable.attributes}
           {...draggable.listeners}
@@ -110,21 +123,17 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
             draggable.isDragging && 'opacity-50',
             !shouldReduceMotion() && 'transition-colors duration-150'
           )}
-          onClick={handleSelect}
+          onClick={handleClick}
           title={collapsed ? folder.name : undefined}
         >
           {!collapsed && hasChildren && (
-            <button
-              onClick={handleToggle}
-              className="p-0.5 hover:bg-sidebar-accent rounded transition-colors"
-              aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
-            >
+            <div className="p-0.5">
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </button>
+            </div>
           )}
 
           {!collapsed && !hasChildren && <div className="w-5" />}

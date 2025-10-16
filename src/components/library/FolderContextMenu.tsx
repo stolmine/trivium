@@ -24,7 +24,7 @@ interface FolderContextMenuProps {
 }
 
 export function FolderContextMenu({ folderId, folderName, children }: FolderContextMenuProps) {
-  const { createFolder, renameFolder, deleteFolder } = useLibraryStore();
+  const { folders, createFolder, renameFolder, deleteFolder } = useLibraryStore();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -34,27 +34,51 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
   const [renameFolderName, setRenameFolderName] = useState(folderName);
 
   const handleCreateSubfolder = async () => {
-    if (newFolderName.trim()) {
-      try {
-        await createFolder(newFolderName.trim(), folderId);
-        setNewFolderName('');
-        setShowCreateDialog(false);
-      } catch (error) {
-        // Error already logged in store, could add toast notification here
-        console.error('Error creating subfolder:', error);
-      }
+    const trimmedName = newFolderName.trim();
+    if (!trimmedName) return;
+
+    const duplicateFolder = folders.find(
+      f => f.parentId === folderId &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      alert('A folder with this name already exists in this folder.');
+      return;
+    }
+
+    try {
+      await createFolder(trimmedName, folderId);
+      setNewFolderName('');
+      setShowCreateDialog(false);
+    } catch (error) {
+      console.error('Error creating subfolder:', error);
     }
   };
 
   const handleRename = async () => {
-    if (renameFolderName.trim() && renameFolderName.trim() !== folderName) {
-      try {
-        await renameFolder(folderId, renameFolderName.trim());
-        setShowRenameDialog(false);
-      } catch (error) {
-        // Error already logged in store, could add toast notification here
-        console.error('Error renaming folder:', error);
-      }
+    const trimmedName = renameFolderName.trim();
+    if (!trimmedName || trimmedName === folderName) return;
+
+    const currentFolder = folders.find(f => f.id === folderId);
+    if (!currentFolder) return;
+
+    const duplicateFolder = folders.find(
+      f => f.id !== folderId &&
+      f.parentId === currentFolder.parentId &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      alert('A folder with this name already exists at this level.');
+      return;
+    }
+
+    try {
+      await renameFolder(folderId, trimmedName);
+      setShowRenameDialog(false);
+    } catch (error) {
+      console.error('Error renaming folder:', error);
     }
   };
 
