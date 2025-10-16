@@ -5,9 +5,34 @@ const progressCache = new Map<number, { progress: number; timestamp: number }>()
 const folderProgressCache = new Map<string, { progress: number; timestamp: number }>();
 const CACHE_DURATION_MS = 60000;
 
+// Cache version tracking - incremented when caches are invalidated
+let cacheVersion = 0;
+const cacheVersionListeners = new Set<() => void>();
+
+function notifyCacheInvalidation() {
+  cacheVersion++;
+  cacheVersionListeners.forEach(listener => listener());
+}
+
+function subscribeToCacheInvalidation(listener: () => void) {
+  cacheVersionListeners.add(listener);
+  return () => {
+    cacheVersionListeners.delete(listener);
+  };
+}
+
 export function useTextProgress(textId: number | null) {
   const [progress, setProgress] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Subscribe to cache invalidation events
+  useEffect(() => {
+    const unsubscribe = subscribeToCacheInvalidation(() => {
+      setRefreshTrigger(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     if (textId === null) {
@@ -36,7 +61,7 @@ export function useTextProgress(textId: number | null) {
         console.error('Failed to calculate progress:', error);
         setIsLoading(false);
       });
-  }, [textId]);
+  }, [textId, refreshTrigger]);
 
   return { progress, isLoading };
 }
@@ -44,6 +69,15 @@ export function useTextProgress(textId: number | null) {
 export function useFolderProgress(folderId: string | null) {
   const [progress, setProgress] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Subscribe to cache invalidation events
+  useEffect(() => {
+    const unsubscribe = subscribeToCacheInvalidation(() => {
+      setRefreshTrigger(prev => prev + 1);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     if (folderId === null) {
@@ -72,20 +106,23 @@ export function useFolderProgress(folderId: string | null) {
         console.error('Failed to calculate folder progress:', error);
         setIsLoading(false);
       });
-  }, [folderId]);
+  }, [folderId, refreshTrigger]);
 
   return { progress, isLoading };
 }
 
 export function invalidateProgressCache(textId: number) {
   progressCache.delete(textId);
+  notifyCacheInvalidation();
 }
 
 export function invalidateFolderProgressCache(folderId: string) {
   folderProgressCache.delete(folderId);
+  notifyCacheInvalidation();
 }
 
 export function clearProgressCache() {
   progressCache.clear();
   folderProgressCache.clear();
+  notifyCacheInvalidation();
 }
