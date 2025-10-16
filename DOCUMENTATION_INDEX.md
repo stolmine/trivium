@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 8 Polish Complete: ALL 4 Unicode Bugs FIXED + 9 UX Polish Fixes! 🎉)
+Last Updated: 2025-10-16 (Phase 9: Text Search Feature Complete! 🔍)
 
 ---
 
@@ -53,8 +53,12 @@ Last Updated: 2025-10-16 (Phase 8 Polish Complete: ALL 4 Unicode Bugs FIXED + 9 
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, **Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE!** 🎉), current capabilities (30+ user-facing features), upcoming phases, detailed bug fix documentation (14 major issues + 9 polish fixes resolved including ALL 4 Unicode bugs with UTF-16 conversion, sidebar progress updates, modal keyboard handlers, undo stack integration, folder drag-drop), testing status (11 new UTF-16 tests passing), and next actions. **Backend now uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-16 (Updated with Phase 8 polish fixes completion)
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature - Real-time search with highlighting, keyboard navigation, and advanced options** 🔍), current capabilities (35+ user-facing features), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-16 (Updated with Phase 9 text search completion)
+
+### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
+**Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
+**Last Updated**: 2025-10-16 (Updated with optimizations and bug fixes)
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -150,12 +154,12 @@ Last Updated: 2025-10-16 (Phase 8 Polish Complete: ALL 4 Unicode Bugs FIXED + 9 
 
 ## Statistics
 
-**Total Documentation Files**: 28 markdown files
-**Total Lines of Documentation**: ~20,000+ lines
+**Total Documentation Files**: 29 markdown files
+**Total Lines of Documentation**: ~21,500+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 3 files
+- Project Planning: 4 files (includes Phase 9 text search)
 - Setup & Configuration: 4 files (includes SQLx guide)
 - Feature-Specific: 3 files
 - Design System: 1 file

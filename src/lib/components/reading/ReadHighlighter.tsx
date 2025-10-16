@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, memo } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import type { ReadRange, ExcludedRange } from '../../types'
 
@@ -8,6 +8,8 @@ interface ReadHighlighterProps {
   className?: string
   onExcludedRangesParsed?: (excludedRanges: ExcludedRange[]) => void
   linksEnabled?: boolean
+  searchMatches?: Array<{ start: number; end: number }>
+  activeSearchIndex?: number
 }
 
 interface TextSegment {
@@ -15,6 +17,10 @@ interface TextSegment {
   isRead: boolean
   isExcluded: boolean
   isHeader: boolean
+  start: number
+  end: number
+  isSearchMatch?: boolean
+  isActiveSearchMatch?: boolean
 }
 
 function formatWikipediaHeaders(text: string): string {
@@ -154,9 +160,6 @@ export function parseExcludedRanges(content: string): {
   renderedContent: string;
   excludedRanges: ExcludedRange[]
 } {
-  // DEBUG LOGGING
-  console.log('parseExcludedRanges called with content length:', content.length)
-
   const excludedRanges: ExcludedRange[] = []
   let cleanedContent = content
   let offset = 0
@@ -199,15 +202,6 @@ export function parseExcludedRanges(content: string): {
     }
   })
 
-  console.log('parseExcludedRanges result:', {
-    originalLength: content.length,
-    cleanedLength: cleanedContent.length,
-    renderedLength: renderedContent.length,
-    excludedCount: excludedRanges.length,
-    tagsRemoved: offset,
-    lengthDifference: cleanedContent.length - renderedContent.length
-  })
-
   return { cleanedContent, renderedContent, excludedRanges: adjustedExcludedRanges }
 }
 
@@ -238,27 +232,20 @@ function isPositionInHeader(position: number, headerRanges: HeaderRange[]): bool
   )
 }
 
-export function ReadHighlighter({ content, readRanges, className, linksEnabled = false }: ReadHighlighterProps) {
+const ReadHighlighterComponent = ({
+  content,
+  readRanges,
+  className,
+  linksEnabled = false,
+  searchMatches = [],
+  activeSearchIndex = -1
+}: ReadHighlighterProps) => {
   const segments = useMemo(() => {
-    const { cleanedContent, renderedContent, excludedRanges } = parseExcludedRanges(content)
+    const { cleanedContent, excludedRanges } = parseExcludedRanges(content)
     const headerRanges = detectHeaderRanges(cleanedContent)
 
-    // DEBUG LOGGING
-    console.log('=== ReadHighlighter: useMemo computation ===')
-    console.log('Original content length:', content.length)
-    console.log('Cleaned content length:', cleanedContent.length)
-    console.log('Rendered content length:', renderedContent.length)
-    console.log('Excluded ranges (adjusted for rendered):', excludedRanges)
-    console.log('Read ranges to apply (in rendered space):', readRanges.map(r => ({
-      start: r.startPosition,
-      end: r.endPosition,
-      length: r.endPosition - r.startPosition,
-      text: renderedContent.substring(r.startPosition, r.endPosition).substring(0, 50) + '...'
-    })))
-    console.log('============================================')
-
     if (!readRanges.length && !excludedRanges.length) {
-      return [{ text: cleanedContent, isRead: false, isExcluded: false, isHeader: false }]
+      return [{ text: cleanedContent, isRead: false, isExcluded: false, isHeader: false, start: 0, end: cleanedContent.length }]
     }
 
     // Convert read ranges from rendered space to cleaned space
@@ -307,7 +294,9 @@ export function ReadHighlighter({ content, readRanges, className, linksEnabled =
           text,
           isRead: false,
           isExcluded: false,
-          isHeader
+          isHeader,
+          start: currentPos,
+          end: range.start
         })
       }
 
@@ -317,7 +306,9 @@ export function ReadHighlighter({ content, readRanges, className, linksEnabled =
         text,
         isRead: range.type === 'read',
         isExcluded: range.type === 'excluded',
-        isHeader
+        isHeader,
+        start: range.start,
+        end: range.end
       })
 
       currentPos = range.end
@@ -330,19 +321,23 @@ export function ReadHighlighter({ content, readRanges, className, linksEnabled =
         text,
         isRead: false,
         isExcluded: false,
-        isHeader
+        isHeader,
+        start: currentPos,
+        end: cleanedContent.length
       })
     }
 
-    console.log('Segments created (in cleaned space):', result.map((s, idx) => ({
-      index: idx,
-      isRead: s.isRead,
-      isExcluded: s.isExcluded,
-      textSample: s.text.substring(0, 30) + '...'
-    })))
-
     return result
   }, [content, readRanges])
+
+  const convertedSearchMatches = useMemo(() => {
+    if (searchMatches.length === 0) return []
+    const { cleanedContent } = parseExcludedRanges(content)
+    return searchMatches.map(match => ({
+      start: renderedPosToCleanedPos(match.start, cleanedContent),
+      end: renderedPosToCleanedPos(match.end, cleanedContent)
+    }))
+  }, [searchMatches, content])
 
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement
@@ -357,16 +352,92 @@ export function ReadHighlighter({ content, readRanges, className, linksEnabled =
     }
   }
 
+  // Split segments into sub-segments based on search matches
+  const renderableSegments = useMemo(() => {
+    if (convertedSearchMatches.length === 0) {
+      return segments.map((seg, idx) => ({ ...seg, key: `seg-${idx}` }))
+    }
+
+    const result: Array<TextSegment & { key: string; isSearchMatch?: boolean; isActiveSearchMatch?: boolean }> = []
+
+    segments.forEach((segment, segIdx) => {
+      // Find search matches that overlap with this segment
+      const overlappingMatches = convertedSearchMatches
+        .map((match, matchIdx) => ({ ...match, matchIdx }))
+        .filter(match => segment.start < match.end && segment.end > match.start)
+        .sort((a, b) => a.start - b.start)
+
+      if (overlappingMatches.length === 0) {
+        // No search matches in this segment - render it as-is
+        result.push({ ...segment, key: `seg-${segIdx}` })
+        return
+      }
+
+      // Split segment into sub-segments around search matches
+      let currentPos = segment.start
+
+      overlappingMatches.forEach((match, matchSubIdx) => {
+        const matchStart = Math.max(match.start, segment.start)
+        const matchEnd = Math.min(match.end, segment.end)
+
+        // Add sub-segment before the match (if any)
+        if (currentPos < matchStart) {
+          const text = segment.text.substring(currentPos - segment.start, matchStart - segment.start)
+          result.push({
+            ...segment,
+            text,
+            start: currentPos,
+            end: matchStart,
+            key: `seg-${segIdx}-pre-${matchSubIdx}`,
+            isSearchMatch: false,
+            isActiveSearchMatch: false
+          })
+        }
+
+        // Add the match itself as a sub-segment
+        const matchText = segment.text.substring(matchStart - segment.start, matchEnd - segment.start)
+        result.push({
+          ...segment,
+          text: matchText,
+          start: matchStart,
+          end: matchEnd,
+          key: `seg-${segIdx}-match-${matchSubIdx}`,
+          isSearchMatch: true,
+          isActiveSearchMatch: match.matchIdx === activeSearchIndex
+        })
+
+        currentPos = matchEnd
+      })
+
+      // Add remaining sub-segment after last match (if any)
+      if (currentPos < segment.end) {
+        const text = segment.text.substring(currentPos - segment.start)
+        result.push({
+          ...segment,
+          text,
+          start: currentPos,
+          end: segment.end,
+          key: `seg-${segIdx}-post`,
+          isSearchMatch: false,
+          isActiveSearchMatch: false
+        })
+      }
+    })
+
+    return result
+  }, [segments, convertedSearchMatches, activeSearchIndex])
+
   return (
     <div
       id="article-content"
       className={`whitespace-pre-wrap not-prose ${className || ''}`}
       onClick={handleClick}
     >
-      {segments.map((segment, idx) => {
+      {renderableSegments.map((segment) => {
         let className = ''
-        let style = {}
+        let style: React.CSSProperties = {}
 
+        // Apply base styling (read/excluded/header)
         if (segment.isExcluded) {
           className = 'excluded-text'
         } else if (segment.isRead && segment.isHeader) {
@@ -375,11 +446,19 @@ export function ReadHighlighter({ content, readRanges, className, linksEnabled =
           style = { backgroundColor: 'black', color: 'white' }
         }
 
+        // Apply search highlighting - overrides base styling for matched text only
+        if (segment.isActiveSearchMatch) {
+          style = { ...style, backgroundColor: '#fed7aa', color: 'black' }
+        } else if (segment.isSearchMatch) {
+          style = { ...style, backgroundColor: '#fef08a', color: 'black' }
+        }
+
         return (
           <span
-            key={idx}
+            key={segment.key}
             className={className}
             style={style}
+            data-search-index={segment.isActiveSearchMatch ? activeSearchIndex : undefined}
             dangerouslySetInnerHTML={{ __html: renderTextWithLinks(segment.text, linksEnabled) }}
           />
         )
@@ -387,3 +466,7 @@ export function ReadHighlighter({ content, readRanges, className, linksEnabled =
     </div>
   )
 }
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-renders when props actually change
+export const ReadHighlighter = memo(ReadHighlighterComponent)

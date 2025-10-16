@@ -20,7 +20,10 @@ import {
 } from '../../lib/components/ui'
 import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges } from '../../lib/components/reading'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
-import { ChevronLeft, MoreVertical, Edit2, Trash2, Link } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Edit2, Trash2, Link, Search } from 'lucide-react'
+import { SearchBar } from '../../lib/components/reading/SearchBar'
+import { useSearchStore } from '../../lib/stores/search'
+import { findMatches } from '../../lib/utils/textSearch'
 
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
@@ -43,6 +46,17 @@ export function ReadPage() {
   } = useReadingStore()
   const { renameText, deleteText } = useLibraryStore()
   const { linksEnabled, toggleLinks } = useSettingsStore()
+  const {
+    isOpen,
+    query,
+    matches,
+    currentIndex,
+    caseSensitive,
+    wholeWord,
+    openSearch,
+    closeSearch,
+    setMatches
+  } = useSearchStore()
 
   useEffect(() => {
     if (id) {
@@ -63,6 +77,27 @@ export function ReadPage() {
     }
   }, [currentText, setExcludedRanges])
 
+  useEffect(() => {
+    if (!query || !currentText?.content) {
+      setMatches([])
+      return
+    }
+
+    console.log('[Search Performance] Executing search for query:', query)
+    const startTime = performance.now()
+
+    const { renderedContent } = parseExcludedRanges(currentText.content)
+    const searchMatches = findMatches(renderedContent, query, {
+      caseSensitive,
+      wholeWord
+    })
+
+    const endTime = performance.now()
+    console.log('[Search Performance] Search completed in', (endTime - startTime).toFixed(2), 'ms. Found', searchMatches.length, 'matches')
+
+    setMatches(searchMatches)
+  }, [query, caseSensitive, wholeWord, currentText?.content, setMatches])
+
   // Handler functions
   const handleRename = async () => {
     if (currentText && renameTextTitle.trim() && renameTextTitle.trim() !== currentText.title) {
@@ -81,6 +116,49 @@ export function ReadPage() {
       navigate('/library')
     }
   }
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault()
+        openSearch()
+
+        // Focus and select text in search input
+        // Use setTimeout to ensure the search bar has rendered
+        setTimeout(() => {
+          const searchInput = document.querySelector('input[placeholder="Find in page..."]') as HTMLInputElement
+          if (searchInput) {
+            searchInput.focus()
+            searchInput.select()
+          }
+        }, 0)
+      }
+      if (e.key === 'Escape' && isOpen) {
+        e.preventDefault()
+        closeSearch()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, openSearch, closeSearch])
+
+  useEffect(() => {
+    if (matches.length > 0 && currentIndex >= 0) {
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        const matchElement = document.querySelector(`[data-search-index="${currentIndex}"]`)
+
+        if (matchElement) {
+          matchElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          })
+        }
+      })
+    }
+  }, [currentIndex, matches])
 
   // Add keyboard shortcuts for rename dialog
   useEffect(() => {
@@ -181,6 +259,25 @@ export function ReadPage() {
                 >
                   <Link className="h-4 w-4" />
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    openSearch()
+                    // Focus and select text in search input
+                    setTimeout(() => {
+                      const searchInput = document.querySelector('input[placeholder="Find in page..."]') as HTMLInputElement
+                      if (searchInput) {
+                        searchInput.focus()
+                        searchInput.select()
+                      }
+                    }, 0)
+                  }}
+                  title="Search in text (Ctrl+F)"
+                  aria-label="Search in text"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -217,6 +314,8 @@ export function ReadPage() {
           </div>
         </header>
 
+        {isOpen && <SearchBar />}
+
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-8 py-12 max-w-4xl">
             <article className="reading-content mx-auto space-y-4">
@@ -225,6 +324,8 @@ export function ReadPage() {
                   content={currentText.content}
                   readRanges={readRanges}
                   linksEnabled={linksEnabled}
+                  searchMatches={matches}
+                  activeSearchIndex={currentIndex}
                 />
               </TextSelectionMenu>
             </article>

@@ -132,7 +132,17 @@
       "Bash(npm run:*)",
       "WebFetch(domain:en.wikipedia.org)",
       "Bash(cargo test:*)",
-      "Bash(cargo run:*)"
+      "Bash(cargo run:*)",
+      "Bash(git stash:*)",
+      "Bash(cargo clean:*)",
+      "Bash(lsof:*)",
+      "WebFetch(domain:markjs.io)",
+      "WebFetch(domain:blog.logrocket.com)",
+      "WebFetch(domain:www.freecodecamp.org)",
+      "WebFetch(domain:bvaughn.github.io)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:whereisthemouse.com)",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []
