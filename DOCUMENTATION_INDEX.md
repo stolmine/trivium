@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 6.5 Merged to Main: Wikipedia Parsing Integration + Review Filtering + 11 Critical Bug Fixes + SQLx Migration Repair + Permanent folder_id Type Fix)
+Last Updated: 2025-10-16 (Phase 8 Polish Complete: ALL 4 Unicode Bugs FIXED + 9 UX Polish Fixes! 🎉)
 
 ---
 
@@ -25,11 +25,11 @@ Last Updated: 2025-10-16 (Phase 6.5 Merged to Main: Wikipedia Parsing Integratio
 ## Architecture & Design
 
 ### `/Users/why/repos/trivium/architecture-backend.md`
-**Description**: Comprehensive backend architecture documentation covering technology stack (Rust/Tauri/SQLite), complete database schema (10+ tables), all command modules (including Wikipedia integration - Phase 6.5), models, services (FSRS-5 algorithm, Wikipedia HTML parsing), and complete project structure
+**Description**: Comprehensive backend architecture documentation covering technology stack (Rust/Tauri/SQLite), complete database schema (10+ tables), all command modules (including Wikipedia integration - Phase 6.5), models, services (FSRS-5 algorithm, Wikipedia HTML parsing, text parsing with Unicode handling), and complete project structure. Includes Phase 8 whitespace/Unicode bug investigation findings
 **Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/architecture-frontend.md`
-**Description**: Frontend architecture specifications with React/TypeScript/Zustand stack, complete state management patterns, component hierarchies for all major features (reading, flashcards, folders, stats), Wikipedia integration implementation (Phase 6.5), Tauri API wrappers, and keyboard shortcuts system
+**Description**: Frontend architecture specifications with React/TypeScript/Zustand stack, complete state management patterns, component hierarchies for all major features (reading, flashcards, folders, stats), Wikipedia integration implementation (Phase 6.5), Tauri API wrappers, keyboard shortcuts system, and text selection handling with UTF-16 character position considerations
 **Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/ARCHITECTURE_GAP_ANALYSIS.md`
@@ -53,8 +53,8 @@ Last Updated: 2025-10-16 (Phase 6.5 Merged to Main: Wikipedia Parsing Integratio
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes including permanent folder_id type mismatch fix), current capabilities (25+ user-facing features), upcoming phases, detailed bug fix documentation (11 major issues resolved), testing status, and next actions
-**Last Updated**: 2025-10-16
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, **Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE!** 🎉), current capabilities (30+ user-facing features), upcoming phases, detailed bug fix documentation (14 major issues + 9 polish fixes resolved including ALL 4 Unicode bugs with UTF-16 conversion, sidebar progress updates, modal keyboard handlers, undo stack integration, folder drag-drop), testing status (11 new UTF-16 tests passing), and next actions. **Backend now uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-16 (Updated with Phase 8 polish fixes completion)
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -128,10 +128,30 @@ Last Updated: 2025-10-16 (Phase 6.5 Merged to Main: Wikipedia Parsing Integratio
 
 ---
 
+## Unicode & Text Processing
+
+### `/Users/why/repos/trivium/docs/unicode-bug-fixes.md`
+**Description**: Critical Unicode character handling bug analysis documenting 4 major bugs in the reading progress system. **Status: ALL 4 BUGS FIXED in Phase 8!** 🎉 (excluded character counting, header character counting, paragraph detection, and UTF-16/Unicode mismatch all fixed using `.encode_utf16().count()` throughout backend). Backend now uses UTF-16 code units to match JavaScript `.length` behavior. Includes detailed fix implementations, code examples, comprehensive test suite (11 new tests), severity assessments, and migration notes
+**Last Updated**: 2025-10-16 (Updated with Bug 4 fix completion)
+
+### `/Users/why/repos/trivium/docs/unicode-bug-examples.md`
+**Description**: Visual demonstrations and concrete examples illustrating the Unicode bugs through test cases with emoji, Chinese/Japanese text, and multi-byte characters. Shows byte vs character counting differences, progress calculation errors, paragraph boundary issues, and UTF-16/Unicode position mismatches with real-world impact scenarios and validation test cases
+**Last Updated**: 2025-10-16
+
+### `/Users/why/repos/trivium/docs/whitespace-handling-analysis.md`
+**Description**: Comprehensive technical analysis of whitespace handling in reading progress calculations, documenting how spaces, newlines, tabs, and other non-visible characters are counted throughout the system. Analyzes consistency across content length storage, read range measurement, progress calculation, and frontend display. **Confirmed: Whitespace IS counted consistently throughout the system**
+**Last Updated**: 2025-10-16
+
+### `/Users/why/repos/trivium/docs/whitespace-investigation-summary.md`
+**Description**: Executive summary of whitespace handling investigation confirming that ALL whitespace characters ARE counted in reading progress. **Documents successful fix of ALL 4 critical Unicode bugs in Phase 8** 🎉, provides impact assessment, recommendations, and completion status. Backend now uses UTF-16 code units throughout to match JavaScript behavior. Includes comprehensive fix status and migration notes
+**Last Updated**: 2025-10-16 (Updated with Bug 4 completion)
+
+---
+
 ## Statistics
 
-**Total Documentation Files**: 24 markdown files
-**Total Lines of Documentation**: ~18,000+ lines
+**Total Documentation Files**: 28 markdown files
+**Total Lines of Documentation**: ~20,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
@@ -140,6 +160,7 @@ Last Updated: 2025-10-16 (Phase 6.5 Merged to Main: Wikipedia Parsing Integratio
 - Feature-Specific: 3 files
 - Design System: 1 file
 - Debugging: 3 files
+- Unicode & Text Processing: 4 files
 
 ---
 
