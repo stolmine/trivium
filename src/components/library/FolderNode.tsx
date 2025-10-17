@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
@@ -10,19 +11,61 @@ import type { TreeNode } from '../../lib/types/folder';
 import type { Folder as FolderType } from '../../lib/types/folder';
 import type { Text } from '../../lib/types/article';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text: string, query: string | null): React.ReactNode {
+  if (!query || query.trim().length === 0) {
+    return text;
+  }
+
+  try {
+    const escapedQuery = escapeRegex(query);
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <mark key={index} style={{ backgroundColor: '#fef08a', color: 'inherit' }}>
+            {part}
+          </mark>
+        );
+      }
+      return part;
+    });
+  } catch (e) {
+    return text;
+  }
+}
+
 interface FolderNodeProps {
   node: TreeNode;
   depth: number;
   collapsed?: boolean;
+  highlightQuery?: string | null;
+  selectedTextId?: number | null;
 }
 
-export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) {
+export function FolderNode({ node, depth, collapsed = false, highlightQuery = null, selectedTextId = null }: FolderNodeProps) {
   const { expandedFolderIds, selectedItemId, toggleFolder, selectItem } = useLibraryStore();
 
   const folder = node.data as FolderType;
   const isExpanded = expandedFolderIds.has(folder.id);
   const isSelected = selectedItemId === folder.id;
   const { progress } = useFolderProgress(folder.id);
+  const nodeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isSelected && nodeRef.current) {
+      nodeRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    }
+  }, [isSelected]);
 
   const { setNodeRef, isOver } = useDroppable({
     id: folder.id,
@@ -40,18 +83,16 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
     },
   });
 
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleFolder(folder.id);
-  };
+  const hasChildren = node.children.length > 0;
 
-  const handleSelect = () => {
+  const handleClick = () => {
+    if (hasChildren) {
+      toggleFolder(folder.id);
+    }
     selectItem(folder.id);
   };
 
   const indentStyle = collapsed ? {} : { paddingLeft: `${depth * 16 + 8}px` };
-
-  const hasChildren = node.children.length > 0;
 
   return (
     <div>
@@ -60,6 +101,9 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
           ref={(node) => {
             setNodeRef(node);
             draggable.setNodeRef(node);
+            if (node) {
+              (nodeRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+            }
           }}
           {...draggable.attributes}
           {...draggable.listeners}
@@ -79,21 +123,17 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
             draggable.isDragging && 'opacity-50',
             !shouldReduceMotion() && 'transition-colors duration-150'
           )}
-          onClick={handleSelect}
+          onClick={handleClick}
           title={collapsed ? folder.name : undefined}
         >
           {!collapsed && hasChildren && (
-            <button
-              onClick={handleToggle}
-              className="p-0.5 hover:bg-sidebar-accent rounded transition-colors"
-              aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
-            >
+            <div className="p-0.5">
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </button>
+            </div>
           )}
 
           {!collapsed && !hasChildren && <div className="w-5" />}
@@ -107,7 +147,7 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
           {!collapsed && (
             <>
               <span className="truncate flex-1" title={folder.name}>
-                {folder.name}
+                {highlightText(folder.name, highlightQuery)}
               </span>
               {progress !== null && progress > 0 && (
                 <span className="text-xs text-muted-foreground ml-auto pl-2 flex-shrink-0">
@@ -123,10 +163,11 @@ export function FolderNode({ node, depth, collapsed = false }: FolderNodeProps) 
         <div>
           {node.children.map((child) => {
             if (child.type === 'folder') {
-              return <FolderNode key={child.id} node={child} depth={depth + 1} />;
+              return <FolderNode key={child.id} node={child} depth={depth + 1} highlightQuery={highlightQuery} selectedTextId={selectedTextId} />;
             } else {
+              const text = child.data as Text;
               return (
-                <TextNode key={child.id} text={child.data as Text} depth={depth + 1} />
+                <TextNode key={child.id} text={text} depth={depth + 1} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />
               );
             }
           })}

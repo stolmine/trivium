@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT COUNT(*) as count\n        FROM flashcards\n        WHERE DATE(created_at) = DATE(?)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1a535ff038e99093fb38f587aed6ec842ad2cf6e0e887b8278143de9cfe78cd0"
+}

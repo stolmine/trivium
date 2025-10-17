@@ -98,6 +98,13 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       category: 'navigation',
     },
     {
+      key: '4',
+      ctrlKey: true,
+      action: handleNavigation('/create'),
+      description: 'Go to Create Cards',
+      category: 'navigation',
+    },
+    {
       key: 'n',
       ctrlKey: true,
       action: handleNavigation('/ingest'),

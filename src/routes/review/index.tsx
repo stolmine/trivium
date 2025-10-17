@@ -8,12 +8,8 @@ import { RadioGroup, RadioGroupItem } from '@/lib/components/ui/radio-group';
 import { Label } from '@/lib/components/ui/label';
 import { Slider } from '@/lib/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
+import { FolderSelect } from '@/lib/components/folders/FolderSelect';
 import type { ReviewFilter, Text } from '@/lib/types';
-
-interface FolderNode {
-  folder: { id: string; name: string };
-  children: FolderNode[];
-}
 
 export function ReviewHubPage() {
   const navigate = useNavigate();
@@ -64,12 +60,6 @@ export function ReviewHubPage() {
     return { type: 'global' };
   };
 
-  const getFolderName = (folderId: string): string => {
-    const flatFolders = flattenFolders(folderTree);
-    const folder = flatFolders.find(f => f.id === folderId);
-    return folder?.name || folderId;
-  };
-
   const getTextName = (textId: number): string => {
     const text = texts.find(t => t.id === textId);
     return text?.title || textId.toString();
@@ -117,20 +107,11 @@ export function ReviewHubPage() {
                   <div className="font-medium">Specific Folder</div>
                   {config.filterType === 'folder' && (
                     <div className="mt-2">
-                      <Select value={config.folderId} onValueChange={setFolder}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select folder...">
-                            {config.folderId ? getFolderName(config.folderId) : "Select folder..."}
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {flattenFolders(folderTree).map(f => (
-                            <SelectItem key={f.id} value={f.id}>
-                              {f.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FolderSelect
+                        value={config.folderId ?? null}
+                        onChange={(value) => value && setFolder(value)}
+                        folders={folderTree}
+                      />
                     </div>
                   )}
                   {config.filterType === 'folder' && config.folderId && (
@@ -211,17 +192,4 @@ export function ReviewHubPage() {
       </div>
     </div>
   );
-}
-
-function flattenFolders(nodes: FolderNode[], result: { id: string; name: string }[] = []): { id: string; name: string }[] {
-  for (const node of nodes) {
-    // Add null check to prevent errors when folder data is missing
-    if (node?.folder?.id && node?.folder?.name) {
-      result.push({ id: node.folder.id, name: node.folder.name });
-    }
-    if (node?.children) {
-      flattenFolders(node.children, result);
-    }
-  }
-  return result;
 }

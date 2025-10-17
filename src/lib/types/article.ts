@@ -62,4 +62,5 @@ export interface CreateTextRequest {
   accessDate?: string;
   doi?: string;
   isbn?: string;
+  folderId?: string | null;
 }

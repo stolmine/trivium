@@ -24,7 +24,7 @@ interface FolderContextMenuProps {
 }
 
 export function FolderContextMenu({ folderId, folderName, children }: FolderContextMenuProps) {
-  const { createFolder, renameFolder, deleteFolder } = useLibraryStore();
+  const { folders, createFolder, renameFolder, deleteFolder } = useLibraryStore();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -32,29 +32,33 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
 
   const [newFolderName, setNewFolderName] = useState('');
   const [renameFolderName, setRenameFolderName] = useState(folderName);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   const handleCreateSubfolder = async () => {
-    if (newFolderName.trim()) {
-      try {
-        await createFolder(newFolderName.trim(), folderId);
-        setNewFolderName('');
-        setShowCreateDialog(false);
-      } catch (error) {
-        // Error already logged in store, could add toast notification here
-        console.error('Error creating subfolder:', error);
-      }
+    const trimmedName = newFolderName.trim();
+    if (!trimmedName || createError) return;
+
+    try {
+      await createFolder(trimmedName, folderId);
+      setNewFolderName('');
+      setCreateError(null);
+      setShowCreateDialog(false);
+    } catch (error) {
+      console.error('Error creating subfolder:', error);
     }
   };
 
   const handleRename = async () => {
-    if (renameFolderName.trim() && renameFolderName.trim() !== folderName) {
-      try {
-        await renameFolder(folderId, renameFolderName.trim());
-        setShowRenameDialog(false);
-      } catch (error) {
-        // Error already logged in store, could add toast notification here
-        console.error('Error renaming folder:', error);
-      }
+    const trimmedName = renameFolderName.trim();
+    if (!trimmedName || trimmedName === folderName || renameError) return;
+
+    try {
+      await renameFolder(folderId, trimmedName);
+      setRenameError(null);
+      setShowRenameDialog(false);
+    } catch (error) {
+      console.error('Error renaming folder:', error);
     }
   };
 
@@ -67,6 +71,74 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
       console.error('Error deleting folder:', error);
     }
   };
+
+  useEffect(() => {
+    console.log('=== useEffect running - create validation ===');
+    console.log('showCreateDialog:', showCreateDialog);
+    console.log('newFolderName:', newFolderName);
+
+    if (!showCreateDialog) {
+      console.log('Early return: showCreateDialog is false');
+      return;
+    }
+
+    const trimmedName = newFolderName.trim();
+    if (!trimmedName) {
+      console.log('Early return: newFolderName is empty after trim');
+      setCreateError(null);
+      return;
+    }
+
+    console.log('=== DUPLICATE CHECK DEBUG ===');
+    console.log('Current folderId (parent):', folderId);
+    console.log('New folder name:', trimmedName);
+    console.log('All folders:', folders);
+    console.log('Folders with matching parent:', folders.filter(f => f.parentId === folderId));
+
+    const duplicateFolder = folders.find(
+      f => f.parentId === folderId &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    console.log('Duplicate found?', duplicateFolder);
+    console.log('=== END DEBUG ===');
+
+    if (duplicateFolder) {
+      setCreateError('A folder with this name already exists');
+    } else {
+      setCreateError(null);
+    }
+  }, [newFolderName, folders, folderId, showCreateDialog]);
+
+  useEffect(() => {
+    if (!showRenameDialog) {
+      return;
+    }
+
+    const trimmedName = renameFolderName.trim();
+    if (!trimmedName || trimmedName === folderName) {
+      setRenameError(null);
+      return;
+    }
+
+    const currentFolder = folders.find(f => f.id === folderId);
+    if (!currentFolder) {
+      setRenameError(null);
+      return;
+    }
+
+    const duplicateFolder = folders.find(
+      f => f.id !== folderId &&
+      f.parentId === currentFolder.parentId &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      setRenameError('A folder with this name already exists');
+    } else {
+      setRenameError(null);
+    }
+  }, [renameFolderName, folders, folderId, folderName, showRenameDialog]);
 
   useEffect(() => {
     if (!showDeleteDialog) return;
@@ -87,7 +159,10 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={() => setShowCreateDialog(true)}>
+          <ContextMenuItem onClick={() => {
+            console.log('Create Subfolder clicked - opening dialog');
+            setShowCreateDialog(true);
+          }}>
             <FolderPlus className="mr-2 h-4 w-4" />
             Create Subfolder
           </ContextMenuItem>
@@ -103,7 +178,14 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <Dialog open={showCreateDialog} onOpenChange={(open) => {
+        console.log('Create dialog onOpenChange - open:', open);
+        setShowCreateDialog(open);
+        if (!open) {
+          setNewFolderName('');
+          setCreateError(null);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Subfolder</DialogTitle>
@@ -114,7 +196,10 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
               <Input
                 id="subfolder-name"
                 value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
+                onChange={(e) => {
+                  console.log('Input onChange - new value:', e.target.value);
+                  setNewFolderName(e.target.value);
+                }}
                 placeholder="Enter folder name"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -123,20 +208,29 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
                 }}
                 autoFocus
               />
+              {createError && (
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{createError}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleCreateSubfolder} disabled={!newFolderName.trim()}>
+            <Button type="button" onClick={handleCreateSubfolder} disabled={!newFolderName.trim() || !!createError}>
               Create
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+      <Dialog open={showRenameDialog} onOpenChange={(open) => {
+        setShowRenameDialog(open);
+        if (!open) {
+          setRenameFolderName(folderName);
+          setRenameError(null);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rename Folder</DialogTitle>
@@ -156,13 +250,16 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
                 }}
                 autoFocus
               />
+              {renameError && (
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{renameError}</p>
+              )}
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setShowRenameDialog(false)}>
               Cancel
             </Button>
-            <Button type="button" onClick={handleRename} disabled={!renameFolderName.trim()}>
+            <Button type="button" onClick={handleRename} disabled={!renameFolderName.trim() || !!renameError}>
               Rename
             </Button>
           </DialogFooter>

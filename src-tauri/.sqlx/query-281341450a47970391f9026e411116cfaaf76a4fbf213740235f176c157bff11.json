@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT COUNT(*) as count\n        FROM flashcards\n        WHERE datetime(created_at) >= datetime(?, '-7 days')\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "281341450a47970391f9026e411116cfaaf76a4fbf213740235f176c157bff11"
+}

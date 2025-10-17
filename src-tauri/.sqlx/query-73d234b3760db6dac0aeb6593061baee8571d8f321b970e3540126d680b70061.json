@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                        UPDATE cloze_notes\n                        SET status = 'needs_review',\n                            notes = 'Text edited in marked region',\n                            updated_at = ?\n                        WHERE id = ?\n                        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "73d234b3760db6dac0aeb6593061baee8571d8f321b970e3540126d680b70061"
+}

@@ -8,6 +8,7 @@ const LibraryPage = lazy(() => import('./routes/library').then(module => ({ defa
 const ReadPage = lazy(() => import('./routes/read/[id]').then(module => ({ default: module.ReadPage })))
 const ReviewHubPage = lazy(() => import('./routes/review').then(module => ({ default: module.ReviewHubPage })))
 const ReviewSessionPage = lazy(() => import('./routes/review/session').then(module => ({ default: module.ReviewSessionPage })))
+const CreateCardsPage = lazy(() => import('./routes/create').then(module => ({ default: module.CreateCardsPage })))
 const IngestPage = lazy(() => import('./routes/ingest').then(module => ({ default: module.IngestPage })))
 
 const router = createBrowserRouter([
@@ -59,6 +60,14 @@ const router = createBrowserRouter([
             ),
           },
         ],
+      },
+      {
+        path: 'create',
+        element: (
+          <Suspense fallback={<SkeletonDashboard />}>
+            <CreateCardsPage />
+          </Suspense>
+        ),
       },
       {
         path: 'ingest',

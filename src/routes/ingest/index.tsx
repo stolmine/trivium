@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
+import { useFolderStore } from '../../lib/stores/folder'
 import {
   Button,
   Input,
@@ -11,9 +12,16 @@ import {
 import { ChevronLeft, X, Loader2 } from 'lucide-react'
 import { useTextHistory } from '../../hooks/useTextHistory'
 import { api } from '../../lib/utils/tauri'
+import { FolderSelect } from '@/lib/components/folders/FolderSelect'
 
 export function IngestPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const initialState = location.state as {
+    wikipediaUrl?: string;
+    selectedFolderId?: string;
+  } | undefined
+
   const [title, setTitle] = useState('')
   const {
     content,
@@ -26,11 +34,16 @@ export function IngestPage() {
   const [author, setAuthor] = useState('')
   const [publicationDate, setPublicationDate] = useState('')
   const [publisher, setPublisher] = useState('')
+  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(
+    initialState?.selectedFolderId || null
+  )
   const { createText, isLoading } = useReadingStore()
-  const { loadLibrary } = useLibraryStore()
-  const [wikipediaUrl, setWikipediaUrl] = useState('')
+  const { texts, loadLibrary } = useLibraryStore()
+  const { folderTree, loadFolderTree } = useFolderStore()
+  const [wikipediaUrl, setWikipediaUrl] = useState(initialState?.wikipediaUrl || '')
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
+  const [titleError, setTitleError] = useState<string | null>(null)
 
   const handleFetchWikipedia = async () => {
     if (!wikipediaUrl.trim()) return
@@ -57,18 +70,23 @@ export function IngestPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle || titleError) {
+      return
+    }
+
     try {
       await createText({
-        title,
+        title: trimmedTitle,
         content,
         source: wikipediaUrl ? 'wikipedia' : 'paste',
         sourceUrl: wikipediaUrl || undefined,
         author: author || undefined,
         publicationDate: publicationDate || undefined,
         publisher: publisher || undefined,
+        folderId: selectedFolderId,
       })
 
-      // Refresh the library store so sidebar updates immediately
       await loadLibrary()
 
       navigate('/library')
@@ -112,6 +130,45 @@ export function IngestPage() {
   }
 
   useEffect(() => {
+    loadFolderTree()
+    loadLibrary()
+  }, [loadFolderTree, loadLibrary])
+
+  useEffect(() => {
+    if (initialState?.wikipediaUrl && !content) {
+      handleFetchWikipedia()
+    }
+  }, [])
+
+  useEffect(() => {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      setTitleError(null)
+      return
+    }
+
+    console.log('[Ingest Validation] Checking for duplicates:', {
+      title: trimmedTitle,
+      selectedFolderId,
+      totalTexts: texts.length,
+      textsInFolder: texts.filter(t => t.folderId === selectedFolderId).length
+    })
+
+    const duplicateText = texts.find(
+      t => t.folderId === selectedFolderId &&
+      t.title.toLowerCase() === trimmedTitle.toLowerCase()
+    )
+
+    if (duplicateText) {
+      console.log('[Ingest Validation] Duplicate found:', duplicateText)
+      setTitleError('A text with this title already exists in this folder')
+    } else {
+      console.log('[Ingest Validation] No duplicate found')
+      setTitleError(null)
+    }
+  }, [title, texts, selectedFolderId])
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
@@ -121,7 +178,7 @@ export function IngestPage() {
 
       if (e.key === 'Enter' && e.shiftKey) {
         e.preventDefault()
-        if (title && content) {
+        if (title && content && !titleError) {
           handleSubmit(e as unknown as React.FormEvent)
         }
         return
@@ -150,7 +207,7 @@ export function IngestPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [content, title, undo, redo])
+  }, [content, title, titleError, undo, redo])
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -224,6 +281,9 @@ export function IngestPage() {
                     required
                     disabled={isLoading}
                   />
+                  {titleError && (
+                    <p className="text-sm text-destructive">{titleError}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -257,6 +317,18 @@ export function IngestPage() {
                     placeholder="Enter the publisher's name"
                     disabled={isLoading}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="folder">Folder (optional)</Label>
+                  <FolderSelect
+                    value={selectedFolderId}
+                    onChange={setSelectedFolderId}
+                    folders={folderTree}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Select a folder to organize this text. Leave empty for root level.
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t">
@@ -327,7 +399,7 @@ export function IngestPage() {
             <Button
               type="submit"
               onClick={handleSubmit}
-              disabled={isLoading || !title || !content}
+              disabled={isLoading || !title || !content || !!titleError}
             >
               {isLoading ? 'Importing...' : 'Import to Library'}
             </Button>

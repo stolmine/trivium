@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE texts SET content = ?, content_length = ?, updated_at = ? WHERE id = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "57cfcbacf4e64145c467b8ba7c667e95b4b8d9395f3b6b101d4aaebfe170cf52"
+}

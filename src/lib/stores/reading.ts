@@ -19,6 +19,8 @@ interface ReadingState {
   setCurrentText: (text: Text | null) => void;
   markRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
   unmarkRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
+  markAsFinished: (textId: number, contentLength: number) => Promise<void>;
+  clearProgress: (textId: number) => Promise<void>;
   isRangeRead: (startPosition: number, endPosition: number) => boolean;
   isRangeExcluded: (startPosition: number, endPosition: number) => boolean;
   setExcludedRanges: (ranges: ExcludedRange[]) => void;
@@ -41,12 +43,15 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   error: null,
 
   loadTexts: async () => {
+    console.log('[Reading Store] loadTexts() called');
     set({ isLoading: true, error: null });
     try {
+      console.log('[Reading Store] Fetching texts from API...');
       const texts = await api.texts.list();
+      console.log('[Reading Store] Received texts:', texts.length, texts);
       set({ texts, isLoading: false });
     } catch (error) {
-      console.error('Failed to load texts:', error);
+      console.error('[Reading Store] Failed to load texts:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to load texts',
         isLoading: false
@@ -126,6 +131,44 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       console.error('Failed to unmark range as read:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to unmark range as read'
+      });
+      throw error;
+    }
+  },
+
+  markAsFinished: async (textId: number, contentLength: number) => {
+    try {
+      await api.reading.markRangeAsRead(textId, 0, contentLength);
+      await get().getReadRanges(textId);
+      await get().calculateProgress(textId);
+      invalidateProgressCache(textId);
+      // Invalidate folder progress cache if text belongs to a folder
+      const currentText = get().currentText;
+      if (currentText?.folderId) {
+        invalidateFolderProgressCache(currentText.folderId);
+      }
+    } catch (error) {
+      console.error('Failed to mark as finished:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to mark as finished'
+      });
+      throw error;
+    }
+  },
+
+  clearProgress: async (textId: number) => {
+    try {
+      await api.reading.clearReadProgress(textId);
+      set({ readRanges: [], totalProgress: 0 });
+      invalidateProgressCache(textId);
+      const currentText = get().currentText;
+      if (currentText?.folderId) {
+        invalidateFolderProgressCache(currentText.folderId);
+      }
+    } catch (error) {
+      console.error('Failed to clear progress:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to clear progress'
       });
       throw error;
     }

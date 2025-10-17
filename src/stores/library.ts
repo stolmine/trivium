@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { api } from '../lib/utils/tauri';
 import type { Folder } from '../lib/types/folder';
 import type { Text } from '../lib/types/article';
+import { buildTree, getFlattenedVisibleNodes, getNodeById } from '../lib/tree-utils';
 
 export type SortOption = 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'content-length';
 
@@ -16,8 +17,14 @@ interface LibraryState {
 
   loadLibrary: () => Promise<void>;
   toggleFolder: (folderId: string) => void;
+  expandAllFolders: () => void;
+  collapseAllFolders: () => void;
   selectItem: (itemId: string | null) => void;
   setSortBy: (sortBy: SortOption) => void;
+  selectNextItem: () => void;
+  selectPreviousItem: () => void;
+  expandSelectedFolder: () => void;
+  collapseSelectedFolder: () => void;
   createFolder: (name: string, parentId?: string) => Promise<void>;
   renameFolder: (id: string, name: string) => Promise<void>;
   deleteFolder: (id: string) => Promise<void>;
@@ -66,12 +73,106 @@ export const useLibraryStore = create<LibraryState>((set) => ({
     });
   },
 
+  expandAllFolders: () => {
+    set((state) => {
+      const allFolderIds = new Set(state.folders.map(f => f.id));
+      return { expandedFolderIds: allFolderIds };
+    });
+  },
+
+  collapseAllFolders: () => {
+    set({ expandedFolderIds: new Set() });
+  },
+
   selectItem: (itemId: string | null) => {
     set({ selectedItemId: itemId });
   },
 
   setSortBy: (sortBy: SortOption) => {
     set({ sortBy });
+  },
+
+  selectNextItem: () => {
+    set((state) => {
+      const tree = buildTree(state.folders, state.texts);
+      const flatNodes = getFlattenedVisibleNodes(tree, state.expandedFolderIds);
+
+      if (flatNodes.length === 0) return {};
+
+      if (!state.selectedItemId) {
+        return { selectedItemId: flatNodes[0].id };
+      }
+
+      const currentIndex = flatNodes.findIndex(n => n.id === state.selectedItemId);
+      if (currentIndex === -1) {
+        return { selectedItemId: flatNodes[0].id };
+      }
+
+      const nextIndex = (currentIndex + 1) % flatNodes.length;
+      return { selectedItemId: flatNodes[nextIndex].id };
+    });
+  },
+
+  selectPreviousItem: () => {
+    set((state) => {
+      const tree = buildTree(state.folders, state.texts);
+      const flatNodes = getFlattenedVisibleNodes(tree, state.expandedFolderIds);
+
+      if (flatNodes.length === 0) return {};
+
+      if (!state.selectedItemId) {
+        return { selectedItemId: flatNodes[flatNodes.length - 1].id };
+      }
+
+      const currentIndex = flatNodes.findIndex(n => n.id === state.selectedItemId);
+      if (currentIndex === -1) {
+        return { selectedItemId: flatNodes[flatNodes.length - 1].id };
+      }
+
+      const prevIndex = currentIndex === 0 ? flatNodes.length - 1 : currentIndex - 1;
+      return { selectedItemId: flatNodes[prevIndex].id };
+    });
+  },
+
+  expandSelectedFolder: () => {
+    set((state) => {
+      if (!state.selectedItemId) return {};
+
+      const tree = buildTree(state.folders, state.texts);
+      const selectedNode = getNodeById(tree, state.selectedItemId);
+
+      if (!selectedNode || selectedNode.type !== 'folder') return {};
+
+      if (state.expandedFolderIds.has(state.selectedItemId)) {
+        if (selectedNode.children.length > 0) {
+          return { selectedItemId: selectedNode.children[0].id };
+        }
+        return {};
+      }
+
+      const newExpandedIds = new Set(state.expandedFolderIds);
+      newExpandedIds.add(state.selectedItemId);
+      return { expandedFolderIds: newExpandedIds };
+    });
+  },
+
+  collapseSelectedFolder: () => {
+    set((state) => {
+      if (!state.selectedItemId) return {};
+
+      const tree = buildTree(state.folders, state.texts);
+      const selectedNode = getNodeById(tree, state.selectedItemId);
+
+      if (!selectedNode || selectedNode.type !== 'folder') return {};
+
+      if (!state.expandedFolderIds.has(state.selectedItemId)) {
+        return {};
+      }
+
+      const newExpandedIds = new Set(state.expandedFolderIds);
+      newExpandedIds.delete(state.selectedItemId);
+      return { expandedFolderIds: newExpandedIds };
+    });
   },
 
   createFolder: async (name: string, parentId?: string) => {

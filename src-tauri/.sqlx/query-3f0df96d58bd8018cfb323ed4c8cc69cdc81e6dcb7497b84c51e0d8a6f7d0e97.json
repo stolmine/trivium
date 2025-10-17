@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT COUNT(*) as count\n        FROM cloze_notes\n        WHERE status = 'converted'\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3f0df96d58bd8018cfb323ed4c8cc69cdc81e6dcb7497b84c51e0d8a6f7d0e97"
+}

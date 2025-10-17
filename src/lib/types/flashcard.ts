@@ -30,6 +30,10 @@ export interface ClozeNote {
   clozeCount: number;
   createdAt: string;
   updatedAt: string;
+  startPosition: number;
+  endPosition: number;
+  status?: string;
+  notes?: string;
 }
 
 export interface ClozeSegment {

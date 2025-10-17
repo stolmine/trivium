@@ -11,7 +11,11 @@ import type {
   ReviewFilter,
   ReviewStats,
   LimitStatus,
-  WikipediaArticle
+  WikipediaArticle,
+  MarkWithContext,
+  CreatedCard,
+  HubStats,
+  CreateCardRequest
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -54,6 +58,9 @@ export const api = {
     list: async (): Promise<Text[]> => {
       return await invoke('list_texts');
     },
+    listWithAvailableMarks: async (): Promise<Text[]> => {
+      return await invoke('get_texts_with_available_marks');
+    },
     get: async (id: number): Promise<Text> => {
       return await invoke('get_text', { id });
     },
@@ -62,6 +69,26 @@ export const api = {
     },
     delete: async (id: number): Promise<void> => {
       return await invoke('delete_text', { id });
+    },
+    updateContent: async (textId: number, newContent: string): Promise<void> => {
+      return await invoke('update_text_content', { textId, newContent });
+    },
+    updateTextWithSmartMarks: async (
+      textId: number,
+      editStart: number,
+      editEnd: number,
+      newContent: string
+    ) => {
+      return invoke<{
+        updated_marks: number[];
+        flagged_marks: number[];
+        unchanged_marks: number[];
+      }>('update_text_with_smart_marks', {
+        textId,
+        editStart,
+        editEnd,
+        newContent,
+      });
     },
   },
   reading: {
@@ -88,6 +115,9 @@ export const api = {
     getParagraphs: async (textId: number): Promise<Paragraph[]> => {
       return await invoke('get_paragraphs', { textId: textId });
     },
+    clearReadProgress: async (textId: number): Promise<void> => {
+      return await invoke('clear_read_progress', { textId });
+    },
   },
   flashcards: {
     createFromCloze: async (textId: number, selectedText: string, clozeText: string): Promise<Flashcard[]> => {
@@ -108,6 +138,22 @@ export const api = {
         clozeText: clozeText,
         clozeNumber: clozeNumber
       });
+    },
+    createMark: async (textId: number, selectedText: string, startPosition: number, endPosition: number): Promise<number> => {
+      return await invoke('create_mark', { textId, selectedText, startPosition, endPosition });
+    },
+    getMarksForText: async (textId: number) => {
+      return invoke<Array<{
+        id: number;
+        textId: number;
+        originalText: string;
+        startPosition: number | null;
+        endPosition: number | null;
+        status: string;
+        notes: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>>('get_marks_for_text', { textId });
     },
   },
   review: {
@@ -171,6 +217,41 @@ export const api = {
   wikipedia: {
     fetch: async (url: string): Promise<WikipediaArticle> => {
       return await invoke('fetch_wikipedia_article', { url });
+    },
+  },
+  hub: {
+    getMarksForScope: async (scope: string, scopeId: string | number | null): Promise<MarkWithContext[]> => {
+      return await invoke('get_hub_marks', {
+        scope,
+        scopeId: scopeId !== null ? String(scopeId) : null,
+        includeWithCards: false,
+      });
+    },
+    skipMark: async (markId: number): Promise<void> => {
+      return await invoke('skip_mark', { markId });
+    },
+    buryMark: async (markId: number): Promise<void> => {
+      return await invoke('bury_mark', { markId });
+    },
+    createCardFromMark: async (request: CreateCardRequest): Promise<CreatedCard[]> => {
+      return await invoke('create_card_from_mark', {
+        markId: request.markId,
+        selectedText: request.selectedText,
+        clozeText: request.clozeText,
+      });
+    },
+    updateCard: async (cardId: number, question: string, answer: string): Promise<void> => {
+      return await invoke('update_created_card', {
+        cardId,
+        question,
+        answer,
+      });
+    },
+    deleteCard: async (cardId: number): Promise<void> => {
+      return await invoke('delete_created_card', { cardId });
+    },
+    getStats: async (): Promise<HubStats> => {
+      return await invoke('get_hub_stats');
     },
   },
 };

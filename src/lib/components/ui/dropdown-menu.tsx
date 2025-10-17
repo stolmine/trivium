@@ -25,7 +25,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
 
   return (
     <DropdownMenuContext.Provider value={{ open, setOpen }}>
-      {children}
+      <div className="relative inline-block">
+        {children}
+      </div>
     </DropdownMenuContext.Provider>
   )
 }
@@ -107,7 +109,7 @@ const DropdownMenuContent: React.FC<DropdownMenuContentProps> = ({
     <div
       ref={ref}
       className={cn(
-        "absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 p-1 text-gray-900 dark:text-gray-100 shadow-md mt-1",
+        "absolute top-full mt-1 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 p-1 text-gray-900 dark:text-gray-100 shadow-md",
         alignmentClasses[align],
         className
       )}

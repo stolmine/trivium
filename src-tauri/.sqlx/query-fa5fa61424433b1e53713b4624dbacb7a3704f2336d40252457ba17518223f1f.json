@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO cloze_notes (\n            text_id, user_id, original_text, parsed_segments, cloze_count,\n            start_position, end_position,\n            created_at, updated_at\n        )\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "fa5fa61424433b1e53713b4624dbacb7a3704f2336d40252457ba17518223f1f"
+}

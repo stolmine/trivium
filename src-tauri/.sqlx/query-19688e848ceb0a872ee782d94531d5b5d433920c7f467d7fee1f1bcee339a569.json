@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                            UPDATE cloze_notes\n                            SET start_position = ?,\n                                end_position = ?,\n                                updated_at = ?\n                            WHERE id = ?\n                            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "19688e848ceb0a872ee782d94531d5b5d433920c7f467d7fee1f1bcee339a569"
+}

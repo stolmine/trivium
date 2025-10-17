@@ -13,4 +13,9 @@ pub struct ClozeNote {
     pub cloze_count: i64,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    // Workflow tracking fields for Flashcard Creation Hub
+    pub status: String, // 'pending', 'converted', 'skipped', 'buried'
+    pub last_seen_at: Option<DateTime<Utc>>, // Nullable: when mark was last viewed
+    pub session_count: i64, // Number of times mark appeared in hub
+    pub notes: Option<String>, // Nullable: optional user notes
 }

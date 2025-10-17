@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT\n                    cn.id,\n                    cn.text_id,\n                    t.title,\n                    t.content,\n                    cn.original_text,\n                    cn.created_at,\n                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as \"card_count!: i64\"\n                FROM cloze_notes cn\n                INNER JOIN texts t ON cn.text_id = t.id\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                  AND cn.text_id = ?\n                ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC\n                LIMIT ?\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "text_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "title",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "content",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "original_text",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at",
+        "ordinal": 5,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "card_count!: i64",
+        "ordinal": 6,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "a4cf1c0e63a98c694777787adce9743edcc91169172b3911915a9bf0ac55695b"
+}

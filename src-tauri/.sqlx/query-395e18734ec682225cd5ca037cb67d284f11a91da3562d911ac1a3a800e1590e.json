@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE cloze_notes\n        SET parsed_segments = ?,\n            cloze_count = ?,\n            original_text = ?,\n            updated_at = ?\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "395e18734ec682225cd5ca037cb67d284f11a91da3562d911ac1a3a800e1590e"
+}

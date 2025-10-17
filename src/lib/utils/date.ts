@@ -95,3 +95,48 @@ export function getDueColorClass(dueDate: string): string {
   // Due later - gray
   return 'text-gray-500'
 }
+
+export function formatRelativeTime(timestamp: string): string {
+  const now = new Date()
+  const past = new Date(timestamp)
+  const diffMs = now.getTime() - past.getTime()
+
+  if (diffMs < 0) {
+    return 'Just now'
+  }
+
+  const diffSeconds = Math.floor(diffMs / 1000)
+  const diffMinutes = Math.floor(diffSeconds / 60)
+  const diffHours = Math.floor(diffMinutes / 60)
+  const diffDays = Math.floor(diffHours / 24)
+
+  if (diffSeconds < 10) {
+    return 'Just now'
+  }
+
+  if (diffSeconds < 60) {
+    return `${diffSeconds} seconds ago`
+  }
+
+  if (diffMinutes === 1) {
+    return '1 minute ago'
+  }
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes} minutes ago`
+  }
+
+  if (diffHours === 1) {
+    return '1 hour ago'
+  }
+
+  if (diffHours < 24) {
+    return `${diffHours} hours ago`
+  }
+
+  if (diffDays === 1) {
+    return '1 day ago'
+  }
+
+  return `${diffDays} days ago`
+}

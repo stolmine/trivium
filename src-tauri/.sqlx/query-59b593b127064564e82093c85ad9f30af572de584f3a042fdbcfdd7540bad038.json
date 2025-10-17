@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            original_text as \"original_text!\",\n            start_position,\n            end_position,\n            status as \"status!\",\n            notes,\n            created_at as \"created_at: _\",\n            updated_at as \"updated_at: _\"\n        FROM cloze_notes\n        WHERE text_id = ?\n          AND start_position IS NOT NULL\n          AND end_position IS NOT NULL\n        ORDER BY start_position ASC\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "text_id!",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "original_text!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_position",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "end_position",
+        "ordinal": 4,
+        "type_info": "Integer"
+      },
+      {
+        "name": "status!",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "notes",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "created_at: _",
+        "ordinal": 7,
+        "type_info": "Datetime"
+      },
+      {
+        "name": "updated_at: _",
+        "ordinal": 8,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "59b593b127064564e82093c85ad9f30af572de584f3a042fdbcfdd7540bad038"
+}

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDraggable } from '@dnd-kit/core';
@@ -8,19 +9,61 @@ import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
 import { useTextProgress } from '../../lib/hooks/useTextProgress';
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightText(text: string, query: string | null): React.ReactNode {
+  if (!query || query.trim().length === 0) {
+    return text;
+  }
+
+  try {
+    const escapedQuery = escapeRegex(query);
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, index) => {
+      if (regex.test(part)) {
+        return (
+          <mark key={index} style={{ backgroundColor: '#fef08a', color: 'inherit' }}>
+            {part}
+          </mark>
+        );
+      }
+      return part;
+    });
+  } catch (e) {
+    return text;
+  }
+}
+
 interface TextNodeProps {
   text: Text;
   depth: number;
   collapsed?: boolean;
+  highlightQuery?: string | null;
+  isSearchSelected?: boolean;
 }
 
-export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
+export function TextNode({ text, depth, collapsed = false, highlightQuery = null, isSearchSelected = false }: TextNodeProps) {
   const navigate = useNavigate();
   const { selectedItemId, selectItem } = useLibraryStore();
   const { progress } = useTextProgress(text.id);
+  const nodeRef = useRef<HTMLDivElement>(null);
 
   const nodeId = `text-${text.id}`;
   const isSelected = selectedItemId === nodeId;
+
+  useEffect(() => {
+    if ((isSearchSelected || isSelected) && nodeRef.current) {
+      nodeRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    }
+  }, [isSearchSelected, isSelected]);
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: nodeId,
@@ -45,12 +88,19 @@ export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
 
   const nodeContent = (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        if (node) {
+          (nodeRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        }
+      }}
       style={{ ...style, ...indentStyle }}
       className={cn(
         'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-        isSelected
+        isSearchSelected
+          ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-900 border border-blue-300'
+          : isSelected
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
           : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
         isDragging && 'opacity-50',
@@ -65,7 +115,7 @@ export function TextNode({ text, depth, collapsed = false }: TextNodeProps) {
       {!collapsed && (
         <>
           <span className="truncate flex-1" title={text.title}>
-            {text.title}
+            {highlightText(text.title, highlightQuery)}
           </span>
           {progress !== null && progress > 0 && (
             <span className="text-xs text-muted-foreground ml-auto pl-2 flex-shrink-0">

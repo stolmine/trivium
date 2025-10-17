@@ -25,7 +25,7 @@ interface TextContextMenuProps {
 }
 
 export function TextContextMenu({ textId, textTitle, children }: TextContextMenuProps) {
-  const { renameText, deleteText } = useLibraryStore();
+  const { texts, renameText, deleteText } = useLibraryStore();
   const { loadTexts } = useReadingStore();
 
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -34,10 +34,25 @@ export function TextContextMenu({ textId, textTitle, children }: TextContextMenu
   const [renameTextTitle, setRenameTextTitle] = useState(textTitle);
 
   const handleRename = async () => {
-    if (renameTextTitle.trim() && renameTextTitle.trim() !== textTitle) {
-      await renameText(textId, renameTextTitle.trim());
-      setShowRenameDialog(false);
+    const trimmedTitle = renameTextTitle.trim();
+    if (!trimmedTitle || trimmedTitle === textTitle) return;
+
+    const currentText = texts.find(t => t.id === textId);
+    if (!currentText) return;
+
+    const duplicateText = texts.find(
+      t => t.id !== textId &&
+      t.folderId === currentText.folderId &&
+      t.title.toLowerCase() === trimmedTitle.toLowerCase()
+    );
+
+    if (duplicateText) {
+      alert('A text with this title already exists in this folder.');
+      return;
     }
+
+    await renameText(textId, trimmedTitle);
+    setShowRenameDialog(false);
   };
 
   const handleDelete = async () => {
