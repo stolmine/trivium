@@ -47,7 +47,10 @@ export function InlineEditor({
   };
 
   const handleActivate = () => {
-    onActivate();
+    // Only call onActivate if not already active
+    if (!isActive) {
+      onActivate();
+    }
   };
 
   const handleDeactivate = () => {

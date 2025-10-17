@@ -1,8 +1,9 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useLayoutEffect } from 'react'
 import type { Root } from 'mdast'
 import type { ClozeNote } from '../../types'
 import { MarkdownRenderer } from './MarkdownRenderer'
 import { cn } from '../../utils'
+import { getTextContent } from '../../utils/domPosition'
 
 interface EditableContentProps {
   mode: 'styled' | 'literal'
@@ -21,17 +22,21 @@ export function EditableContent({
   editableRange,
   onContentChange
 }: EditableContentProps) {
-  const [localMarkdown, setLocalMarkdown] = useState(markdown)
   const divRef = useRef<HTMLDivElement>(null)
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const lastPropsMarkdownRef = useRef<string>(markdown)
 
-  useEffect(() => {
-    setLocalMarkdown(markdown)
+  useLayoutEffect(() => {
+    if (!divRef.current) return
+
+    const currentContent = getTextContent(divRef.current)
+    if (currentContent !== markdown && markdown !== lastPropsMarkdownRef.current) {
+      divRef.current.textContent = markdown
+    }
+    lastPropsMarkdownRef.current = markdown
   }, [markdown])
 
   const handleContentChange = useCallback((newMarkdown: string) => {
-    setLocalMarkdown(newMarkdown)
-
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
     }
@@ -53,7 +58,7 @@ export function EditableContent({
     return (
       <MarkdownRenderer
         ast={ast}
-        markdown={localMarkdown}
+        markdown={markdown}
         onTextEdit={handleContentChange}
         editableRange={editableRange}
         marks={marks}
@@ -99,7 +104,7 @@ export function EditableContent({
         minHeight: '2rem'
       }}
     >
-      {localMarkdown}
+      {markdown}
     </div>
   )
 }

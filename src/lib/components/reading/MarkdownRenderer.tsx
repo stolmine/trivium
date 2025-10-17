@@ -1,8 +1,9 @@
-import { useMemo, memo } from 'react'
+import { useMemo, memo, useRef, useLayoutEffect } from 'react'
 import type { Root, RootContent, Paragraph, Text, Link, PhrasingContent } from 'mdast'
 import type { ClozeNote } from '../../types'
 import { EditableLink } from './EditableLink'
 import { updateLinkText, replaceTextAtPosition } from '../../utils/markdownEdit'
+import { getAbsolutePosition, setSelectionRange } from '../../utils/domPosition'
 
 interface MarkdownRendererProps {
   ast: Root
@@ -56,7 +57,9 @@ function renderTextNode(
   marks: ClozeNote[] | undefined,
   markdown: string,
   onTextEdit: (newMarkdown: string) => void,
-  key: string
+  key: string,
+  cursorPosRef: React.MutableRefObject<number | null>,
+  containerRef: React.MutableRefObject<HTMLDivElement | null>
 ) {
   const position = getNodePosition(node)
   if (!position) {
@@ -65,6 +68,11 @@ function renderTextNode(
 
   const mark = getMarkAtPosition(position.start, marks)
   const backgroundColor = mark ? '#fef08a' : undefined
+
+  // Trim trailing newlines from text node to prevent visual selection extending beyond paragraph
+  // The markdown source includes trailing \n\n after paragraphs, but we don't want these to be
+  // visually selectable as they create invisible space that extends selection highlighting
+  const displayValue = node.value.replace(/\n+$/, '')
 
   if (isEditable) {
     return (
@@ -77,6 +85,17 @@ function renderTextNode(
           outline: 'none'
         }}
         onInput={(e) => {
+          if (containerRef.current) {
+            const selection = window.getSelection()
+            if (selection && selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0)
+              cursorPosRef.current = getAbsolutePosition(
+                containerRef.current,
+                range.startContainer,
+                range.startOffset
+              )
+            }
+          }
           const newText = e.currentTarget.textContent || ''
           const updatedMarkdown = replaceTextAtPosition(
             markdown,
@@ -91,14 +110,14 @@ function renderTextNode(
           document.execCommand('insertText', false, text)
         }}
       >
-        {node.value}
+        {displayValue}
       </span>
     )
   }
 
   return (
     <span key={key} style={{ backgroundColor }}>
-      {node.value}
+      {displayValue}
     </span>
   )
 }
@@ -144,7 +163,9 @@ function renderParagraphNode(
   marks: ClozeNote[] | undefined,
   markdown: string,
   onTextEdit: (newMarkdown: string) => void,
-  key: string
+  key: string,
+  cursorPosRef: React.MutableRefObject<number | null>,
+  containerRef: React.MutableRefObject<HTMLDivElement | null>
 ) {
   const isEditable = isNodeEditable(node, editableRange)
 
@@ -160,7 +181,9 @@ function renderParagraphNode(
             marks,
             markdown,
             onTextEdit,
-            childKey
+            childKey,
+            cursorPosRef,
+            containerRef
           )
         }
 
@@ -189,6 +212,16 @@ const MarkdownRendererComponent = ({
   marks,
   mode
 }: MarkdownRendererProps) => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const cursorPosRef = useRef<number | null>(null)
+
+  useLayoutEffect(() => {
+    if (cursorPosRef.current !== null && containerRef.current) {
+      setSelectionRange(containerRef.current, cursorPosRef.current, cursorPosRef.current)
+      cursorPosRef.current = null
+    }
+  }, [markdown])
+
   const renderedContent = useMemo(() => {
     if (!ast.children || ast.children.length === 0) {
       return <div className="text-muted-foreground">Empty content</div>
@@ -204,7 +237,9 @@ const MarkdownRendererComponent = ({
           marks,
           markdown,
           onTextEdit,
-          nodeKey
+          nodeKey,
+          cursorPosRef,
+          containerRef
         )
       }
 
@@ -216,7 +251,9 @@ const MarkdownRendererComponent = ({
           marks,
           markdown,
           onTextEdit,
-          nodeKey
+          nodeKey,
+          cursorPosRef,
+          containerRef
         )
       }
 
@@ -226,6 +263,7 @@ const MarkdownRendererComponent = ({
 
   return (
     <div
+      ref={containerRef}
       className="whitespace-pre-wrap not-prose"
       style={{
         fontFamily: 'Charter, Georgia, serif',

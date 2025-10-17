@@ -103,20 +103,22 @@
 ## Truly Inline Text Editor Design
 
 **Last Updated**: 2025-10-17
-**Status**: Design Specification - Inline Region Editing
+**Status**: IMPLEMENTED - Phase 14 Complete
 
-### Context & Constraints
+### Implementation Overview
 
-The truly inline text editor enables users to edit text content directly within the reading view with intelligent boundary expansion. The editor maintains full context visibility while creating a focused editing experience.
+The truly inline text editor provides users with a seamless editing experience directly within the reading view. The system uses the **InlineRegionEditor** component as the primary editing interface, replacing the previous modal-based approach.
 
-**Core Features**:
-- In-place editing (no modal overlay)
-- Smart boundary expansion (sentence or paragraph)
-- Context preservation with visual dimming
-- Dual markdown modes (styled vs literal)
-- Mark position preservation
+**Implemented Features**:
+- In-place editing with smart boundary detection (sentence or paragraph)
+- Context preservation with 40% opacity dimming and subtle blur
+- Dual markdown modes (styled rendering vs literal syntax)
+- Inline toolbar with mode toggle and character counter
+- Mark position preservation with three-zone update strategy
+- Marker-based cursor tracking through mode switches
+- UTF-16 position tracking for all text operations
 
-**Critical Requirement**: Marks and read ranges are stored by character position. Text edits can shift positions, requiring careful handling.
+**Architecture**: The editor uses a conditional rendering approach where ReadHighlighter and InlineRegionEditor swap based on editing state, ensuring clean separation of read and edit modes.
 
 ---
 

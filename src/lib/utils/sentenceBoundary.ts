@@ -85,7 +85,14 @@ export function findSentenceEnd(text: string, position: number): number {
   let currentPos = safePosition;
 
   while (currentPos < text.length) {
-    const paragraphBreakIndex = text.indexOf('\n\n', currentPos);
+    // Skip any trailing whitespace/newlines in the current selection
+    // to avoid finding paragraph breaks that are already included
+    let searchPos = currentPos;
+    while (searchPos < text.length && /\s/.test(text[searchPos])) {
+      searchPos++;
+    }
+
+    const paragraphBreakIndex = text.indexOf('\n\n', searchPos);
     const sentenceEndIndex = findNextSentenceEnd(text, currentPos);
 
     if (paragraphBreakIndex !== -1 && (sentenceEndIndex === -1 || paragraphBreakIndex < sentenceEndIndex)) {
@@ -259,6 +266,25 @@ export function findParagraphEnd(text: string, position: number): number {
     return text.length;
   }
 
+  // Check if we're already at or inside a paragraph break (\n\n)
+  // If so, back up to just before the break
+  if (safePosition > 0 &&
+      text[safePosition - 1] === '\n' &&
+      safePosition < text.length &&
+      text[safePosition] === '\n') {
+    // We're between the two newlines of a paragraph break
+    return safePosition - 1;
+  }
+
+  if (safePosition < text.length &&
+      text[safePosition] === '\n' &&
+      safePosition + 1 < text.length &&
+      text[safePosition + 1] === '\n') {
+    // We're at the start of a paragraph break
+    return safePosition;
+  }
+
+  // Search for the next paragraph break, starting from current position
   const paragraphBreakIndex = text.indexOf('\n\n', safePosition);
 
   if (paragraphBreakIndex === -1) {
@@ -304,4 +330,117 @@ export function expandToSmartBoundary(
 
   const boundary = expandToSentenceBoundary(text, safeStart, safeEnd);
   return { ...boundary, boundaryType: 'sentence' };
+}
+
+/**
+ * Determines if a selection appears to be an intentional full selection
+ * that should be respected exactly, vs a partial selection that should
+ * be expanded to boundaries.
+ *
+ * This function analyzes both the length and boundary alignment of the
+ * selection to infer user intent.
+ */
+export function shouldRespectExactSelection(
+  text: string,
+  start: number,
+  end: number
+): boolean {
+  const safeStart = adjustPositionToBoundary(text, start);
+  const safeEnd = adjustPositionToBoundary(text, end);
+  const selectionLength = safeEnd - safeStart;
+
+  // If selection is very small (< 20 chars), always expand
+  // User likely wants help completing their selection
+  if (selectionLength < 20) {
+    return false;
+  }
+
+  // If selection is very large (> 200 chars), likely intentional
+  // User took time to select a substantial region
+  if (selectionLength > 200) {
+    return true;
+  }
+
+  // For medium selections (20-200 chars), check boundary alignment
+  // If both start and end are at natural boundaries, respect the selection
+  const startsAtBoundary = isAtBoundary(text, safeStart, 'start');
+  const endsAtBoundary = isAtBoundary(text, safeEnd, 'end');
+
+  // If both boundaries are aligned and selection is at least moderate size (> 30 chars)
+  // User made a deliberate selection of complete units
+  // Lower threshold (30 instead of 50) to respect complete sentence selections
+  if (startsAtBoundary && endsAtBoundary && selectionLength > 30) {
+    return true;
+  }
+
+  // Default: expand to help the user
+  return false;
+}
+
+/**
+ * Check if a position is at a natural text boundary (sentence or paragraph start/end).
+ * This helps determine if a user made an intentional selection of complete text units.
+ */
+function isAtBoundary(text: string, pos: number, side: 'start' | 'end'): boolean {
+  const safePos = adjustPositionToBoundary(text, pos);
+
+  if (side === 'start') {
+    // Check if at start of text
+    if (safePos === 0) return true;
+
+    // Check if at paragraph start (after \n\n)
+    if (safePos >= 2 && text.slice(safePos - 2, safePos) === '\n\n') return true;
+
+    // Check if at sentence start (after sentence ending + space(s))
+    // We need to look back to find sentence ending punctuation
+    if (safePos > 0 && safePos < text.length) {
+      // Look back for sentence ending followed by whitespace
+      let lookBack = safePos - 1;
+      // Skip whitespace
+      while (lookBack >= 0 && /\s/.test(text[lookBack])) {
+        lookBack--;
+      }
+      // Check if we found sentence ending punctuation
+      if (lookBack >= 0 && SENTENCE_ENDINGS.test(text[lookBack])) {
+        if (!isAbbreviation(text, lookBack) && !isEllipsis(text, lookBack)) {
+          return true;
+        }
+      }
+    }
+
+    // Check if at line start (after single newline, for list items etc.)
+    if (safePos > 0 && text[safePos - 1] === '\n') {
+      // Check if this line starts with a list marker
+      const lineStart = safePos;
+      const lineEnd = getLineEnd(text, lineStart);
+      const line = text.slice(lineStart, lineEnd);
+      if (LIST_ITEM_START.test(line)) return true;
+    }
+  } else {
+    // Check if at end of text
+    if (safePos === text.length) return true;
+
+    // Check if at paragraph end (before \n\n or at \n\n)
+    if (safePos < text.length - 1 && text.slice(safePos, safePos + 2) === '\n\n') return true;
+    if (safePos > 0 && safePos < text.length && text[safePos - 1] === '\n' && text[safePos] === '\n') return true;
+
+    // Check if at sentence end (just after punctuation, possibly with trailing space)
+    // Look back to find the actual sentence ending
+    let lookBack = safePos - 1;
+    // Skip trailing whitespace
+    while (lookBack >= 0 && /\s/.test(text[lookBack])) {
+      lookBack--;
+    }
+    if (lookBack >= 0 && SENTENCE_ENDINGS.test(text[lookBack])) {
+      // Make sure it's not an abbreviation or ellipsis
+      if (!isAbbreviation(text, lookBack) && !isEllipsis(text, lookBack)) {
+        return true;
+      }
+    }
+
+    // Check if at line end (single newline)
+    if (safePos < text.length && text[safePos] === '\n') return true;
+  }
+
+  return false;
 }

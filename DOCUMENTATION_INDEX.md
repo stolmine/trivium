@@ -2,15 +2,15 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual markdown modes, smart boundaries, context dimming)
+Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual markdown modes, smart boundaries, context dimming, mark preservation)
 
 ---
 
 ## Core Specification Documents
 
 ### `/Users/why/repos/trivium/README.md`
-**Description**: Project readme (currently minimal placeholder)
-**Last Updated**: 2025-10-12
+**Description**: Project readme with overview, features, technology stack, and Phase 14 inline editing highlights
+**Last Updated**: 2025-10-17
 
 ### `/Users/why/repos/trivium/core.md`
 **Description**: Core application specification defining the four main features: text ingestion, incremental reading, flashcard creation, and spaced repetition system (SRS)
@@ -29,8 +29,8 @@ Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual
 **Last Updated**: 2025-10-16
 
 ### `/Users/why/repos/trivium/architecture-frontend.md`
-**Description**: Frontend architecture specifications with React/TypeScript/Zustand stack, complete state management patterns, component hierarchies for all major features (reading, flashcards, folders, stats), Wikipedia integration implementation (Phase 6.5), Tauri API wrappers, keyboard shortcuts system, and text selection handling with UTF-16 character position considerations
-**Last Updated**: 2025-10-16
+**Description**: Frontend architecture specifications with React/TypeScript/Zustand stack, complete state management patterns, component hierarchies for all major features (reading, flashcards, folders, stats), Wikipedia integration implementation (Phase 6.5), Phase 14 inline editing components (InlineRegionEditor, InlineToolbar, EditableContent, MarkdownRenderer), Tauri API wrappers, keyboard shortcuts system, and text selection handling with UTF-16 character position considerations
+**Last Updated**: 2025-10-17
 
 ### `/Users/why/repos/trivium/ARCHITECTURE_GAP_ANALYSIS.md`
 **Description**: Detailed gap analysis between UI specifications and current implementation. Identifies critical new requirements (folder system, granular read/unread tracking, paragraph detection, resizable layouts) with database schema changes and implementation priorities across 6 phases
@@ -53,8 +53,8 @@ Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨), current capabilities (54 user-facing features including inline text editing with mark preservation, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-17 (Phase 13 Complete: Selection-based inline editing with smart mark preservation)
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝), current capabilities (63 user-facing features including truly inline text editing with smart boundaries, dual markdown modes, context dimming, mark preservation, cursor tracking, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual markdown modes)
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
@@ -139,11 +139,11 @@ Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual
 ### Inline Text Editing (Phase 13)
 
 #### `/Users/why/repos/trivium/CONTENTEDITABLE_RESEARCH.md`
-**Description**: Research and implementation documentation for Phase 13 inline editing feature. Covers contenteditable approach exploration, position space challenges, multiple architectural iterations (overlay system vs conditional rendering), and final selection-based editing design with smart mark preservation through flagging system
+**Description**: Research and implementation documentation for Phase 13-14 inline editing features. Covers contenteditable approach exploration, position space challenges, multiple architectural iterations (overlay system vs conditional rendering), selection-based editing design (Phase 13), and truly inline editing with dual markdown modes (Phase 14). Includes Phase 14 implementation summary with final architecture, technical solutions, lessons learned, and performance metrics
 **Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/layout-guide.md`
-**Description**: Layout architecture guide documenting the reading view structure, component hierarchy, and position space conversions for inline editing. Details the conditional rendering approach with ReadHighlighter and InlineEditor components, state management patterns, and mark preservation strategy
+**Description**: Layout architecture guide documenting the reading view structure, component hierarchy, and position space conversions for inline editing. Details the conditional rendering approach with ReadHighlighter and InlineRegionEditor components (Phase 14), state management patterns, mark preservation strategy, smart boundary detection, context dimming, and dual markdown modes. Updated with Phase 14 implementation status
 **Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/src/lib/utils/utf16.ts`

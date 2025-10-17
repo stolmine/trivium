@@ -518,7 +518,12 @@ src/
 │   │   │   ├── ArticleViewer.tsx        # Main text display
 │   │   │   ├── TextSelectionMenu.tsx    # Context menu for marking read
 │   │   │   ├── ParagraphNavigator.tsx   # Keyboard paragraph navigation
-│   │   │   ├── ReadUnreadHighlighter.tsx # Visual read/unread highlighting
+│   │   │   ├── ReadHighlighter.tsx      # Visual read/unread highlighting
+│   │   │   ├── InlineRegionEditor.tsx   # Phase 14: Truly inline text editor (MAIN)
+│   │   │   ├── InlineToolbar.tsx        # Phase 14: Inline editing toolbar
+│   │   │   ├── EditableContent.tsx      # Phase 14: Mode-aware content container
+│   │   │   ├── MarkdownRenderer.tsx     # Phase 14: Styled mode renderer
+│   │   │   ├── EditableLink.tsx         # Phase 14: Link editing component
 │   │   │   └── IngestModal.tsx          # Text import/metadata entry
 │   │   ├── flashcard/
 │   │   │   ├── FlashcardCreator.tsx     # Flashcard creation interface
@@ -545,7 +550,11 @@ src/
 │   │   ├── tauri.ts                     # IPC wrappers
 │   │   ├── selection.ts                 # Text selection utilities
 │   │   ├── keyboard.ts                  # Keyboard shortcuts
-│   │   ├── paragraphDetection.ts        # Paragraph boundary detection
+│   │   ├── sentenceBoundary.ts          # Sentence/paragraph boundary detection (Phase 14)
+│   │   ├── expandToSmartBoundary.ts     # Smart boundary expansion (Phase 14)
+│   │   ├── preserveCursorThroughTransform.ts # Marker-based cursor tracking (Phase 14)
+│   │   ├── parseMarkdownWithPositions.ts # Unified/remark integration (Phase 14)
+│   │   ├── positionMapping.ts           # Rendered ↔ source position mapping (Phase 14)
 │   │   └── rangeCalculator.ts           # Read range merging/calculation
 │   └── types/                           # TypeScript types
 │       ├── folder.ts

@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { InlineToolbar } from './InlineToolbar';
+import { EditableContent } from './EditableContent';
+import { MarkdownRenderer } from './MarkdownRenderer';
+import { parseMarkdownWithPositions } from '@/lib/utils/markdownParser';
 import { cn } from '@/lib/utils';
 import type { ClozeNote } from '@/lib/types/flashcard';
 
@@ -15,11 +18,13 @@ interface InlineRegionEditorProps {
 export function InlineRegionEditor({
   content,
   editRegion,
+  marks,
   onSave,
   onCancel,
   initialMode = 'styled'
 }: InlineRegionEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const editableRef = useRef<HTMLDivElement>(null);
   const [editedContent, setEditedContent] = useState('');
   const [mode, setMode] = useState<'styled' | 'literal'>(initialMode);
   const [hasChanges, setHasChanges] = useState(false);
@@ -29,19 +34,41 @@ export function InlineRegionEditor({
   const contextAfter = content.substring(editRegion.end);
   const originalEditedContent = content.substring(editRegion.start, editRegion.end);
 
+  const contextBeforeAst = useMemo(() => {
+    if (mode === 'styled' && contextBefore) {
+      return parseMarkdownWithPositions(contextBefore);
+    }
+    return null;
+  }, [contextBefore, mode]);
+
+  const contextAfterAst = useMemo(() => {
+    if (mode === 'styled' && contextAfter) {
+      return parseMarkdownWithPositions(contextAfter);
+    }
+    return null;
+  }, [contextAfter, mode]);
+
+  const editedAst = useMemo(() => {
+    if (mode === 'styled' && editedContent) {
+      return parseMarkdownWithPositions(editedContent);
+    }
+    return null;
+  }, [editedContent, mode]);
+
+  const marksInEditRegion = useMemo(() => {
+    if (!marks) return [];
+    return marks.filter(
+      mark => mark.startPosition >= editRegion.start && mark.endPosition <= editRegion.end
+    ).map(mark => ({
+      ...mark,
+      startPosition: mark.startPosition - editRegion.start,
+      endPosition: mark.endPosition - editRegion.start
+    }));
+  }, [marks, editRegion]);
+
   useEffect(() => {
     setEditedContent(originalEditedContent);
     setHasChanges(false);
-
-    if (editorRef.current) {
-      editorRef.current.focus();
-      const selection = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(editorRef.current);
-      range.collapse(false);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    }
   }, [originalEditedContent]);
 
   useEffect(() => {
@@ -67,20 +94,25 @@ export function InlineRegionEditor({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [editedContent, hasChanges]);
 
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const newText = e.currentTarget.textContent || '';
+  const handleContentChange = (newText: string) => {
     setEditedContent(newText);
     setHasChanges(newText !== originalEditedContent);
   };
 
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const text = e.clipboardData.getData('text/plain');
-    document.execCommand('insertText', false, text);
-  };
-
   const handleModeToggle = () => {
     setMode(prev => prev === 'styled' ? 'literal' : 'styled');
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (editableRef.current) {
+          editableRef.current.scrollIntoView({
+            behavior: 'instant',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      });
+    });
   };
 
   const handleCancel = () => {
@@ -123,11 +155,22 @@ export function InlineRegionEditor({
             fontFamily: 'Charter, Georgia, serif',
           }}
         >
-          {contextBefore}
+          {mode === 'styled' && contextBeforeAst ? (
+            <MarkdownRenderer
+              ast={contextBeforeAst}
+              markdown={contextBefore}
+              onTextEdit={() => {}}
+              marks={undefined}
+              mode="styled"
+            />
+          ) : (
+            <div className="whitespace-pre-wrap">{contextBefore}</div>
+          )}
         </div>
       )}
 
       <div
+        ref={editableRef}
         className={cn(
           'relative my-4 transition-all duration-200',
           'animate-in fade-in slide-in-from-bottom-2'
@@ -135,27 +178,23 @@ export function InlineRegionEditor({
       >
         <div
           ref={editorRef}
-          contentEditable
-          onInput={handleInput}
-          onPaste={handlePaste}
           className={cn(
             'outline-none transition-all duration-200',
             'bg-white dark:bg-zinc-900',
             'border-2 border-gray-800 dark:border-gray-200',
             'rounded-md px-4 py-3',
             'min-h-[3rem]',
-            'whitespace-pre-wrap break-words',
-            'focus:ring-2 focus:ring-gray-800/20 dark:focus:ring-gray-200/25'
+            'focus-within:ring-2 focus-within:ring-gray-800/20 dark:focus-within:ring-gray-200/25'
           )}
-          style={{
-            fontFamily: 'Charter, Georgia, serif',
-          }}
-          suppressContentEditableWarning
-          role="textbox"
-          aria-label="Edit text region"
-          aria-multiline="true"
         >
-          {editedContent}
+          <EditableContent
+            mode={mode}
+            markdown={editedContent}
+            ast={editedAst || undefined}
+            marks={marksInEditRegion}
+            editableRange={{ start: 0, end: editedContent.length }}
+            onContentChange={handleContentChange}
+          />
         </div>
 
         <InlineToolbar
@@ -177,7 +216,17 @@ export function InlineRegionEditor({
             fontFamily: 'Charter, Georgia, serif',
           }}
         >
-          {contextAfter}
+          {mode === 'styled' && contextAfterAst ? (
+            <MarkdownRenderer
+              ast={contextAfterAst}
+              markdown={contextAfter}
+              onTextEdit={() => {}}
+              marks={undefined}
+              mode="styled"
+            />
+          ) : (
+            <div className="whitespace-pre-wrap">{contextAfter}</div>
+          )}
         </div>
       )}
     </div>

@@ -12,7 +12,7 @@ interface SelectionToolbarProps {
   onEdit: () => void
   onEditInline?: () => void
   onMarkAsRead: () => void
-  position: { x: number; y: number }
+  position: { x: number; y: number; bottom: number; width: number; height: number }
 }
 
 export function SelectionToolbar({
@@ -38,8 +38,14 @@ export function SelectionToolbar({
       const toolbarWidth = toolbarRect.width || 200
       const toolbarHeight = toolbarRect.height || 48
 
-      let finalX = position.x - toolbarWidth / 2
-      let finalY = position.y - toolbarHeight - 8
+      const spaceAbove = position.y
+      const spaceBelow = window.innerHeight - position.bottom
+
+      let finalY = spaceAbove > spaceBelow
+        ? position.y - toolbarHeight - 8
+        : position.bottom + 8
+
+      let finalX = position.x - toolbarWidth
 
       const viewportWidth = window.innerWidth
       const viewportHeight = window.innerHeight
@@ -51,7 +57,7 @@ export function SelectionToolbar({
       }
 
       if (finalY < 8) {
-        finalY = position.y + 8
+        finalY = position.bottom + 8
       }
 
       if (finalY + toolbarHeight > viewportHeight - 8) {

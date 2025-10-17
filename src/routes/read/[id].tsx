@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
@@ -20,7 +20,7 @@ import {
   Label
 } from '../../lib/components/ui'
 import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar, InlineRegionEditor } from '../../lib/components/reading'
-import { expandToSentenceBoundary, expandToSmartBoundary } from '../../lib/utils/sentenceBoundary'
+import { expandToSentenceBoundary, expandToSmartBoundary, shouldRespectExactSelection } from '../../lib/utils/sentenceBoundary'
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
@@ -33,6 +33,7 @@ import { api } from '../../lib/utils/tauri'
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const scrollPositionRef = useRef<number | null>(null)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -41,13 +42,14 @@ export function ReadPage() {
   const [renameTextTitle, setRenameTextTitle] = useState('')
   const [isEditMode, setIsEditMode] = useState(false)
   const [inlineEditActive, setInlineEditActive] = useState(false)
+  const [isEditButtonProcessing, setIsEditButtonProcessing] = useState(false)
   const [editingContent, setEditingContent] = useState('')
   const [marks, setMarks] = useState<ClozeNote[]>([])
   const [selectionInfo, setSelectionInfo] = useState<{
     text: string
     start: number
     end: number
-    position: { x: number; y: number }
+    position: { x: number; y: number; bottom: number; width: number; height: number }
   } | null>(null)
   const [editRegion, setEditRegion] = useState<{
     start: number
@@ -226,6 +228,29 @@ export function ReadPage() {
     }
   }
 
+  const handleEditButtonClick = () => {
+    // Prevent rapid state changes from double-clicks or quick successive clicks
+    if (isEditButtonProcessing) {
+      console.log('[ReadPage] Edit button click ignored - still processing previous click');
+      return
+    }
+
+    setIsEditButtonProcessing(true)
+
+    // If canceling edit, revert content changes
+    if (inlineEditActive) {
+      console.log('[ReadPage] Canceling inline edit - reverting content');
+      setEditingContent(currentText?.content || '')
+    }
+
+    setInlineEditActive(!inlineEditActive)
+
+    // Reset processing flag after cooldown period
+    setTimeout(() => {
+      setIsEditButtonProcessing(false)
+    }, 400)
+  }
+
   const handleTextSelection = () => {
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed) {
@@ -246,8 +271,11 @@ export function ReadPage() {
       start: range.start,
       end: range.end,
       position: {
-        x: rect.left + rect.width / 2,
-        y: rect.top
+        x: rect.right,
+        y: rect.top,
+        bottom: rect.bottom,
+        width: rect.width,
+        height: rect.height
       }
     })
   }
@@ -282,18 +310,55 @@ export function ReadPage() {
   const handleActivateInlineEdit = () => {
     if (!selectionInfo || !currentText) return
 
-    // Convert rendered positions to cleaned positions
+    scrollPositionRef.current = window.scrollY
+
     const { cleanedContent } = parseExcludedRanges(currentText.content)
     const cleanedStart = renderedPosToCleanedPos(selectionInfo.start, cleanedContent)
     const cleanedEnd = renderedPosToCleanedPos(selectionInfo.end, cleanedContent)
 
-    // Expand to smart boundaries (sentence or paragraph)
-    const boundary = expandToSmartBoundary(cleanedContent, cleanedStart, cleanedEnd)
+    // Determine if we should respect exact selection or expand to smart boundaries
+    const respectExact = shouldRespectExactSelection(
+      cleanedContent,
+      cleanedStart,
+      cleanedEnd
+    )
 
-    // Set inline edit region
-    setInlineEditRegion(boundary)
+    let regionStart: number
+    let regionEnd: number
 
-    // Clear selection info and toolbar
+    if (respectExact) {
+      // User made intentional full selection, respect it exactly
+      console.log('[ReadPage] Respecting exact user selection:', {
+        length: cleanedEnd - cleanedStart,
+        text: cleanedContent.substring(cleanedStart, cleanedEnd).substring(0, 50) + '...'
+      })
+      regionStart = cleanedStart
+      regionEnd = cleanedEnd
+    } else {
+      // Small/partial selection, expand to smart boundaries
+      console.log('[ReadPage] Expanding partial selection to smart boundaries:', {
+        originalLength: cleanedEnd - cleanedStart,
+        text: cleanedContent.substring(cleanedStart, cleanedEnd)
+      })
+      const expanded = expandToSmartBoundary(
+        cleanedContent,
+        cleanedStart,
+        cleanedEnd
+      )
+      regionStart = expanded.start
+      regionEnd = expanded.end
+      console.log('[ReadPage] Expanded to:', {
+        boundaryType: expanded.boundaryType,
+        newLength: regionEnd - regionStart,
+        text: cleanedContent.substring(regionStart, regionEnd).substring(0, 50) + '...'
+      })
+    }
+
+    setInlineEditRegion({
+      start: regionStart,
+      end: regionEnd
+    })
+
     setSelectionInfo(null)
   }
 
@@ -346,7 +411,7 @@ export function ReadPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
         e.preventDefault()
         if (selectionInfo) {
           console.log('[ReadPage] Ctrl+E pressed with selection - activating inline region edit');
@@ -372,6 +437,13 @@ export function ReadPage() {
         e.preventDefault()
         console.log('[ReadPage] Escape pressed - canceling inline region edit');
         setInlineEditRegion(null)
+
+        requestAnimationFrame(() => {
+          if (scrollPositionRef.current !== null) {
+            window.scrollTo(0, scrollPositionRef.current)
+            scrollPositionRef.current = null
+          }
+        })
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's' && inlineEditActive) {
         e.preventDefault()
@@ -407,7 +479,6 @@ export function ReadPage() {
 
   useEffect(() => {
     if (matches.length > 0 && currentIndex >= 0) {
-      // Use requestAnimationFrame to ensure DOM has updated before scrolling
       requestAnimationFrame(() => {
         const matchElement = document.querySelector(`[data-search-index="${currentIndex}"]`)
 
@@ -421,6 +492,18 @@ export function ReadPage() {
       })
     }
   }, [currentIndex, matches])
+
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection()
+      if (!selection || selection.isCollapsed) {
+        setSelectionInfo(null)
+      }
+    }
+
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => document.removeEventListener('selectionchange', handleSelectionChange)
+  }, [])
 
   // Add keyboard shortcuts for rename dialog
   useEffect(() => {
@@ -545,19 +628,29 @@ export function ReadPage() {
                 <Button
                   variant={inlineEditActive ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setInlineEditActive(!inlineEditActive)}
+                  onClick={handleEditButtonClick}
+                  onMouseDown={(e) => {
+                    // Prevent blur event from firing on InlineEditor when clicking this button
+                    // This prevents the view from bouncing between edit/read modes
+                    if (inlineEditActive) {
+                      e.preventDefault()
+                    }
+                  }}
+                  disabled={isEditButtonProcessing}
                   title={inlineEditActive ? 'Cancel editing (Esc)' : 'Edit text inline (Ctrl+E)'}
-                  aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text'}
+                  aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text globally'}
+                  className="h-9"
                 >
                   <Edit2 className="h-4 w-4 mr-1" />
-                  {inlineEditActive ? 'Cancel Edit' : 'Edit'}
+                  {inlineEditActive ? 'Cancel Edit' : 'Global Edit'}
                 </Button>
                 <Button
                   variant={linksEnabled ? 'default' : 'outline'}
-                  size="icon"
+                  size="sm"
                   onClick={toggleLinks}
                   title={linksEnabled ? 'Links enabled (Ctrl+L)' : 'Links disabled (Ctrl+L)'}
                   aria-label={linksEnabled ? 'Disable links' : 'Enable links'}
+                  className="h-9 w-9 p-0"
                 >
                   <Link className="h-4 w-4" />
                 </Button>
@@ -668,8 +761,24 @@ export function ReadPage() {
                     await loadText(currentText.id)
                     await loadMarks(currentText.id)
                     setInlineEditRegion(null)
+
+                    requestAnimationFrame(() => {
+                      if (scrollPositionRef.current !== null) {
+                        window.scrollTo(0, scrollPositionRef.current)
+                        scrollPositionRef.current = null
+                      }
+                    })
                   }}
-                  onCancel={() => setInlineEditRegion(null)}
+                  onCancel={() => {
+                    setInlineEditRegion(null)
+
+                    requestAnimationFrame(() => {
+                      if (scrollPositionRef.current !== null) {
+                        window.scrollTo(0, scrollPositionRef.current)
+                        scrollPositionRef.current = null
+                      }
+                    })
+                  }}
                 />
               </article>
             ) : editRegion ? (
