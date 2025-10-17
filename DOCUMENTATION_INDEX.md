@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-17 (Inline Text Editing: ContentEditable editor with mark preservation, UTF-16 position tracking, DOM utilities)
+Last Updated: 2025-10-17 (Phase 13 Complete: Selection-based inline editing with smart mark preservation, UTF-16 position tracking, DOM/position utilities)
 
 ---
 
@@ -53,8 +53,8 @@ Last Updated: 2025-10-17 (Inline Text Editing: ContentEditable editor with mark 
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧), current capabilities (52 user-facing features including Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation (5 post-Phase 12 bug fixes + 1 new feature), testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-16 (Updated with Phase 12 post-phase improvements: 5 bug fixes + text filtering feature)
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨), current capabilities (54 user-facing features including inline text editing with mark preservation, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-17 (Phase 13 Complete: Selection-based inline editing with smart mark preservation)
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
@@ -136,18 +136,46 @@ Last Updated: 2025-10-17 (Inline Text Editing: ContentEditable editor with mark 
 **Description**: Visual examples illustrating card enumeration problem and solution through concrete scenarios showing how current system creates duplicate card numbers ("Card #1" appearing multiple times) and how display_index solves it with sequential unique numbers. Includes deletion handling, multi-text scenarios, and edge cases
 **Last Updated**: 2025-10-13
 
-### Inline Text Editing
+### Inline Text Editing (Phase 13)
+
+#### `/Users/why/repos/trivium/CONTENTEDITABLE_RESEARCH.md`
+**Description**: Research and implementation documentation for Phase 13 inline editing feature. Covers contenteditable approach exploration, position space challenges, multiple architectural iterations (overlay system vs conditional rendering), and final selection-based editing design with smart mark preservation through flagging system
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/layout-guide.md`
+**Description**: Layout architecture guide documenting the reading view structure, component hierarchy, and position space conversions for inline editing. Details the conditional rendering approach with ReadHighlighter and InlineEditor components, state management patterns, and mark preservation strategy
+**Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/src/lib/utils/utf16.ts`
-**Description**: UTF-16 position tracking utilities for contenteditable. Handles emoji and surrogate pairs correctly. Functions: isHighSurrogate, isLowSurrogate, getCharacterLength, adjustPositionToBoundary, getNextBoundary, getPreviousBoundary, countCodeUnits
+**Description**: UTF-16 position tracking utilities for contenteditable. Handles emoji and surrogate pairs correctly. Functions: isHighSurrogate, isLowSurrogate, getCharacterLength, adjustPositionToBoundary, getNextBoundary, getPreviousBoundary, countCodeUnits. Essential for accurate position tracking with multi-byte characters
 **Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/src/lib/utils/domPosition.ts`
-**Description**: DOM selection to UTF-16 position conversion utilities. Functions: getAbsolutePosition, getSelectionRange, setSelectionRange, findNodeAtPosition, getTextContent. Used for inline editing position tracking
+**Description**: DOM selection to UTF-16 position conversion utilities. Functions: getAbsolutePosition, getSelectionRange, setSelectionRange, findNodeAtPosition, getTextContent. Converts between DOM tree positions and linear UTF-16 character offsets for inline editing
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/utils/markPositions.ts`
+**Description**: Mark position adjustment utilities for inline editing. Handles mark position updates when text content changes, including position shifts and mark flagging for review. Integrates with UTF-16 position tracking system
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/utils/sentenceBoundary.ts`
+**Description**: Sentence boundary detection utilities for text editing and context extraction. Functions for finding sentence starts/ends, detecting punctuation, and extracting complete sentences around selections. Used for mark context display and smart editing
 **Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/src/lib/components/reading/InlineEditor.tsx`
-**Description**: ContentEditable-based inline text editor component. Activated via Ctrl+E or Edit button. Features: plain text editing, paste sanitization, auto-focus, visual state transitions. Uses conditional rendering with ReadHighlighter
+**Description**: ContentEditable-based inline text editor component for selection-based editing. Activated via Ctrl+E or Edit button. Features: plain text editing, paste sanitization, auto-focus, visual state transitions, save/cancel operations. Uses conditional rendering with ReadHighlighter
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/components/reading/SelectionEditor.tsx`
+**Description**: Selection-based editor component for inline text editing. Manages editing mode state, selection range tracking, and text content updates. Coordinates with InlineEditor for user interactions
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/components/reading/SelectionToolbar.tsx`
+**Description**: Toolbar component for inline editing actions. Displays edit controls near text selection with buttons for saving, canceling, and managing edited content. Positioned dynamically relative to user selection
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/components/reading/TextEditor.tsx`
+**Description**: Text editor component providing basic editing functionality. Handles text input, change events, and content synchronization. Part of the inline editing system infrastructure
 **Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/src/lib/components/reading/HighlightOverlay.tsx`
@@ -202,14 +230,14 @@ Last Updated: 2025-10-17 (Inline Text Editing: ContentEditable editor with mark 
 
 ## Statistics
 
-**Total Documentation Files**: 35 markdown files
-**Total Lines of Documentation**: ~30,000+ lines
+**Total Documentation Files**: 37 markdown files
+**Total Lines of Documentation**: ~35,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 11 files (includes 4 flashcard hub docs + 4 inline editing implementation files)
+- Feature-Specific: 13 files (includes 4 flashcard hub docs + 11 inline editing implementation files + 2 research/architecture docs)
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files
