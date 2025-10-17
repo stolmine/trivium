@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -26,6 +26,7 @@ interface SidebarProps {
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/', shortcut: 'Ctrl+1' },
   { id: 'review', label: 'Review', icon: GraduationCap, path: '/review', shortcut: 'Ctrl+3' },
+  { id: 'create', label: 'Create Cards', icon: Sparkles, path: '/create', shortcut: 'Ctrl+4' },
 ];
 
 const getSortLabel = (sortBy: SortOption): string => {

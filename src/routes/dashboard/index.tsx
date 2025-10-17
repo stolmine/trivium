@@ -2,6 +2,7 @@ import { ContinueReadingCard } from '../../components/dashboard/ContinueReadingC
 import { DueReviewCard } from '../../components/dashboard/DueReviewCard';
 import { StatsCard } from '../../components/dashboard/StatsCard';
 import { QuickImportCard } from '../../components/dashboard/QuickImportCard';
+import { CreateCardsCard } from '../../components/dashboard/CreateCardsCard';
 import { RecentActivity } from '../../components/dashboard/RecentActivity';
 
 export function DashboardPage() {
@@ -12,6 +13,7 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
         <ContinueReadingCard />
         <DueReviewCard />
+        <CreateCardsCard />
         <StatsCard />
         <QuickImportCard />
       </div>

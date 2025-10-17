@@ -232,3 +232,37 @@ pub async fn get_flashcard_preview(
         cloze_number,
     })
 }
+
+/// Create a mark (cloze_note without flashcards) for later processing in Create Cards hub
+#[tauri::command]
+pub async fn create_mark(
+    text_id: i64,
+    selected_text: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<i64, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let user_id = 1;
+    let now = Utc::now();
+
+    // Create a simple cloze_note without any cloze deletions
+    // This will appear in the Create Cards hub with status='pending'
+    let cloze_note_result = sqlx::query!(
+        r#"
+        INSERT INTO cloze_notes (text_id, user_id, original_text, parsed_segments, cloze_count, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        "#,
+        text_id,
+        user_id,
+        selected_text,
+        "[]",  // Empty parsed segments - no cloze deletions yet
+        0,     // No cloze deletions
+        now,
+        now
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to create mark: {}", e))?;
+
+    Ok(cloze_note_result.last_insert_rowid())
+}

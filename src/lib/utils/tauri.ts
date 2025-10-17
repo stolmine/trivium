@@ -11,7 +11,11 @@ import type {
   ReviewFilter,
   ReviewStats,
   LimitStatus,
-  WikipediaArticle
+  WikipediaArticle,
+  MarkWithContext,
+  CreatedCard,
+  HubStats,
+  CreateCardRequest
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -109,6 +113,9 @@ export const api = {
         clozeNumber: clozeNumber
       });
     },
+    createMark: async (textId: number, selectedText: string): Promise<number> => {
+      return await invoke('create_mark', { textId, selectedText });
+    },
   },
   review: {
     getDueCards: async (limit: number): Promise<Flashcard[]> => {
@@ -171,6 +178,41 @@ export const api = {
   wikipedia: {
     fetch: async (url: string): Promise<WikipediaArticle> => {
       return await invoke('fetch_wikipedia_article', { url });
+    },
+  },
+  hub: {
+    getMarksForScope: async (scope: string, scopeId: string | number | null): Promise<MarkWithContext[]> => {
+      return await invoke('get_hub_marks', {
+        scope,
+        scopeId,
+        includeWithCards: false,
+      });
+    },
+    skipMark: async (markId: number): Promise<void> => {
+      return await invoke('skip_mark', { markId });
+    },
+    buryMark: async (markId: number): Promise<void> => {
+      return await invoke('bury_mark', { markId });
+    },
+    createCardFromMark: async (request: CreateCardRequest): Promise<CreatedCard[]> => {
+      return await invoke('create_card_from_mark', {
+        markId: request.markId,
+        selectedText: request.selectedText,
+        clozeText: request.clozeText,
+      });
+    },
+    updateCard: async (cardId: number, question: string, answer: string): Promise<void> => {
+      return await invoke('update_created_card', {
+        cardId,
+        question,
+        answer,
+      });
+    },
+    deleteCard: async (cardId: number): Promise<void> => {
+      return await invoke('delete_created_card', { cardId });
+    },
+    getStats: async (): Promise<HubStats> => {
+      return await invoke('get_hub_stats');
     },
   },
 };

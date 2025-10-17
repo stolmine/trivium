@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 11.5: Quick Import Dashboard Tile Complete! 🚀✅)
+Last Updated: 2025-10-16 (Phase 12: Flashcard Creation Hub Complete! 🎴✅)
 
 ---
 
@@ -53,8 +53,8 @@ Last Updated: 2025-10-16 (Phase 11.5: Quick Import Dashboard Tile Complete! 🚀
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀), current capabilities (40 user-facing features including Quick Import dashboard tile with folder/Wikipedia pre-configuration, keyboard navigation, expand/collapse all, unique naming enforcement with real-time validation feedback, click-to-expand folders, and better dropdown positioning), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-16 (Updated with Phase 11.5 Quick Import dashboard tile)
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub** 🎴), current capabilities (50 user-facing features including Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, and complete keyboard support), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-16 (Updated with Phase 12 Flashcard Creation Hub)
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
@@ -67,6 +67,10 @@ Last Updated: 2025-10-16 (Phase 11.5: Quick Import Dashboard Tile Complete! 🚀
 ### `/Users/why/repos/trivium/PHASE_11_SIDEBAR_UI.md`
 **Description**: Complete implementation documentation for Phase 11 sidebar UI improvements + post-phase validation polish. **8 Major Features**: (1) Expand all/collapse all toggle button replacing dropdown with single Ctrl+Shift+E hotkey, (2) Fixed dropdown positioning globally - all dropdowns now appear directly under trigger buttons, (3) New ingest button in library header with FilePlus icon, (4) New folder keyboard shortcut (Ctrl+Shift+N), (5) Unique naming enforcement for folders (within same parent) and texts (within same folder) with case-insensitive validation, (6) Folder click to expand/collapse - entire folder row is clickable, (7) macOS Finder-style keyboard navigation with arrow keys (Up/Down navigate, Right expands, Left collapses, Enter opens), auto-scroll selected items into view, disabled during search. **5 Validation Improvements**: (1) Cross-platform hotkey support (Ctrl+Shift+N and Cmd+Shift+N), (2) Real-time duplicate validation feedback in ingest modal with red error text, (3) Real-time duplicate validation feedback in folder creation dialog, (4) Shift+Enter respects validation rules, (5) loadLibrary() call ensures validation data available. Technical details: getFlattenedVisibleNodes() helper function, new store methods, keyboard event handling, validation pattern with useMemo. Files modified: 10 components + 3 additional for validation polish. Implementation time: 8 hours (Phase 11) + 1 hour (validation polish)
 **Last Updated**: 2025-10-16 (Updated with validation improvements)
+
+### `/Users/why/repos/trivium/PHASE_12_FLASHCARD_CREATION_HUB.md`
+**Description**: Complete implementation documentation for Phase 12 Flashcard Creation Hub. **Overview**: Dedicated workspace for efficiently creating flashcards from previously marked text (cloze notes) with skip/bury workflow. **Backend**: Database migration adding workflow tracking to cloze_notes (status, last_seen_at, session_count, notes columns), flashcard_hub.rs commands module with 5 commands (get_hub_marks, skip_mark, bury_mark, create_card_from_mark, get_hub_stats), context extraction (~200 chars before/after), status workflow integration. **Frontend**: Hub types (MarkWithContext, HubStats, CreatedCard), cardCreation Zustand store, 5 core components (ScopeSelector, MarkNavigation, MarkContext, CardCreator, CreatedCardsList), main /create route (17KB), dashboard tile integration, sidebar navigation with Sparkles icon. **Features**: Library/Folder/Text scope selection, skip marks (temporary - Space key), bury marks (permanent 0-card - Shift+B), mark navigation (arrows/Ctrl+K/J), Q&A card creation with live preview (Shift+Enter), session tracking with created cards list, complete keyboard support (Ctrl+4 global access), real-time statistics. **Files**: 18 created (3 backend, 12 frontend, 3 docs), 8 modified. **Performance**: Sub-second queries, < 200ms card creation, < 500ms page load. Implementation time: ~6 hours with parallel agents
+**Last Updated**: 2025-10-16 (Updated with 4 critical bug fixes)
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -101,6 +105,18 @@ Last Updated: 2025-10-16 (Phase 11.5: Quick Import Dashboard Tile Complete! 🚀
 ## Feature-Specific Documentation
 
 ### Flashcard System
+
+#### `/Users/why/repos/trivium/FLASHCARD_CREATION_HUB_DESIGN.md`
+**Description**: Complete design specification for the Flashcard Creation Hub feature (Phase 12). Covers UI/UX design with detailed mockups, component architecture (ScopeSelector, MarkNavigation, MarkContext, CardCreator, CreatedCardsList), keyboard shortcuts system (Ctrl+4, arrows, Space, Shift+B, Shift+Enter), state management patterns, backend integration requirements, accessibility considerations, performance targets, and success metrics. Includes visual hierarchy diagrams, interaction flows, design system compliance (Inter/Charter fonts, Tailwind v4, shadcn/ui), and comprehensive implementation checklist across 5 phases (Core Infrastructure, UI Components, Integration, Polish, Testing). Serves as primary design contract for the feature
+**Last Updated**: 2025-10-16
+
+#### `/Users/why/repos/trivium/FLASHCARD_HUB_QUICK_REFERENCE.md`
+**Description**: Quick reference guide for Flashcard Creation Hub providing condensed overview for rapid lookups. Includes at-a-glance keyboard shortcuts table, visual layout comparisons, component architecture diagram with data flow, common workflows and usage patterns, file structure reference, and testing checklist. Designed as companion to the full design specification for developers needing quick answers during implementation
+**Last Updated**: 2025-10-16
+
+#### `/Users/why/repos/trivium/FLASHCARD_HUB_VISUAL_STATES.md`
+**Description**: Visual mockups document for Flashcard Creation Hub containing 14 high-fidelity ASCII mockups illustrating all major UI states. Covers initial state, loading states, success states, error states, empty states, mark navigation states (skip/bury/create), edit mode, completion state, and mobile adaptation. Each mockup includes color references for light/dark modes and annotations explaining interaction patterns. Provides visual design contract complementing the text-based design specification
+**Last Updated**: 2025-10-16
 
 #### `/Users/why/repos/trivium/CARD_ENUMERATION_DESIGN.md`
 **Description**: Comprehensive 933-line design document analyzing the card enumeration problem (duplicate card numbers across sessions) and recommending solution: auto-incrementing display_index column. Includes problem illustrations with scenarios, 4 design options analysis, detailed implementation plan across 7 phases with SQL migrations, Rust models, TypeScript updates, edge case handling, and performance considerations
@@ -162,14 +178,14 @@ Last Updated: 2025-10-16 (Phase 11.5: Quick Import Dashboard Tile Complete! 🚀
 
 ## Statistics
 
-**Total Documentation Files**: 31 markdown files
-**Total Lines of Documentation**: ~22,800+ lines
+**Total Documentation Files**: 35 markdown files
+**Total Lines of Documentation**: ~30,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 6 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import)
+- Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
 - Setup & Configuration: 4 files (includes SQLx guide)
-- Feature-Specific: 3 files
+- Feature-Specific: 7 files (includes 4 flashcard hub docs)
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files

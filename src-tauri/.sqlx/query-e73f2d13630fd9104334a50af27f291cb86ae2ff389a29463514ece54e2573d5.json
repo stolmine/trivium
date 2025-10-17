@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE cloze_notes\n        SET status = 'skipped',\n            last_seen_at = ?,\n            session_count = session_count + 1,\n            updated_at = ?\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "e73f2d13630fd9104334a50af27f291cb86ae2ff389a29463514ece54e2573d5"
+}

@@ -9,6 +9,7 @@ import {
 } from '../ui'
 import { useReadingStore } from '../../stores/reading'
 import { FlashcardCreator } from '../flashcard/FlashcardCreator'
+import { api } from '../../utils/tauri'
 
 interface TextSelectionMenuProps {
   children: React.ReactNode
@@ -20,7 +21,7 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
   const [showFlashcardCreator, setShowFlashcardCreator] = useState(false)
   const [selectedText, setSelectedText] = useState('')
 
-  const handleToggleRead = () => {
+  const handleToggleRead = async () => {
     if (!currentText) return
 
     const selection = window.getSelection()
@@ -62,7 +63,16 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
     if (isRangeRead(startPosition, endPosition)) {
       unmarkRangeAsRead(currentText.id, startPosition, endPosition)
     } else {
+      // Mark as read for progress tracking
       markRangeAsRead(currentText.id, startPosition, endPosition)
+
+      // Also create a mark for the Create Cards hub
+      try {
+        await api.flashcards.createMark(currentText.id, selectedText)
+      } catch (error) {
+        console.error('Failed to create mark:', error)
+        // Don't block the read marking if mark creation fails
+      }
     }
 
     selection.removeAllRanges()

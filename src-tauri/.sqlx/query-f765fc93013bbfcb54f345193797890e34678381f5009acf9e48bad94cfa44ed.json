@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE cloze_notes\n        SET status = 'converted', updated_at = ?\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "f765fc93013bbfcb54f345193797890e34678381f5009acf9e48bad94cfa44ed"
+}
