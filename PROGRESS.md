@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 13 Complete ✅ - Selection-Based Inline Editing
+## Current Status: Phase 14 Complete ✅ - Truly Inline Text Editing
 
-**Branch**: `9_features`
-**Last Updated**: 2025-10-17 (Phase 13: Selection-based inline editing with smart mark preservation)
+**Branch**: `10_inline`
+**Last Updated**: 2025-10-17 (Phase 14: Truly inline text editing with dual markdown modes)
 
 ---
 
@@ -148,11 +148,17 @@
 50. **Hub Shortcuts**: Ctrl+4 to access Create Cards from anywhere
 51. **Recursive Folder Mark Detection**: Marks detected in all nested subfolders when selecting folder scope
 52. **Text Filtering by Marks**: Dropdown shows only texts with available marks (80% reduction in noise)
-53. **Selection-Based Inline Editing**: Select text and edit in-place with smart mark preservation
-54. **Sentence Boundary Expansion**: Edit regions auto-expand to complete sentences
-55. **Smart Mark Preservation**: Marks outside edit region automatically updated with correct positions
-56. **Position Space Conversion**: Accurate rendering ↔ database position translation
-57. **Edit Context Display**: See surrounding text before/after edit region while editing
+53. **Truly Inline Text Editing**: Edit text directly in reading view with smart boundaries and dual markdown modes
+54. **Smart Boundary Detection**: Single sentence expands to sentence, multi-sentence expands to paragraph
+55. **Context Dimming**: Before/after context shown at 40% opacity with subtle blur for visual focus
+56. **Dual Markdown Modes**: Styled mode (rendered links, editable text) and Literal mode (raw syntax)
+57. **Mode Toggle**: Switch between styled/literal with M key or toolbar button
+58. **Inline Editing Toolbar**: Bottom-attached toolbar with mode toggle, character count, save/cancel
+59. **Cursor Preservation**: Marker-based position tracking preserves cursor through mode switches
+60. **Mark Position Updates**: Marks automatically repositioned when text edited (before/within/after zones)
+61. **Keyboard Shortcuts**: Ctrl+E edit, Ctrl+S save, Esc cancel, M toggle mode
+62. **Smooth Animations**: 200ms transitions for mode switches and UI state changes
+63. **UTF-16 Position Tracking**: Accurate position handling for emoji, CJK, and all Unicode
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -1421,6 +1427,45 @@
 - Phase 13: Integration with reading view and selection menu
 - Phase 13: Bug fixes for position space conversion
 - Phase 13: Documentation and testing
+
+---
+
+### ✅ Phase 14: Truly Inline Text Editing (2025-10-17) - COMPLETE
+**Completed**: 2025-10-17
+**Implementation Time**: ~6 hours with 3 parallel agents
+
+**Core Innovation**: Dual-document model with marker-based position tracking
+- ✅ Smart boundary detection: single sentence → sentence boundary, multi-sentence → paragraph boundary
+- ✅ Context preservation: Three-region layout with 40% opacity dimming + 0.5px blur
+- ✅ Dual markdown modes: Styled (rendered links, editable text) and Literal (raw syntax, full control)
+- ✅ Inline toolbar: Mode toggle, character counter, save/cancel with keyboard shortcuts
+- ✅ Marker-based cursor preservation: Unique Unicode markers track cursor through transformations
+- ✅ Mark position preservation: Three-zone update strategy (before/within/after edit region)
+- ✅ Paragraph boundary detection: Extends sentenceBoundary.ts with 5 new functions
+- ✅ Position marker system: preserveCursorThroughTransform utility
+- ✅ Markdown parser integration: unified/remark with UTF-16 position tracking
+- ✅ 26 automated tests: All passing, comprehensive coverage
+- ✅ Smooth animations: 200ms transitions with Tailwind CSS utilities
+
+**Files Created**: 18 new files (6 utilities, 6 components, 1 animation, 5 docs)
+**Files Modified**: 2 (ReadPage, SelectionToolbar)
+**Dependencies Added**: 6 (unified, remark-parse, remark-stringify, unist-util-visit, @types/mdast, vitest)
+
+**New Components**:
+- InlineRegionEditor: Main inline editing component with three-region layout
+- InlineToolbar: Bottom-attached toolbar with mode toggle and controls
+- EditableContent: Mode-aware container for styled/literal rendering
+- MarkdownRenderer: AST-based styled mode renderer
+- EditableLink: Link editing component (text only in styled, full in literal)
+
+**New Utilities**:
+- expandToSmartBoundary: Intelligent sentence/paragraph detection
+- preserveCursorThroughTransform: Marker-based position tracking
+- parseMarkdownWithPositions: unified/remark integration
+- renderedPositionToSource/sourcePositionToRendered: Bidirectional position mapping
+
+**Testing**: 26/26 tests passing, 0 TypeScript errors, 0 warnings
+**Documentation**: PHASE_14_INLINE_EDITING.md (comprehensive), plus 4 supporting docs
 
 ---
 

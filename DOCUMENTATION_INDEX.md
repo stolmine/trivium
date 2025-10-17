@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-17 (Phase 13 Complete: Selection-based inline editing with smart mark preservation, UTF-16 position tracking, DOM/position utilities)
+Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual markdown modes, smart boundaries, context dimming)
 
 ---
 
@@ -184,6 +184,30 @@ Last Updated: 2025-10-17 (Phase 13 Complete: Selection-based inline editing with
 
 ---
 
+### Truly Inline Text Editing (Phase 14)
+
+#### `/Users/why/repos/trivium/PHASE_14_INLINE_EDITING.md`
+**Description**: Complete implementation documentation for Phase 14 truly inline text editing. Comprehensive guide covering smart boundary detection (sentence/paragraph), context dimming (40% opacity), dual markdown modes (styled/literal), inline toolbar, mark position preservation, marker-based cursor tracking, and complete component architecture. Includes 26 passing automated tests, performance benchmarks, keyboard shortcuts, integration guide, and migration notes. Features the dual-document model for position mapping between source markdown and rendered view.
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/INLINE_EDITING_DESIGN.md`
+**Description**: UX/UI design specification for inline text editing system (created by ui-design-architect agent)
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/INLINE_EDITING_VISUALS.md`
+**Description**: ASCII mockups and visual reference for all inline editing states
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/STYLED_MODE_IMPLEMENTATION.md`
+**Description**: Technical documentation for styled mode markdown rendering system
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/INLINE_EDITING_USAGE.md`
+**Description**: Usage guide and integration instructions for inline editing components
+**Last Updated**: 2025-10-17
+
+---
+
 ## Design System
 
 ### `/Users/why/repos/trivium/src/lib/design-system.md`
@@ -230,14 +254,14 @@ Last Updated: 2025-10-17 (Phase 13 Complete: Selection-based inline editing with
 
 ## Statistics
 
-**Total Documentation Files**: 37 markdown files
-**Total Lines of Documentation**: ~35,000+ lines
+**Total Documentation Files**: 42 markdown files
+**Total Lines of Documentation**: ~40,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 13 files (includes 4 flashcard hub docs + 11 inline editing implementation files + 2 research/architecture docs)
+- Feature-Specific: 18 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 2 research/architecture docs)
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files

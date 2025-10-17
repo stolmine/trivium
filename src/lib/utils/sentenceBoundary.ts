@@ -224,3 +224,84 @@ function getLineAt(text: string, position: number): string {
   const end = getLineEnd(text, position);
   return text.slice(start, end);
 }
+
+export function isParagraphBoundary(text: string, position: number): boolean {
+  const safePosition = adjustPositionToBoundary(text, position);
+
+  if (safePosition >= text.length - 1 || safePosition < 1) {
+    return false;
+  }
+
+  return text[safePosition] === '\n' && text[safePosition + 1] === '\n';
+}
+
+export function findParagraphStart(text: string, position: number): number {
+  const safePosition = adjustPositionToBoundary(text, position);
+
+  if (safePosition === 0) {
+    return 0;
+  }
+
+  const paragraphBreakIndex = text.lastIndexOf('\n\n', safePosition - 1);
+
+  if (paragraphBreakIndex === -1) {
+    return 0;
+  }
+
+  const afterBreak = paragraphBreakIndex + 2;
+  return adjustPositionToBoundary(text, afterBreak);
+}
+
+export function findParagraphEnd(text: string, position: number): number {
+  const safePosition = adjustPositionToBoundary(text, position);
+
+  if (safePosition >= text.length) {
+    return text.length;
+  }
+
+  const paragraphBreakIndex = text.indexOf('\n\n', safePosition);
+
+  if (paragraphBreakIndex === -1) {
+    return text.length;
+  }
+
+  return adjustPositionToBoundary(text, paragraphBreakIndex);
+}
+
+export function expandToParagraphBoundary(
+  text: string,
+  selectionStart: number,
+  selectionEnd: number
+): { start: number; end: number } {
+  const safeStart = adjustPositionToBoundary(text, selectionStart);
+  const safeEnd = adjustPositionToBoundary(text, selectionEnd);
+
+  const start = findParagraphStart(text, safeStart);
+  const end = findParagraphEnd(text, safeEnd);
+
+  return {
+    start: adjustPositionToBoundary(text, start),
+    end: adjustPositionToBoundary(text, end)
+  };
+}
+
+export function expandToSmartBoundary(
+  text: string,
+  selectionStart: number,
+  selectionEnd: number
+): { start: number; end: number; boundaryType: 'sentence' | 'paragraph' } {
+  const safeStart = adjustPositionToBoundary(text, selectionStart);
+  const safeEnd = adjustPositionToBoundary(text, selectionEnd);
+
+  const selectedText = text.slice(safeStart, safeEnd);
+  const hasParagraphBreak = selectedText.includes('\n\n');
+  const hasMultipleSentences = selectedText.split(SENTENCE_ENDINGS).length > 2;
+
+  if (hasParagraphBreak || hasMultipleSentences) {
+    const boundary = expandToParagraphBoundary(text, safeStart, safeEnd);
+    return { ...boundary, boundaryType: 'paragraph' };
+  }
+
+  const boundary = expandToSentenceBoundary(text, safeStart, safeEnd);
+  return { ...boundary, boundaryType: 'sentence' };
+}

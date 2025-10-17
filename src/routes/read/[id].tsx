@@ -19,8 +19,8 @@ import {
   Input,
   Label
 } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar } from '../../lib/components/reading'
-import { expandToSentenceBoundary } from '../../lib/utils/sentenceBoundary'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar, InlineRegionEditor } from '../../lib/components/reading'
+import { expandToSentenceBoundary, expandToSmartBoundary } from '../../lib/utils/sentenceBoundary'
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
@@ -53,6 +53,10 @@ export function ReadPage() {
     start: number
     end: number
     extractedText: string
+  } | null>(null)
+  const [inlineEditRegion, setInlineEditRegion] = useState<{
+    start: number
+    end: number
   } | null>(null)
   const {
     currentText,
@@ -275,6 +279,24 @@ export function ReadPage() {
     setSelectionInfo(null)
   }
 
+  const handleActivateInlineEdit = () => {
+    if (!selectionInfo || !currentText) return
+
+    // Convert rendered positions to cleaned positions
+    const { cleanedContent } = parseExcludedRanges(currentText.content)
+    const cleanedStart = renderedPosToCleanedPos(selectionInfo.start, cleanedContent)
+    const cleanedEnd = renderedPosToCleanedPos(selectionInfo.end, cleanedContent)
+
+    // Expand to smart boundaries (sentence or paragraph)
+    const boundary = expandToSmartBoundary(cleanedContent, cleanedStart, cleanedEnd)
+
+    // Set inline edit region
+    setInlineEditRegion(boundary)
+
+    // Clear selection info and toolbar
+    setSelectionInfo(null)
+  }
+
   const handleSaveSelectionEdit = async (newText: string, updatedMarks: ClozeNote[]) => {
     if (!currentText || !editRegion) return
 
@@ -324,11 +346,11 @@ export function ReadPage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
         e.preventDefault()
         if (selectionInfo) {
-          console.log('[ReadPage] Ctrl+E pressed with selection - activating selection edit');
-          handleActivateSelectionEdit()
+          console.log('[ReadPage] Ctrl+E pressed with selection - activating inline region edit');
+          handleActivateInlineEdit()
         } else {
           console.log('[ReadPage] Ctrl+E pressed without selection - activating inline edit');
           setEditingContent(currentText?.content || '')
@@ -345,6 +367,11 @@ export function ReadPage() {
         e.preventDefault()
         console.log('[ReadPage] Escape pressed - canceling selection edit');
         setEditRegion(null)
+      }
+      if (e.key === 'Escape' && inlineEditRegion) {
+        e.preventDefault()
+        console.log('[ReadPage] Escape pressed - canceling inline region edit');
+        setInlineEditRegion(null)
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's' && inlineEditActive) {
         e.preventDefault()
@@ -376,7 +403,7 @@ export function ReadPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, isEditMode, inlineEditActive, editRegion, selectionInfo, editingContent, currentText, openSearch, closeSearch])
+  }, [isOpen, isEditMode, inlineEditActive, editRegion, inlineEditRegion, selectionInfo, editingContent, currentText, openSearch, closeSearch])
 
   useEffect(() => {
     if (matches.length > 0 && currentIndex >= 0) {
@@ -622,7 +649,7 @@ export function ReadPage() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-8 py-12 max-w-4xl">
-            {isEditMode ? (
+{isEditMode ? (
               <TextEditor
                 textId={currentText.id}
                 initialContent={currentText.content}
@@ -630,6 +657,21 @@ export function ReadPage() {
                 onCancel={() => setIsEditMode(false)}
                 fontSize={fontSize * 16}
               />
+            ) : inlineEditRegion ? (
+              <article className="reading-content mx-auto space-y-4" style={{ fontSize: `${fontSize}rem` }}>
+                <InlineRegionEditor
+                  content={parseExcludedRanges(currentText.content).cleanedContent}
+                  editRegion={inlineEditRegion}
+                  marks={marks}
+                  onSave={async (mergedContent: string) => {
+                    await api.texts.updateContent(currentText.id, mergedContent)
+                    await loadText(currentText.id)
+                    await loadMarks(currentText.id)
+                    setInlineEditRegion(null)
+                  }}
+                  onCancel={() => setInlineEditRegion(null)}
+                />
+              </article>
             ) : editRegion ? (
               <SelectionEditor
                 fullText={currentText.content}
@@ -675,6 +717,7 @@ export function ReadPage() {
                   <SelectionToolbar
                     selection={selectionInfo}
                     onEdit={handleActivateSelectionEdit}
+                    onEditInline={handleActivateInlineEdit}
                     onMarkAsRead={handleMarkSelectionRead}
                     position={selectionInfo.position}
                   />

@@ -10,6 +10,7 @@ interface SelectionToolbarProps {
     end: number
   } | null
   onEdit: () => void
+  onEditInline?: () => void
   onMarkAsRead: () => void
   position: { x: number; y: number }
 }
@@ -17,6 +18,7 @@ interface SelectionToolbarProps {
 export function SelectionToolbar({
   selection,
   onEdit,
+  onEditInline,
   onMarkAsRead,
   position
 }: SelectionToolbarProps) {
@@ -73,7 +75,11 @@ export function SelectionToolbar({
   }, [])
 
   const handleEdit = () => {
-    onEdit()
+    if (onEditInline) {
+      onEditInline()
+    } else {
+      onEdit()
+    }
     setIsVisible(false)
   }
 

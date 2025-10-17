@@ -100,18 +100,21 @@
 
 ---
 
-## Inline Text Editor Design
+## Truly Inline Text Editor Design
 
-**Last Updated**: 2025-10-16
-**Status**: Design Specification
+**Last Updated**: 2025-10-17
+**Status**: Design Specification - Inline Region Editing
 
 ### Context & Constraints
 
-The inline text editor allows users to edit text content directly in the reading view while preserving:
-- Read/unread progress tracking (character position ranges)
-- Flashcard marks (highlighted yellow text)
-- Excluded ranges (grayed-out sections)
-- Markdown links and Wikipedia headers (=== format)
+The truly inline text editor enables users to edit text content directly within the reading view with intelligent boundary expansion. The editor maintains full context visibility while creating a focused editing experience.
+
+**Core Features**:
+- In-place editing (no modal overlay)
+- Smart boundary expansion (sentence or paragraph)
+- Context preservation with visual dimming
+- Dual markdown modes (styled vs literal)
+- Mark position preservation
 
 **Critical Requirement**: Marks and read ranges are stored by character position. Text edits can shift positions, requiring careful handling.
 
@@ -119,59 +122,61 @@ The inline text editor allows users to edit text content directly in the reading
 
 ## 1. ENTRY/EXIT MECHANISMS
 
-### A. Toggle Button (Primary Entry)
+### A. Selection-Based Entry (Primary)
 
-**Location**: Header toolbar, between Search and Options menu
+**User Flow**:
+1. User selects text in reading view (existing selection behavior)
+2. User presses `E` key OR clicks "Edit" in text selection menu
+3. System calculates smart boundary expansion
+4. Inline editor activates with 200ms transition
 
+**Smart Boundary Logic**:
+- **Single sentence or fragment** → Expand to sentence boundaries (. ! ?)
+- **Multiple sentences** → Expand to paragraph boundaries (\n\n)
+- Boundaries are auto-detected but visually indicated
+
+**Selection Menu Addition**:
 ```
-Header Layout:
-┌──────────────────────────────────────────────────────────────────┐
-│ [← Back]  Title            Progress: 45%  [🔗] [🔍] [✏️] [⋮]     │
-└──────────────────────────────────────────────────────────────────┘
-                                                      ^^^
-                                                   NEW BUTTON
+┌────────────────────────────┐
+│ Mark as Read               │
+│ Create Flashcard           │
+│ ─────────────────────────  │
+│ Edit Selection          E  │ ← NEW OPTION
+└────────────────────────────┘
 ```
 
-**Button Specs**:
-- Component: `Button` variant="ghost" size="icon"
-- Icon: `Edit2` from lucide-react (16px)
-- States:
-  - Default: `variant="ghost"`
-  - Active (edit mode): `variant="default"` with primary background
-- Tooltip: "Edit text (Ctrl+E)"
-- aria-label: "Toggle edit mode"
+### B. Keyboard Shortcuts
 
-### B. Keyboard Shortcut (Secondary Entry)
+**Entry**:
+- `E` - Enter edit mode (requires active selection)
 
-**Shortcut**: `Ctrl/Cmd+E` (E for Edit)
-- Works globally in reading view
-- Prevents default browser behavior
-- Toggles between read and edit modes
-- Does NOT trigger when:
-  - Search bar is focused
-  - Any dialog is open
-  - Flashcard creator is open
+**While Editing**:
+- `M` - Toggle markdown mode (styled ↔ literal)
+- `⌘S` / `Ctrl+S` - Save changes
+- `Esc` - Cancel editing
+- `⌘Z` / `Ctrl+Z` - Undo (native)
+- `⌘⇧Z` / `Ctrl+⇧Z` - Redo (native)
 
 ### C. Exit Methods
 
 **Three ways to exit**:
 
-1. **Save Changes** (Primary action)
-   - Button: "Save" variant="default"
-   - Shortcut: `Ctrl/Cmd+S`
-   - Validates content length > 0
-   - Shows success toast: "Text updated successfully"
-   - Recalculates progress and mark positions
+1. **Save Changes** (Primary)
+   - Toolbar button: "Save" or keyboard `⌘S`
+   - Validates content non-empty
+   - Updates mark positions (backend)
+   - Shows success toast
+   - 300ms fade transition to read mode
 
-2. **Cancel Changes** (Secondary action)
-   - Button: "Cancel" variant="outline"
-   - Shortcut: `Escape`
-   - Shows confirmation if unsaved changes detected
+2. **Cancel Changes** (Secondary)
+   - Toolbar button: "Cancel" or keyboard `Esc`
+   - If unchanged: immediate exit
+   - If changed: inline confirmation dialog
    - Reverts to original content
 
-3. **Toggle Button** (Tertiary)
-   - Clicking edit button again
-   - Same behavior as Cancel (shows confirmation if unsaved)
+3. **Click Outside** (Optional Enhancement)
+   - Same behavior as Cancel
+   - Prevents accidental exits with confirmation
 
 ---
 
@@ -183,35 +188,42 @@ Header Layout:
 ┌──────────────┐
 │  READ MODE   │ ← Default state
 │              │
-│ - Text with  │
-│   highlights │
+│ - Full text  │
+│ - Highlights │
 │ - Selection  │
-│   enabled    │
 └──────┬───────┘
        │
-       │ Ctrl+E or Click Edit
+       │ Select text + press E
        ↓
-┌──────────────┐
-│  EDIT MODE   │
-│              │
-│ - Textarea   │
-│ - Char count │
-│ - Actions    │
-└──────┬───────┘
+┌──────────────────┐
+│ BOUNDARY         │
+│ CALCULATION      │
+│ (instant)        │
+└──────┬───────────┘
        │
-       │ Save / Cancel / Esc
        ↓
-┌──────────────┐
-│ SAVING STATE │ (Brief, 200ms-1s)
-│              │
-│ - Disabled   │
-│ - Spinner    │
-└──────┬───────┘
+┌──────────────────────┐
+│ INLINE EDIT MODE     │
+│                      │
+│ - Editable region    │
+│ - Dimmed context     │
+│ - Inline toolbar     │
+│ - Styled/Literal mode│
+└──────┬───────────────┘
+       │
+       │ Save / Cancel
+       ↓
+┌──────────────────┐
+│ SAVING STATE     │ (200ms-1s)
+│                  │
+│ - Disabled UI    │
+│ - Spinner        │
+│ - Position update│
+└──────┬───────────┘
        │
        ↓ Success
 ┌──────────────┐
 │  READ MODE   │
-│              │
 │ (Updated)    │
 └──────────────┘
 ```
@@ -219,132 +231,218 @@ Header Layout:
 ### Read Mode (Default)
 
 **Appearance**:
-- Content: `<ReadHighlighter>` component (current)
-- Font: Charter serif, 1.25rem scaled by user preference
+- Content: `<ReadHighlighter>` component
+- Font: Charter serif, 1.25rem × user scale
 - Highlights: Yellow background for marks
 - Read ranges: Black background, white text
-- User can select text for marking/flashcards
+- Text selection enabled
 
 **Visual Example**:
 ```
 ┌────────────────────────────────────────────────────┐
 │                                                    │
-│  The quick brown fox jumps over the lazy dog.     │
+│  Natural selection acts solely through the         │
+│  preservation of variations in some way            │
+│  advantageous, which consequently endure.          │
 │  ████████████████████████████ (read text)         │
-│  Lorem ipsum dolor sit amet, consectetur           │
-│  adipiscing elit with highlighted mark shown       │
-│  in yellow background.                             │
+│  The term 'natural selection' is in some respects  │
+│  a bad one, as it seems to imply conscious choice. │
 │                                                    │
 └────────────────────────────────────────────────────┘
 ```
 
-### Edit Mode (Active)
+### Inline Edit Mode - Sentence Boundary
 
-**Layout Transform**: Content area becomes editable form
+**User selects partial text → expands to full sentence**
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
-│ ┃ EDIT MODE ACTIVE                                       ┃ │
-│ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ │
+│ [← Back]  Origin of Species      [🔗] [🔍] [📝 EDITING] [⋮] │
+├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│ ┌─────────────────────────────────────────────────────┐   │
-│ │ The quick brown fox jumps over the lazy dog.       │   │
-│ │ All previously read text remains as normal text.    │   │
-│ │ Lorem ipsum dolor sit amet, consectetur             │   │
-│ │ adipiscing elit {{c1::with highlighted mark}}       │   │
-│ │ visible as cloze syntax.                            │   │
-│ │                                                      │   │
-│ │ [Cursor here, fully editable]                       │   │
-│ └─────────────────────────────────────────────────────┘   │
+│░░ Natural selection acts solely through preservation... ░░░│
+│░░ ████████████████████████████████████████████████████ ░░░│
 │                                                             │
-│ Characters: 1,247 / unlimited                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ The term 'natural selection' is in some respects a  │  │
+│  │ bad one, as it seems to imply conscious choice; but │  │
+│  │ this will be disregarded after a little familiarity.│  │
+│  │                                                [▊]  │  │
+│  └──────────────────────────────────────────────────────┘  │
 │                                                             │
-│ ┌─────────────────────────────────────────────────────┐   │
-│ │ ⚠️  EDITING NOTICE                                  │   │
-│ │                                                      │   │
-│ │ • Read progress and flashcard marks will be         │   │
-│ │   automatically updated to match text changes       │   │
-│ │ • Large edits may affect mark positions             │   │
-│ └─────────────────────────────────────────────────────┘   │
+│░░ Everyone knows what is meant by inherited tendency... ░░░│
 │                                                             │
-│                              [Cancel]  [Save Changes]      │
+│  [M] Styled │ 158 chars │ [Esc] Cancel │ [⌘S] Save         │
+└─────────────────────────────────────────────────────────────┘
+
+Legend:
+░ = Dimmed context (40% opacity, slight blur)
+┌─┐ = Editable region border (2px primary color)
+[▊] = Text cursor
+```
+
+### Inline Edit Mode - Paragraph Boundary
+
+**User selects multiple sentences → expands to paragraph**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ [← Back]  Origin of Species      [🔗] [🔍] [📝 EDITING] [⋮] │
+├─────────────────────────────────────────────────────────────┤
+│░░                                                        ░░░│
+│░░ [Previous paragraph dimmed...]                        ░░░│
+│░░ ████████████████████████████████████████████████████ ░░░│
+│                                                             │
+│  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓  │
+│  ┃ The term 'natural selection' is in some respects a  ┃  │
+│  ┃ bad one, as it seems to imply conscious choice; but ┃  │
+│  ┃ this will be disregarded after a little familiarity.┃  │
+│  ┃                                                      ┃  │
+│  ┃ Everyone knows what is meant by inherited tendency; ┃  │
+│  ┃ we see it in every domestic and wild animals. The   ┃  │
+│  ┃ laws governing inheritance are unknown. [▊]         ┃  │
+│  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛  │
+│                                                             │
+│░░                                                        ░░░│
+│░░ [Next paragraph dimmed...]                            ░░░│
+│                                                             │
+│  [M] Styled │ 347 chars │ [Esc] Cancel │ [⌘S] Save         │
+└─────────────────────────────────────────────────────────────┘
+
+Legend:
+░ = Dimmed context
+┏━┓ = Paragraph border (3px, thicker than sentence)
+```
+
+### Markdown Mode Toggle - Literal View
+
+**User presses M to see raw markdown**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ The term '[natural selection](https://wikipedia...)' │  │
+│  │ is in some respects a bad one, as it seems to imply  │  │
+│  │ conscious choice; but this will be disregarded after │  │
+│  │ a little familiarity.                                │  │
+│  │                                                       │  │
+│  │ Everyone knows what is meant by {{c1::inherited      │  │
+│  │ tendency}}; we see it in every domestic and wild     │  │
+│  │ animals. [▊]                                         │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  [M] LITERAL │ 412 chars │ [Esc] Cancel │ [⌘S] Save        │
+│  └─ Shows raw markdown syntax for editing URLs            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 **Component Specifications**:
 
-1. **Edit Mode Banner** (Top)
-   - Background: `hsl(var(--accent))`
-   - Border: 2px `hsl(var(--primary))`
-   - Padding: 12px 16px
-   - Font: Inter 600, 14px
-   - Text: "EDIT MODE ACTIVE"
-   - Icon: `Edit2` (16px) before text
-   - Border-radius: 8px
-   - Margin-bottom: 24px
+### Inline Editable Region
 
-2. **Textarea Component**
-   - Component: Custom styled `<Textarea>` (shadcn/ui)
-   - Font: **Charter serif** (matches reading view)
-   - Font-size: Inherits from `reading-content` (1.25rem × user scale)
-   - Line-height: 1.8 (matches reading view)
-   - Min-height: 400px
-   - Max-width: 70ch (matches reading content)
-   - Padding: 16px
-   - Border: 2px `hsl(var(--border))`
-   - Border-radius: var(--radius) (0.625rem)
-   - Background: `hsl(var(--background))`
-   - Focus:
-     - Border-color: `hsl(var(--ring))`
-     - Box-shadow: `0 0 0 2px hsl(var(--ring) / 20%)`
-   - Resize: vertical (user can adjust height)
-   - Spellcheck: enabled
-   - Auto-focus: true (when entering edit mode)
+**Sentence Boundary Styling**:
+```css
+.inline-edit-region--sentence {
+  border: 2px solid oklch(var(--primary));
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: oklch(var(--background));
+  box-shadow:
+    0 0 0 4px oklch(var(--primary) / 10%),
+    0 4px 16px oklch(0 0 0 / 8%);
+  min-height: 48px;
+  max-height: min(70vh, 800px);
+  overflow-y: auto;
+  font-family: Charter, Georgia, serif;
+  font-size: 1.25rem; /* × user scale */
+  line-height: 1.8;
+  contenteditable: true;
+  outline: none;
+}
+```
 
-3. **Character Counter**
-   - Position: Below textarea, right-aligned
-   - Font: Inter 400, 14px
-   - Color: `hsl(var(--muted-foreground))`
-   - Format: "Characters: 1,247 / unlimited"
-   - Updates in real-time (debounced 100ms)
+**Paragraph Boundary Styling**:
+```css
+.inline-edit-region--paragraph {
+  border: 3px solid oklch(var(--primary));
+  border-radius: 12px;
+  padding: 20px 24px;
+  background: oklch(var(--background));
+  box-shadow:
+    0 0 0 6px oklch(var(--primary) / 15%),
+    0 8px 24px oklch(0 0 0 / 12%);
+  min-height: 120px;
+  max-height: min(70vh, 800px);
+  /* ... same font properties ... */
+}
+```
 
-4. **Information Banner**
-   - Component: Custom alert-style div
-   - Background: `hsl(var(--muted) / 50%)`
-   - Border-left: 4px `hsl(var(--primary))`
-   - Padding: 16px
-   - Border-radius: var(--radius)
-   - Margin: 24px 0
-   - Icon: `AlertCircle` (20px, `hsl(var(--primary))`)
-   - Title: "EDITING NOTICE" (Inter 600, 13px, uppercase)
-   - Content:
-     - Bullet points (Inter 400, 14px)
-     - Line-height: 1.6
-     - Color: `hsl(var(--foreground))`
-   - Message:
-     ```
-     • Read progress and flashcard marks will be automatically
-       updated to match text changes
-     • Large edits may affect mark positions
-     ```
+**Context Dimming**:
+```css
+.context-dimmed {
+  opacity: 0.4;
+  filter: blur(0.5px);
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 300ms ease-out, filter 300ms ease-out;
+}
+```
 
-5. **Action Buttons** (Footer)
-   - Layout: Flex row, justify-end, gap 12px
-   - Margin-top: 24px
+### Inline Toolbar
 
-   **Cancel Button**:
-   - Component: `Button` variant="outline" size="default"
-   - Text: "Cancel"
-   - Keyboard: `Escape`
-   - Behavior: Confirm if unsaved changes
+**Layout**:
+```
+┌────────────────────────────────────────────────────────┐
+│ [M] Styled │ 158 chars │ [Esc] Cancel │ [⌘S] Save     │
+│ └─ 40px      120px        100px           100px        │
+│    Toggle    Counter      Cancel          Save         │
+└────────────────────────────────────────────────────────┘
+```
 
-   **Save Button**:
-   - Component: `Button` variant="default" size="default"
-   - Text: "Save Changes"
-   - Keyboard: `Ctrl/Cmd+S`
-   - Disabled when: content === originalContent
-   - Loading state: Shows spinner, text "Saving..."
+**Toolbar Container**:
+- Position: Fixed to bottom of editable region
+- Background: `oklch(var(--background) / 95%)` with `backdrop-blur(8px)`
+- Border-top: `2px solid oklch(var(--primary))`
+- Border-radius: `0 0 8px 8px` (matches region)
+- Padding: `12px 16px`
+- Height: `56px` total (12px + 32px + 12px)
+- Shadow: `0 -4px 12px oklch(0 0 0 / 10%)`
+- Display: `flex`, `align-items: center`, `gap: 16px`
+
+**1. Markdown Mode Toggle**:
+- Component: `Button` variant="ghost" size="sm"
+- Icon: `Code` (literal mode) or `Eye` (styled mode)
+- Text: "Styled" or "LITERAL"
+- Width: `40px` (icon only) or `auto` (with text)
+- Height: `32px`
+- Keyboard: `M`
+- aria-label: "Toggle markdown editing mode"
+- aria-pressed: `{mode === 'literal'}`
+
+**2. Character Counter**:
+- Font: Inter 400, 13px
+- Color: `oklch(var(--muted-foreground))`
+- Format: `{count} chars`
+- Flex: `1` (takes remaining space)
+- Text-align: `center`
+- aria-live: `polite`
+- aria-atomic: `true`
+
+**3. Cancel Button**:
+- Component: `Button` variant="outline" size="sm"
+- Text: "Cancel"
+- Width: `100px`
+- Height: `32px`
+- Keyboard hint: Show `Esc` on hover/focus
+
+**4. Save Button**:
+- Component: `Button` variant="default" size="sm"
+- Text: "Save" (normal) or "Saving..." (loading)
+- Width: `100px`
+- Height: `32px`
+- Disabled: When `content === originalContent`
+- Loading: Shows `Loader2` spinner + "Saving..."
+- Keyboard hint: Show `⌘S` on hover/focus
 
 ### Saving State (Transition)
 
@@ -379,34 +477,175 @@ Loading:    [⟳ Saving...]
 
 ---
 
-## 3. MARK PRESERVATION & VISUALIZATION
+## 3. MARKDOWN RENDERING MODES
+
+### Two Editing Modes
+
+The inline editor supports two modes for different use cases:
+
+**1. Styled Mode** (Default):
+- Markdown rendered as HTML in contenteditable
+- Links: `[text](url)` → underlined, clickable-looking but not clickable
+- Cloze marks: `{{c1::text}}` → yellow background highlight
+- Headers: `=== Text ===` → bold text
+- User edits visible text only, URLs protected
+- Best for: Quick text edits without touching syntax
+
+**2. Literal Mode** (Toggle with M):
+- Raw markdown visible as plain text
+- Links: Shows full `[text](url)` syntax
+- Cloze marks: Shows raw `{{c1::text}}` syntax
+- Headers: Shows raw `=== Text ===`
+- User can edit all syntax including URLs
+- Best for: Fixing links, adjusting cloze boundaries
+
+### Styled Mode Implementation
+
+**Challenge**: Render markdown in contenteditable while preventing URL edits
+
+**Solution**: Use custom HTML elements with data attributes
+
+```html
+<!-- Link rendering -->
+<span class="inline-link" data-url="https://...">natural selection</span>
+
+<!-- Cloze rendering -->
+<mark class="cloze-mark" data-cloze-id="c1">inherited tendency</mark>
+
+<!-- Header rendering -->
+<strong class="header-text">Section Title</strong>
+```
+
+**On Input Event**:
+```typescript
+function handleStyledModeInput(e: React.FormEvent<HTMLDivElement>) {
+  const element = e.currentTarget;
+
+  // Extract text content (strips HTML but preserves structure)
+  const textContent = element.textContent || '';
+
+  // User can edit visible text, but we preserve underlying markdown
+  // This requires tracking changes and reconstructing markdown
+
+  setEditedText(textContent);
+}
+```
+
+**Styled Mode Styling**:
+```css
+.inline-link {
+  text-decoration: underline;
+  text-decoration-color: oklch(0.45 0.1 240);
+  text-underline-offset: 2px;
+  cursor: text; /* Not pointer - editing, not clicking */
+}
+
+.inline-link:hover::after {
+  content: ' 🔗';
+  opacity: 0.5;
+  font-size: 0.85em;
+}
+
+.cloze-mark {
+  background: oklch(0.95 0.08 90);
+  border: 2px dotted oklch(0.7 0.15 85);
+  border-radius: 4px;
+  padding: 2px 4px;
+  font-weight: 500;
+}
+
+.header-text {
+  font-weight: 700;
+  display: block;
+  margin: 0.5em 0;
+}
+```
+
+### Literal Mode Implementation
+
+**Much Simpler**: Just show raw text
+
+```typescript
+function handleLiteralModeInput(e: React.FormEvent<HTMLDivElement>) {
+  const element = e.currentTarget;
+  const rawText = element.textContent || '';
+
+  // Direct markdown editing - what you see is what you get
+  setEditedText(rawText);
+}
+```
+
+**Toggle Behavior**:
+```typescript
+function toggleMarkdownMode() {
+  if (mode === 'styled') {
+    // Convert from styled to literal
+    // Extract raw markdown from HTML (reverse render)
+    const rawMarkdown = extractMarkdownFromHTML(editorRef.current);
+    setMode('literal');
+    setEditedText(rawMarkdown);
+
+    // Update contenteditable to show raw text
+    if (editorRef.current) {
+      editorRef.current.textContent = rawMarkdown;
+    }
+  } else {
+    // Convert from literal to styled
+    setMode('styled');
+    const renderedHTML = renderMarkdownToHTML(editedText);
+
+    // Update contenteditable to show styled HTML
+    if (editorRef.current) {
+      editorRef.current.innerHTML = renderedHTML;
+    }
+  }
+}
+```
+
+### Indicator for Link Editing
+
+**In Styled Mode**, hovering a link shows tooltip:
+```
+┌─────────────────────────────────┐
+│ Press M for literal mode to     │
+│ edit URL                         │
+└─────────────────────────────────┘
+```
+
+**Visual Cue**: Link has subtle icon on hover
+```
+natural selection 🔗
+```
+
+---
+
+## 4. MARK PRESERVATION & POSITION TRACKING
 
 ### The Challenge
 
 Marks and read ranges are stored as **character positions** (start, end) in the database. When text is edited:
 - Adding text before a mark shifts its position forward
 - Deleting text can invalidate mark positions
-- We must intelligently update positions or warn users
+- Boundary edits only affect marks within the boundary
 
-### Strategy: Transparent Auto-Update
+### Strategy: Boundary-Scoped Updates
 
-**Philosophy**: Make editing feel seamless. The system handles position updates behind the scenes.
+**Philosophy**: Only marks within the edit boundary need recalculation. Marks outside are automatically shifted by the length delta.
 
-### Visual Approach in Edit Mode
+**Three Position Zones**:
 
-**Option A: Show Marks as Plain Text** (RECOMMENDED)
-- Display raw cloze syntax: `{{c1::highlighted text}}`
-- Users see and can edit mark boundaries
-- Clear, explicit, matches flashcard creation
-- Familiar to users who understand cloze format
+1. **Before Boundary**: Unchanged
+   - Mark positions remain identical
+   - No recalculation needed
 
-**Option B: Syntax Highlighting** (Future Enhancement)
-- Display marks with yellow background in textarea
-- Technically complex (requires contenteditable)
-- Risk of user confusion about editability
-- Defer to v2
+2. **Within Boundary**: Recalculate
+   - Try to find mark text in new content
+   - Update relative positions
+   - Flag for review if text not found
 
-**Implementation**: Option A (Raw Syntax)
+3. **After Boundary**: Shift
+   - Add `(newBoundaryLength - oldBoundaryLength)` to positions
+   - Automatic, no text searching needed
 
 ### Cloze Syntax Preservation
 
