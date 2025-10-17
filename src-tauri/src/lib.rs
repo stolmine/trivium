@@ -43,6 +43,7 @@ pub fn run() {
             greet,
             commands::texts::create_text,
             commands::texts::list_texts,
+            commands::texts::get_texts_with_available_marks,
             commands::texts::get_text,
             commands::texts::rename_text,
             commands::texts::delete_text,

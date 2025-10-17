@@ -144,7 +144,7 @@ pub async fn get_hub_marks(
             let folder_id = scope_id
                 .ok_or_else(|| "Folder ID required for folder scope".to_string())?;
 
-            // Get pending marks from texts in specified folder
+            // Get pending marks from texts in specified folder AND all its subfolders (recursive)
             let rows = sqlx::query!(
                 r#"
                 SELECT
@@ -159,7 +159,15 @@ pub async fn get_hub_marks(
                 INNER JOIN texts t ON cn.text_id = t.id
                 WHERE cn.status IN ('pending', 'skipped')
                   AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
-                  AND t.folder_id = ?
+                  AND t.folder_id IN (
+                    WITH RECURSIVE folder_tree AS (
+                        SELECT id FROM folders WHERE id = ?
+                        UNION ALL
+                        SELECT f.id FROM folders f
+                        INNER JOIN folder_tree ft ON f.parent_id = ft.id
+                    )
+                    SELECT id FROM folder_tree
+                )
                 ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC
                 LIMIT ?
                 "#,

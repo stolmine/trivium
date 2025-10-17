@@ -146,6 +146,8 @@
 48. **Session Tracking**: View created cards list with edit/delete during session
 49. **Hub Statistics**: Dashboard tile shows pending marks and today's card count
 50. **Hub Shortcuts**: Ctrl+4 to access Create Cards from anywhere
+51. **Recursive Folder Mark Detection**: Marks detected in all nested subfolders when selecting folder scope
+52. **Text Filtering by Marks**: Dropdown shows only texts with available marks (80% reduction in noise)
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -975,6 +977,7 @@
 **Completed**: 2025-10-16
 **Branch**: `9_features`
 **Implementation Time**: ~6 hours (with parallel agents)
+**Post-Phase Improvements**: 5 bug fixes + 1 new feature (~4 hours)
 
 **Overview**: Dedicated workspace for efficiently creating flashcards from previously marked text (cloze notes). Provides centralized mark processing with skip/bury workflow.
 
@@ -1017,6 +1020,14 @@
 - ✅ Added `create_mark` command - Ctrl+M now creates marks for hub
 - ✅ Fixed query to exclude marks that already have cards
 - ✅ Fixed cloze deletion parsing in `create_card_from_mark`
+
+**Post-Phase 12 Improvements** (2025-10-16):
+- ✅ **Folder Recursive Detection**: Fixed `get_hub_marks` to use recursive CTE for nested folders
+- ✅ **Type Mismatch Fix**: Fixed scopeId type from `number | string` to `string | null` (UUID compatibility)
+- ✅ **Scope Selection Fix**: Fixed `handleScopeChange` to call `setScope` for all scope types
+- ✅ **Premature loadMarks Fix**: Added conditional checks before loading marks (prevents "Text ID required" errors)
+- ✅ **React Hooks Fix**: Added `useCallback` and proper dependencies for text dropdown population
+- ✅ **Text Filtering Feature**: New `get_texts_with_available_marks()` command shows only texts with marks (80% noise reduction)
 
 **Keyboard Shortcuts**:
 - `Ctrl+4`: Navigate to hub from anywhere

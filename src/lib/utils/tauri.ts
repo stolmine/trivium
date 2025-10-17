@@ -58,6 +58,9 @@ export const api = {
     list: async (): Promise<Text[]> => {
       return await invoke('list_texts');
     },
+    listWithAvailableMarks: async (): Promise<Text[]> => {
+      return await invoke('get_texts_with_available_marks');
+    },
     get: async (id: number): Promise<Text> => {
       return await invoke('get_text', { id });
     },
@@ -184,7 +187,7 @@ export const api = {
     getMarksForScope: async (scope: string, scopeId: string | number | null): Promise<MarkWithContext[]> => {
       return await invoke('get_hub_marks', {
         scope,
-        scopeId,
+        scopeId: scopeId !== null ? String(scopeId) : null,
         includeWithCards: false,
       });
     },

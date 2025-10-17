@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Library, Folder as FolderIcon, FileText } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Library, Folder as FolderIcon, FileText, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Button } from '../ui/button';
 import { FolderSelect } from '../folders/FolderSelect';
 import { useCardCreationStore } from '../../stores/cardCreation';
 import { useFolderStore } from '../../stores/folder';
-import { useReadingStore } from '../../stores/reading';
-import type { HubScope } from '../../types';
+import { api } from '../../utils/tauri';
+import type { HubScope, Text } from '../../types';
 
 export function ScopeSelector() {
   const scope = useCardCreationStore((state) => state.scope);
@@ -17,20 +18,45 @@ export function ScopeSelector() {
   const folderTree = useFolderStore((state) => state.folderTree);
   const loadFolderTree = useFolderStore((state) => state.loadFolderTree);
 
-  const texts = useReadingStore((state) => state.texts);
-  const loadTexts = useReadingStore((state) => state.loadTexts);
-
   const [localScope, setLocalScope] = useState<HubScope>(scope);
-  const [localSelectedId, setLocalSelectedId] = useState<string | number | null>(selectedId);
+  const [localSelectedId, setLocalSelectedId] = useState<string | null>(selectedId as string | null);
+  const [textsWithMarks, setTextsWithMarks] = useState<Text[]>([]);
+  const [isLoadingTexts, setIsLoadingTexts] = useState(false);
+  const [textsError, setTextsError] = useState<string | null>(null);
+
+  const handleLoadTexts = useCallback(async () => {
+    console.log('[ScopeSelector] handleLoadTexts() called - loading texts with available marks');
+    setIsLoadingTexts(true);
+    setTextsError(null);
+    try {
+      console.log('[ScopeSelector] Calling api.texts.listWithAvailableMarks()...');
+      const texts = await api.texts.listWithAvailableMarks();
+      console.log('[ScopeSelector] Received texts with marks:', texts.length, texts);
+      setTextsWithMarks(texts);
+    } catch (error) {
+      console.error('[ScopeSelector] Failed to load texts with marks:', error);
+      setTextsError(error instanceof Error ? error.message : 'Failed to load texts with marks');
+    } finally {
+      setIsLoadingTexts(false);
+    }
+  }, []);
 
   useEffect(() => {
+    console.log('[ScopeSelector] useEffect triggered', {
+      scope,
+      textsWithMarksLength: textsWithMarks.length,
+      folderTreeLength: folderTree.length
+    });
+
     if (scope === 'folder' && folderTree.length === 0) {
+      console.log('[ScopeSelector] Loading folder tree...');
       loadFolderTree();
     }
-    if (scope === 'text' && texts.length === 0) {
-      loadTexts();
+    if (scope === 'text' && textsWithMarks.length === 0) {
+      console.log('[ScopeSelector] Loading texts via handleLoadTexts...');
+      handleLoadTexts();
     }
-  }, [scope, folderTree.length, texts.length, loadFolderTree, loadTexts]);
+  }, [scope, folderTree.length, textsWithMarks.length, loadFolderTree, handleLoadTexts]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,12 +80,8 @@ export function ScopeSelector() {
 
   const handleScopeChange = (newScope: HubScope) => {
     setLocalScope(newScope);
-    if (newScope === 'library') {
-      setLocalSelectedId(null);
-      setScope(newScope, null);
-    } else {
-      setLocalSelectedId(null);
-    }
+    setLocalSelectedId(null);
+    setScope(newScope, null);
   };
 
   const handleFolderChange = (folderId: string | null) => {
@@ -68,9 +90,8 @@ export function ScopeSelector() {
   };
 
   const handleTextChange = (textId: string) => {
-    const numericId = parseInt(textId, 10);
-    setLocalSelectedId(numericId);
-    setScope('text', numericId);
+    setLocalSelectedId(textId);
+    setScope('text', textId);
   };
 
   const getBreadcrumb = () => {
@@ -107,7 +128,7 @@ export function ScopeSelector() {
     }
 
     if (localScope === 'text' && localSelectedId) {
-      const text = texts.find((t) => t.id === localSelectedId);
+      const text = textsWithMarks.find((t) => t.id.toString() === localSelectedId);
       return (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <FileText className="h-4 w-4" />
@@ -172,22 +193,80 @@ export function ScopeSelector() {
         )}
 
         {localScope === 'text' && (
-          <div className="mt-4">
+          <div className="mt-4 space-y-3">
             <Select
               value={localSelectedId?.toString() || undefined}
               onValueChange={handleTextChange}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a text..." />
+                <SelectValue placeholder="Select a text...">
+                  {isLoadingTexts ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading texts...</span>
+                    </span>
+                  ) : localSelectedId ? (
+                    textsWithMarks.find((t) => t.id.toString() === localSelectedId)?.title || 'Select a text...'
+                  ) : (
+                    'Select a text...'
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="max-h-[300px] overflow-y-auto">
-                {texts.map((text) => (
-                  <SelectItem key={text.id} value={text.id.toString()}>
-                    {text.title}
-                  </SelectItem>
-                ))}
+                {isLoadingTexts ? (
+                  <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading texts...</span>
+                  </div>
+                ) : textsError ? (
+                  <div className="px-2 py-4 space-y-3">
+                    <div className="flex items-start gap-2 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="font-medium">Failed to load texts</div>
+                        <div className="text-xs mt-1">{textsError}</div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadTexts}
+                      className="w-full"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                      Retry
+                    </Button>
+                  </div>
+                ) : textsWithMarks.length === 0 ? (
+                  <div className="px-2 py-6 space-y-2 text-center">
+                    <div className="flex justify-center">
+                      <div className="rounded-full bg-muted p-3">
+                        <FileText className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium">No texts with marks available</div>
+                      <div className="text-xs text-muted-foreground">
+                        Create marks while reading or all marks have been converted to cards
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {textsWithMarks.map((text) => (
+                      <SelectItem key={text.id} value={text.id.toString()}>
+                        {text.title}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
+            {!isLoadingTexts && !textsError && textsWithMarks.length > 0 && (
+              <div className="text-xs text-muted-foreground">
+                {textsWithMarks.length} text{textsWithMarks.length !== 1 ? 's' : ''} with marks available
+              </div>
+            )}
           </div>
         )}
 

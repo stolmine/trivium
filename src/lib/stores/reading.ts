@@ -41,12 +41,15 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
   error: null,
 
   loadTexts: async () => {
+    console.log('[Reading Store] loadTexts() called');
     set({ isLoading: true, error: null });
     try {
+      console.log('[Reading Store] Fetching texts from API...');
       const texts = await api.texts.list();
+      console.log('[Reading Store] Received texts:', texts.length, texts);
       set({ texts, isLoading: false });
     } catch (error) {
-      console.error('Failed to load texts:', error);
+      console.error('[Reading Store] Failed to load texts:', error);
       set({
         error: error instanceof Error ? error.message : 'Failed to load texts',
         isLoading: false

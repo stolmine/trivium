@@ -107,6 +107,47 @@ pub async fn list_texts(db: State<'_, Arc<Mutex<Database>>>) -> Result<Vec<Text>
 }
 
 #[tauri::command]
+pub async fn get_texts_with_available_marks(
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<Vec<Text>, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    let texts = sqlx::query_as!(
+        Text,
+        r#"
+        SELECT DISTINCT
+            t.id as "id!",
+            t.title,
+            t.source,
+            t.source_url,
+            t.content,
+            t.content_length as "content_length!",
+            t.ingested_at as "ingested_at: _",
+            t.updated_at as "updated_at: _",
+            t.metadata,
+            t.author,
+            t.publication_date,
+            t.publisher,
+            t.access_date,
+            t.doi,
+            t.isbn,
+            t.folder_id
+        FROM texts t
+        INNER JOIN cloze_notes cn ON cn.text_id = t.id
+        WHERE cn.status IN ('pending', 'skipped')
+          AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
+        ORDER BY t.ingested_at DESC
+        "#
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch texts with available marks: {}", e))?;
+
+    Ok(texts)
+}
+
+#[tauri::command]
 pub async fn get_text(
     id: i64,
     db: State<'_, Arc<Mutex<Database>>>,

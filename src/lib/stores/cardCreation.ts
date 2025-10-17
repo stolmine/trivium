@@ -4,7 +4,7 @@ import { api } from '../utils/tauri';
 
 export interface CardCreationState {
   scope: HubScope;
-  selectedId: string | number | null;
+  selectedId: string | null;
   marks: MarkWithContext[];
   currentMarkIndex: number;
   createdCards: CreatedCard[];
@@ -12,7 +12,7 @@ export interface CardCreationState {
   buriedMarkIds: Set<number>;
   isLoading: boolean;
   error: string | null;
-  setScope: (scope: HubScope, selectedId?: string | number | null) => void;
+  setScope: (scope: HubScope, selectedId?: string | null) => void;
   loadMarks: () => Promise<void>;
   nextMark: () => void;
   prevMark: () => void;
@@ -35,12 +35,21 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  setScope: (scope: HubScope, selectedId?: string | number | null) => {
+  setScope: (scope: HubScope, selectedId?: string | null) => {
     set({
       scope,
       selectedId: selectedId !== undefined ? selectedId : null,
       currentMarkIndex: 0
     });
+
+    const state = get();
+    if (scope === 'folder' && !state.selectedId) {
+      return;
+    }
+    if (scope === 'text' && !state.selectedId) {
+      return;
+    }
+
     get().loadMarks();
   },
 
