@@ -11,8 +11,6 @@ interface CardCreatorProps {
     markedText: string
   }
   onCreateCard: (selectedText: string, clozeText: string) => Promise<void>
-  onSkip: () => void
-  onBury: () => void
 }
 
 const hasClozes = (text: string): boolean => {
@@ -28,8 +26,6 @@ const countClozes = (text: string): number => {
 export function CardCreator({
   mark,
   onCreateCard,
-  onSkip,
-  onBury,
 }: CardCreatorProps) {
   const {
     content: clozeText,
@@ -164,24 +160,6 @@ export function CardCreator({
         }
         return
       }
-
-      if (e.key === ' ' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
-        const target = e.target as HTMLElement
-        if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return
-
-        e.preventDefault()
-        onSkip()
-        return
-      }
-
-      if (e.key === 'B' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
-        const target = e.target as HTMLElement
-        if (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') return
-
-        e.preventDefault()
-        onBury()
-        return
-      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -263,25 +241,7 @@ export function CardCreator({
         </div>
       )}
 
-      <div className="flex justify-between gap-2">
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onSkip}
-            disabled={isCreating}
-          >
-            Skip (Space)
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBury}
-            disabled={isCreating}
-          >
-            Bury (⇧B)
-          </Button>
-        </div>
+      <div className="flex justify-end">
         <Button
           onClick={handleCreate}
           disabled={isCreating || !clozeText.trim() || !hasClozes(clozeText)}

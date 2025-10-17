@@ -313,3 +313,27 @@ pub async fn unmark_range_as_read(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn clear_read_progress(
+    text_id: i64,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let user_id = 1;
+
+    sqlx::query!(
+        r#"
+        DELETE FROM read_ranges
+        WHERE text_id = ? AND user_id = ?
+        "#,
+        text_id,
+        user_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to clear read progress: {}", e))?;
+
+    Ok(())
+}

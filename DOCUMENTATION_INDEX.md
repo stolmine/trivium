@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-16 (Phase 12: Flashcard Creation Hub Complete + Post-Phase Improvements! 🎴✅🔧)
+Last Updated: 2025-10-17 (Inline Text Editing: ContentEditable editor with mark preservation, UTF-16 position tracking, DOM utilities)
 
 ---
 
@@ -100,6 +100,12 @@ Last Updated: 2025-10-16 (Phase 12: Flashcard Creation Hub Complete + Post-Phase
 **Description**: Frontend dependencies installation documentation detailing Zustand (5.0), Lexical (0.37), shadcn/ui with Tailwind CSS v4, configuration files (components.json, tsconfig.json, vite.config.ts, index.css), CSS-based theme configuration using @theme directive, and path aliases setup
 **Last Updated**: 2025-10-12
 
+### Database Migrations
+
+#### `/Users/why/repos/trivium/src-tauri/migrations/20251017000000_add_cloze_notes_positions.sql`
+**Description**: Database migration adding start_pos and end_pos columns to cloze_notes table for UTF-16 position tracking. Enables inline text editing with mark preservation by storing exact character positions of highlighted text
+**Last Updated**: 2025-10-17
+
 ---
 
 ## Feature-Specific Documentation
@@ -129,6 +135,24 @@ Last Updated: 2025-10-16 (Phase 12: Flashcard Creation Hub Complete + Post-Phase
 #### `/Users/why/repos/trivium/CARD_ENUMERATION_EXAMPLES.md`
 **Description**: Visual examples illustrating card enumeration problem and solution through concrete scenarios showing how current system creates duplicate card numbers ("Card #1" appearing multiple times) and how display_index solves it with sequential unique numbers. Includes deletion handling, multi-text scenarios, and edge cases
 **Last Updated**: 2025-10-13
+
+### Inline Text Editing
+
+#### `/Users/why/repos/trivium/src/lib/utils/utf16.ts`
+**Description**: UTF-16 position tracking utilities for contenteditable. Handles emoji and surrogate pairs correctly. Functions: isHighSurrogate, isLowSurrogate, getCharacterLength, adjustPositionToBoundary, getNextBoundary, getPreviousBoundary, countCodeUnits
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/utils/domPosition.ts`
+**Description**: DOM selection to UTF-16 position conversion utilities. Functions: getAbsolutePosition, getSelectionRange, setSelectionRange, findNodeAtPosition, getTextContent. Used for inline editing position tracking
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/components/reading/InlineEditor.tsx`
+**Description**: ContentEditable-based inline text editor component. Activated via Ctrl+E or Edit button. Features: plain text editing, paste sanitization, auto-focus, visual state transitions. Uses conditional rendering with ReadHighlighter
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/components/reading/HighlightOverlay.tsx`
+**Description**: Transparent overlay system for displaying highlights without interfering with contenteditable. Segments text and renders mark tags with z-index layering. Created during development but not used in final conditional rendering approach
+**Last Updated**: 2025-10-17
 
 ---
 
@@ -184,8 +208,8 @@ Last Updated: 2025-10-16 (Phase 12: Flashcard Creation Hub Complete + Post-Phase
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
-- Setup & Configuration: 4 files (includes SQLx guide)
-- Feature-Specific: 7 files (includes 4 flashcard hub docs)
+- Setup & Configuration: 5 files (includes SQLx guide + database migration)
+- Feature-Specific: 11 files (includes 4 flashcard hub docs + 4 inline editing implementation files)
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files

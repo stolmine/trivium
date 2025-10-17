@@ -116,7 +116,7 @@ export function StatsCard() {
   }
 
   return (
-    <div className="border rounded-lg p-8 shadow-card hover-lift bg-card">
+    <div className="border rounded-lg p-8 shadow-card bg-card">
       <h2 className="text-lg font-semibold mb-6">Statistics</h2>
 
       <div className="space-y-4">

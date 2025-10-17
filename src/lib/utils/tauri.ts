@@ -70,6 +70,9 @@ export const api = {
     delete: async (id: number): Promise<void> => {
       return await invoke('delete_text', { id });
     },
+    updateContent: async (textId: number, newContent: string): Promise<void> => {
+      return await invoke('update_text_content', { textId, newContent });
+    },
   },
   reading: {
     markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
@@ -95,6 +98,9 @@ export const api = {
     getParagraphs: async (textId: number): Promise<Paragraph[]> => {
       return await invoke('get_paragraphs', { textId: textId });
     },
+    clearReadProgress: async (textId: number): Promise<void> => {
+      return await invoke('clear_read_progress', { textId });
+    },
   },
   flashcards: {
     createFromCloze: async (textId: number, selectedText: string, clozeText: string): Promise<Flashcard[]> => {
@@ -116,8 +122,8 @@ export const api = {
         clozeNumber: clozeNumber
       });
     },
-    createMark: async (textId: number, selectedText: string): Promise<number> => {
-      return await invoke('create_mark', { textId, selectedText });
+    createMark: async (textId: number, selectedText: string, startPosition: number, endPosition: number): Promise<number> => {
+      return await invoke('create_mark', { textId, selectedText, startPosition, endPosition });
     },
   },
   review: {

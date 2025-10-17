@@ -14,16 +14,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
   Input,
   Label
 } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges } from '../../lib/components/reading'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, TextEditor, InlineEditor } from '../../lib/components/reading'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
-import { ChevronLeft, MoreVertical, Edit2, Trash2, Link, Search } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
 import { useSearchStore } from '../../lib/stores/search'
 import { findMatches } from '../../lib/utils/textSearch'
+import { api } from '../../lib/utils/tauri'
 
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
@@ -31,7 +33,12 @@ export function ReadPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showFinishedDialog, setShowFinishedDialog] = useState(false)
+  const [showClearDialog, setShowClearDialog] = useState(false)
   const [renameTextTitle, setRenameTextTitle] = useState('')
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [inlineEditActive, setInlineEditActive] = useState(false)
+  const [editingContent, setEditingContent] = useState('')
   const {
     currentText,
     isLoading,
@@ -42,10 +49,12 @@ export function ReadPage() {
     getReadRanges,
     getParagraphs,
     calculateProgress,
-    setExcludedRanges
+    setExcludedRanges,
+    markAsFinished,
+    clearProgress
   } = useReadingStore()
   const { renameText, deleteText } = useLibraryStore()
-  const { linksEnabled, toggleLinks } = useSettingsStore()
+  const { linksEnabled, toggleLinks, fontSize, setFontSize } = useSettingsStore()
   const {
     isOpen,
     query,
@@ -76,6 +85,13 @@ export function ReadPage() {
       setRenameTextTitle(currentText.title)
     }
   }, [currentText, setExcludedRanges])
+
+  // Sync editing content when currentText changes
+  useEffect(() => {
+    if (currentText) {
+      setEditingContent(currentText.content)
+    }
+  }, [currentText])
 
   useEffect(() => {
     if (!query || !currentText?.content) {
@@ -117,15 +133,76 @@ export function ReadPage() {
     }
   }
 
+  const handleMarkAsFinished = async () => {
+    if (currentText) {
+      await markAsFinished(currentText.id, currentText.contentLength)
+      setShowFinishedDialog(false)
+    }
+  }
+
+  const handleClearProgress = async () => {
+    if (currentText) {
+      await clearProgress(currentText.id)
+      setShowClearDialog(false)
+    }
+  }
+
+  const handleSaveEdit = async (newContent: string) => {
+    if (!currentText) return
+    await api.texts.updateContent(currentText.id, newContent)
+    await loadText(currentText.id)
+    setIsEditMode(false)
+  }
+
+  const handleSaveInlineEdit = async () => {
+    console.log('[ReadPage] handleSaveInlineEdit called', {
+      hasCurrentText: !!currentText,
+      editingContentLength: editingContent.length,
+      currentTextContentLength: currentText?.content.length,
+      areEqual: editingContent === currentText?.content
+    });
+
+    if (!currentText || editingContent === currentText.content) {
+      console.log('[ReadPage] No changes, just deactivating');
+      setInlineEditActive(false)
+      return
+    }
+
+    try {
+      console.log('[ReadPage] Saving content update...');
+      await api.texts.updateContent(currentText.id, editingContent)
+      console.log('[ReadPage] Reloading text...');
+      await loadText(currentText.id)
+      console.log('[ReadPage] Deactivating inline edit');
+      setInlineEditActive(false)
+    } catch (error) {
+      console.error('[ReadPage] Failed to save:', error)
+    }
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only trigger on Ctrl/Cmd+F WITHOUT Shift (Shift+Ctrl/Cmd+F is for library search)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !isEditMode && !inlineEditActive) {
+        e.preventDefault()
+        console.log('[ReadPage] Ctrl+E pressed - activating inline edit');
+        setEditingContent(currentText?.content || '')  // Sync BEFORE activating
+        setInlineEditActive(true)
+      }
+      if (e.key === 'Escape' && inlineEditActive) {
+        e.preventDefault()
+        console.log('[ReadPage] Escape pressed - canceling inline edit, reverting content');
+        setInlineEditActive(false)
+        setEditingContent(currentText?.content || '')
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && inlineEditActive) {
+        e.preventDefault()
+        console.log('[ReadPage] Ctrl+S pressed - saving inline edit');
+        handleSaveInlineEdit()
+      }
       if (!e.shiftKey && (e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         openSearch()
 
-        // Focus and select text in search input
-        // Use setTimeout to ensure the search bar has rendered
         setTimeout(() => {
           const searchInput = document.querySelector('input[placeholder="Find in page..."]') as HTMLInputElement
           if (searchInput) {
@@ -142,7 +219,7 @@ export function ReadPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, openSearch, closeSearch])
+  }, [isOpen, isEditMode, inlineEditActive, editingContent, currentText, openSearch, closeSearch])
 
   useEffect(() => {
     if (matches.length > 0 && currentIndex >= 0) {
@@ -190,6 +267,36 @@ export function ReadPage() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showDeleteDialog])
+
+  // Add keyboard shortcuts for finished dialog
+  useEffect(() => {
+    if (!showFinishedDialog) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleMarkAsFinished()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showFinishedDialog])
+
+  // Add keyboard shortcuts for clear dialog
+  useEffect(() => {
+    if (!showClearDialog) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleClearProgress()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showClearDialog])
 
   // Handle loading state
   if (isLoading) {
@@ -252,6 +359,16 @@ export function ReadPage() {
                   Progress: <span className="font-medium">{totalProgress.toFixed(0)}%</span>
                 </div>
                 <Button
+                  variant={inlineEditActive ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setInlineEditActive(!inlineEditActive)}
+                  title={inlineEditActive ? 'Cancel editing (Esc)' : 'Edit text inline (Ctrl+E)'}
+                  aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text'}
+                >
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  {inlineEditActive ? 'Cancel Edit' : 'Edit'}
+                </Button>
+                <Button
                   variant={linksEnabled ? 'default' : 'outline'}
                   size="icon"
                   onClick={toggleLinks}
@@ -265,7 +382,6 @@ export function ReadPage() {
                   size="icon"
                   onClick={() => {
                     openSearch()
-                    // Focus and select text in search input
                     setTimeout(() => {
                       const searchInput = document.querySelector('input[placeholder="Find in page..."]') as HTMLInputElement
                       if (searchInput) {
@@ -296,6 +412,36 @@ export function ReadPage() {
                       Rename
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setFontSize(1)}>
+                      {fontSize === 1 && <Check className="mr-2 h-4 w-4" />}
+                      {fontSize !== 1 && <span className="mr-6" />}
+                      Small
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setFontSize(1.25)}>
+                      {fontSize === 1.25 && <Check className="mr-2 h-4 w-4" />}
+                      {fontSize !== 1.25 && <span className="mr-6" />}
+                      Medium
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setFontSize(1.5)}>
+                      {fontSize === 1.5 && <Check className="mr-2 h-4 w-4" />}
+                      {fontSize !== 1.5 && <span className="mr-6" />}
+                      Large
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setFontSize(1.75)}>
+                      {fontSize === 1.75 && <Check className="mr-2 h-4 w-4" />}
+                      {fontSize !== 1.75 && <span className="mr-6" />}
+                      Extra Large
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowFinishedDialog(true)}>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Mark as Finished
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setShowClearDialog(true)}>
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Clear Progress
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
                       <Trash2 className="mr-2 h-4 w-4 text-destructive" />
                       <span className="text-destructive">Delete</span>
@@ -319,17 +465,39 @@ export function ReadPage() {
 
         <div className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-8 py-12 max-w-4xl">
-            <article className="reading-content mx-auto space-y-4">
-              <TextSelectionMenu textId={currentText.id}>
-                <ReadHighlighter
-                  content={currentText.content}
-                  readRanges={readRanges}
-                  linksEnabled={linksEnabled}
-                  searchMatches={matches}
-                  activeSearchIndex={currentIndex}
-                />
-              </TextSelectionMenu>
-            </article>
+            {isEditMode ? (
+              <TextEditor
+                textId={currentText.id}
+                initialContent={currentText.content}
+                onSave={handleSaveEdit}
+                onCancel={() => setIsEditMode(false)}
+                fontSize={fontSize * 16}
+              />
+            ) : (
+              <article className="reading-content mx-auto space-y-4" style={{ fontSize: `${fontSize}rem` }}>
+                <TextSelectionMenu textId={currentText.id}>
+                  {inlineEditActive ? (
+                    <InlineEditor
+                      initialContent={currentText.content}
+                      onContentChange={setEditingContent}
+                      onActivate={() => setInlineEditActive(true)}
+                      onDeactivate={handleSaveInlineEdit}
+                      isActive={true}
+                      className="font-serif"
+                      fontSize={fontSize}
+                    />
+                  ) : (
+                    <ReadHighlighter
+                      content={currentText.content}
+                      readRanges={readRanges}
+                      linksEnabled={linksEnabled}
+                      searchMatches={matches}
+                      activeSearchIndex={currentIndex}
+                    />
+                  )}
+                </TextSelectionMenu>
+              </article>
+            )}
           </div>
         </div>
       </div>
@@ -393,6 +561,48 @@ export function ReadPage() {
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark as Finished Dialog */}
+      <Dialog open={showFinishedDialog} onOpenChange={setShowFinishedDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark as Finished?</DialogTitle>
+            <DialogDescription>
+              This will mark the entire text as read and set progress to 100%. You can still create flashcards from marked text.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFinishedDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleMarkAsFinished}>
+              Mark as Finished
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear Progress Dialog */}
+      <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Clear Reading Progress?</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              This will remove all read marks for this text. Flashcards already created will not be affected. This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowClearDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleClearProgress}>
+              Clear Progress
             </Button>
           </DialogFooter>
         </DialogContent>

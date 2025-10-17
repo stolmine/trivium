@@ -10,15 +10,12 @@ export function DashboardPage() {
     <div className="container max-w-6xl mx-auto px-8 py-8">
       <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <ContinueReadingCard />
         <DueReviewCard />
         <CreateCardsCard />
         <StatsCard />
         <QuickImportCard />
-      </div>
-
-      <div className="max-w-4xl">
         <RecentActivity />
       </div>
     </div>

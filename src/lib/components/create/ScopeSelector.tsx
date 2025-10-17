@@ -147,38 +147,32 @@ export function ScopeSelector() {
       <div className="space-y-4">
         <RadioGroup value={localScope} onValueChange={(value) => handleScopeChange(value as HubScope)}>
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
+            <Label htmlFor="scope-library" className="flex items-center gap-2 cursor-pointer">
               <RadioGroupItem value="library" id="scope-library" />
-              <Label htmlFor="scope-library" className="cursor-pointer">
-                <span className="flex items-center gap-2">
-                  <Library className="h-4 w-4" />
-                  All Library
-                  <span className="text-xs text-muted-foreground">(Ctrl+1)</span>
-                </span>
-              </Label>
-            </div>
+              <span className="flex items-center gap-2">
+                <Library className="h-4 w-4" />
+                All Library
+                <span className="text-xs text-muted-foreground">(Ctrl+1)</span>
+              </span>
+            </Label>
 
-            <div className="flex items-center gap-2">
+            <Label htmlFor="scope-folder" className="flex items-center gap-2 cursor-pointer">
               <RadioGroupItem value="folder" id="scope-folder" />
-              <Label htmlFor="scope-folder" className="cursor-pointer">
-                <span className="flex items-center gap-2">
-                  <FolderIcon className="h-4 w-4" />
-                  Folder
-                  <span className="text-xs text-muted-foreground">(Ctrl+2)</span>
-                </span>
-              </Label>
-            </div>
+              <span className="flex items-center gap-2">
+                <FolderIcon className="h-4 w-4" />
+                Folder
+                <span className="text-xs text-muted-foreground">(Ctrl+2)</span>
+              </span>
+            </Label>
 
-            <div className="flex items-center gap-2">
+            <Label htmlFor="scope-text" className="flex items-center gap-2 cursor-pointer">
               <RadioGroupItem value="text" id="scope-text" />
-              <Label htmlFor="scope-text" className="cursor-pointer">
-                <span className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Text
-                  <span className="text-xs text-muted-foreground">(Ctrl+3)</span>
-                </span>
-              </Label>
-            </div>
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Text
+                <span className="text-xs text-muted-foreground">(Ctrl+3)</span>
+              </span>
+            </Label>
           </div>
         </RadioGroup>
 

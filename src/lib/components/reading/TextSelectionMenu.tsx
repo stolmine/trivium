@@ -66,9 +66,9 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
       // Mark as read for progress tracking
       markRangeAsRead(currentText.id, startPosition, endPosition)
 
-      // Also create a mark for the Create Cards hub
+      // Also create a mark for the Create Cards hub with position information
       try {
-        await api.flashcards.createMark(currentText.id, selectedText)
+        await api.flashcards.createMark(currentText.id, selectedText, startPosition, endPosition)
       } catch (error) {
         console.error('Failed to create mark:', error)
         // Don't block the read marking if mark creation fails

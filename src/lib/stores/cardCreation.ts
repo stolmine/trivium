@@ -8,7 +8,6 @@ export interface CardCreationState {
   marks: MarkWithContext[];
   currentMarkIndex: number;
   createdCards: CreatedCard[];
-  skippedMarkIds: Set<number>;
   buriedMarkIds: Set<number>;
   isLoading: boolean;
   error: string | null;
@@ -16,7 +15,6 @@ export interface CardCreationState {
   loadMarks: () => Promise<void>;
   nextMark: () => void;
   prevMark: () => void;
-  skipMark: () => Promise<void>;
   buryMark: () => Promise<void>;
   createCard: (selectedText: string, clozeText: string) => Promise<void>;
   deleteCard: (id: number) => void;
@@ -30,7 +28,6 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
   marks: [],
   currentMarkIndex: 0,
   createdCards: [],
-  skippedMarkIds: new Set(),
   buriedMarkIds: new Set(),
   isLoading: false,
   error: null,
@@ -83,25 +80,6 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
     const { currentMarkIndex } = get();
     if (currentMarkIndex > 0) {
       set({ currentMarkIndex: currentMarkIndex - 1 });
-    }
-  },
-
-  skipMark: async () => {
-    const { marks, currentMarkIndex, skippedMarkIds } = get();
-    const currentMark = marks[currentMarkIndex];
-    if (currentMark) {
-      try {
-        await api.hub.skipMark(currentMark.id);
-        const newSkippedIds = new Set(skippedMarkIds);
-        newSkippedIds.add(currentMark.id);
-        set({ skippedMarkIds: newSkippedIds });
-        get().nextMark();
-      } catch (error) {
-        console.error('Failed to skip mark:', error);
-        set({
-          error: error instanceof Error ? error.message : 'Failed to skip mark'
-        });
-      }
     }
   },
 
@@ -189,7 +167,6 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
       marks: [],
       currentMarkIndex: 0,
       createdCards: [],
-      skippedMarkIds: new Set(),
       buriedMarkIds: new Set(),
       isLoading: false,
       error: null

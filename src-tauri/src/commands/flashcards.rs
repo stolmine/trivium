@@ -238,6 +238,8 @@ pub async fn get_flashcard_preview(
 pub async fn create_mark(
     text_id: i64,
     selected_text: String,
+    start_position: i64,
+    end_position: i64,
     db: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<i64, String> {
     let db = db.lock().await;
@@ -249,14 +251,20 @@ pub async fn create_mark(
     // This will appear in the Create Cards hub with status='pending'
     let cloze_note_result = sqlx::query!(
         r#"
-        INSERT INTO cloze_notes (text_id, user_id, original_text, parsed_segments, cloze_count, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO cloze_notes (
+            text_id, user_id, original_text, parsed_segments, cloze_count,
+            start_position, end_position,
+            created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         text_id,
         user_id,
         selected_text,
         "[]",  // Empty parsed segments - no cloze deletions yet
         0,     // No cloze deletions
+        start_position,
+        end_position,
         now,
         now
     )

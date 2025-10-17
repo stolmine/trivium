@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 13 Complete ✅ - Reading UI Improvements & Dashboard Refinements
+## Current Status: Phase 14 Complete ✅ - Inline Text Editing with Mark Preservation
 
 **Branch**: `9_features`
-**Last Updated**: 2025-10-17 (Phase 13: Enhanced reading controls, unified dashboard, streamlined card creation hub)
+**Last Updated**: 2025-10-17 (Phase 14: Inline text editing, UTF-16 position tracking, mark preservation)
 
 ---
 
@@ -148,6 +148,8 @@
 50. **Hub Shortcuts**: Ctrl+4 to access Create Cards from anywhere
 51. **Recursive Folder Mark Detection**: Marks detected in all nested subfolders when selecting folder scope
 52. **Text Filtering by Marks**: Dropdown shows only texts with available marks (80% reduction in noise)
+53. **Inline Text Editing**: Direct in-place editing with Ctrl+E toggle, mark preservation via flagging
+54. **UTF-16 Position Tracking**: Accurate mark positions for emoji and multi-byte characters
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -1212,6 +1214,112 @@
 - Card Hub: Create unified MarkDisplay component
 - Card Hub: UI cleanup and improvements
 - Documentation: Update PROGRESS.md and documentation_index.md
+
+---
+
+**Phase 13: Inline Text Editing with Mark Preservation** 📝 (2025-10-17)
+
+**Database Changes**:
+- Added `start_position` and `end_position` columns to `cloze_notes` table
+- Migration: `20251017000000_add_cloze_notes_positions.sql`
+- Index created for efficient position-based queries
+- Existing marks migrated with reconstructed positions using string search
+
+**Backend Implementation**:
+1. **Updated `create_mark` command** (`commands/flashcards.rs`):
+   - Now accepts `start_position` and `end_position` parameters
+   - Stores UTF-16 code unit offsets in database
+   - Maintains backward compatibility with existing frontend
+
+2. **New `update_text_content` command** (`commands/texts.rs`):
+   - Updates text content and recalculates content_length (UTF-16)
+   - Marks all affected cloze_notes as `status = 'needs_review'`
+   - Preserves marks by flagging rather than deleting
+
+**Frontend Implementation**:
+1. **UTF-16 Position Utilities** (`lib/utils/utf16.ts`):
+   - Complete suite of UTF-16 position tracking functions
+   - Handles emoji and surrogate pairs correctly
+   - Functions: `isHighSurrogate`, `isLowSurrogate`, `getCharacterLength`, `adjustPositionToBoundary`, `getNextBoundary`, `getPreviousBoundary`, `countCodeUnits`
+
+2. **DOM Position Utilities** (`lib/utils/domPosition.ts`):
+   - Converts between DOM selections and UTF-16 character positions
+   - Functions: `getAbsolutePosition`, `getSelectionRange`, `setSelectionRange`, `findNodeAtPosition`, `getTextContent`
+
+3. **InlineEditor Component** (`lib/components/reading/InlineEditor.tsx`):
+   - ContentEditable-based inline editor
+   - Plain text editing with paste sanitization
+   - Auto-focus when activated
+   - Visual states: transparent → bordered + background
+   - State synchronization with parent component
+
+4. **Conditional Rendering Architecture** (`routes/read/[id].tsx`):
+   - Clean separation: ReadHighlighter for reading, InlineEditor for editing
+   - Preserves all existing functionality (links, marks, search)
+   - No state synchronization issues
+   - Keyboard shortcuts: Ctrl+E (toggle), Ctrl+S (save), Escape (cancel)
+
+**Features**:
+- Click anywhere in text or press Ctrl+E to activate inline editing
+- Direct in-place text editing with contentEditable
+- Automatic content saving with Ctrl+S
+- Cancel editing with Escape (reverts changes)
+- All marks flagged for review after text updates
+- UTF-16 position tracking ensures emoji/multi-byte character support
+- Preserves all existing features (links, highlights, search, marks)
+
+**Architectural Decisions**:
+- **Conditional rendering** chosen over overlay approach for simplicity
+- ReadHighlighter handles all display logic (links, markdown, headers)
+- InlineEditor handles all editing logic (contentEditable, input handling)
+- State management: `inlineEditActive` and `editingContent` with proper synchronization
+- Future enhancement: Selection-based activation (edit only selected text)
+
+**Development Process**:
+- Initial implementation: Overlay architecture (HighlightOverlay + InlineEditor)
+- Issues discovered: Text disappearing, links broken, marks wrong colors
+- Root cause analysis: State desynchronization and architectural mismatch
+- Solution: Reverted to conditional rendering with ReadHighlighter
+- Result: Clean, maintainable, and fully functional
+
+**Bug Fixes**:
+1. **Text Disappearance**: Fixed uninitialized `editingContent` state
+2. **Links Rendering Literally**: ReadHighlighter now handles markdown parsing
+3. **Mark Colors**: ReadHighlighter applies correct styling
+4. **State Sync**: Added useEffect to sync `editingContent` with `currentText`
+
+**Files Created** (9 files):
+- 1 database migration
+- 2 utility modules (utf16.ts, domPosition.ts)
+- 2 React components (InlineEditor.tsx, HighlightOverlay.tsx)
+- Documentation and research files
+
+**Files Modified** (5 files):
+- `commands/flashcards.rs` - Added position storage
+- `commands/texts.rs` - Added content update command
+- `lib.rs` - Registered new command
+- `lib/utils/tauri.ts` - API wrappers
+- `routes/read/[id].tsx` - Integrated inline editing
+- `lib/components/reading/index.ts` - Exports
+
+**Implementation Time**: ~10 hours (research, implementation, debugging, fixes)
+
+**Success Criteria Met**:
+- ✅ Can activate inline editing mode with Ctrl+E
+- ✅ Text edits persist to database
+- ✅ Marks preserved with flagging system
+- ✅ UTF-16 position tracking accurate for emoji/CJK
+- ✅ All existing features work (links, highlights, search)
+- ✅ Clean conditional rendering architecture
+- ✅ Backend compiles without errors
+- ✅ Frontend TypeScript passes
+
+**Commits**:
+- Inline editing: Database migration and backend commands
+- Inline editing: UTF-16 and DOM position utilities
+- Inline editing: InlineEditor component implementation
+- Inline editing: Integration with reading view
+- Bug fixes: State synchronization and rendering issues
 
 ---
 

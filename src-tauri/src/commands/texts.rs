@@ -222,3 +222,45 @@ pub async fn delete_text(
 
     Ok(())
 }
+
+#[tauri::command]
+pub async fn update_text_content(
+    text_id: i64,
+    new_content: String,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let now = Utc::now();
+
+    let new_length = new_content.encode_utf16().count() as i64;
+
+    sqlx::query!(
+        "UPDATE texts SET content = ?, content_length = ?, updated_at = ? WHERE id = ?",
+        new_content,
+        new_length,
+        now,
+        text_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to update text content: {}", e))?;
+
+    sqlx::query!(
+        r#"
+        UPDATE cloze_notes
+        SET status = 'needs_review',
+            notes = 'Text was edited - please verify mark',
+            updated_at = ?
+        WHERE text_id = ?
+          AND status NOT IN ('buried', 'converted')
+        "#,
+        now,
+        text_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to update marks: {}", e))?;
+
+    Ok(())
+}

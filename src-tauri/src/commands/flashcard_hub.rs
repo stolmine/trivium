@@ -214,7 +214,7 @@ pub async fn get_hub_marks(
                     t.content,
                     cn.original_text,
                     cn.created_at,
-                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as card_count
+                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as "card_count!: i64"
                 FROM cloze_notes cn
                 INNER JOIN texts t ON cn.text_id = t.id
                 WHERE cn.status IN ('pending', 'skipped')

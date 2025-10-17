@@ -31,7 +31,7 @@ export function QuickImportCard() {
   };
 
   return (
-    <div className="border rounded-lg p-8 shadow-card hover-lift bg-card">
+    <div className="border rounded-lg p-8 shadow-card bg-card">
       <div className="flex items-center gap-3 mb-6">
         <FileText className="h-5 w-5" />
         <h2 className="text-lg font-semibold">Quick Import</h2>

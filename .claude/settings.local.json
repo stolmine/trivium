@@ -142,7 +142,17 @@
       "WebFetch(domain:bvaughn.github.io)",
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:whereisthemouse.com)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(git restore:*)",
+      "Bash(DATABASE_URL=\"sqlite:trivium_dev.db\" sqlx migrate:*)",
+      "Bash(DATABASE_URL=\"sqlite:../trivium_dev.db\" sqlx migrate:*)",
+      "Bash(DATABASE_URL=\"sqlite:../trivium_dev.db\" sqlx database create:*)",
+      "Bash(DATABASE_URL=\"sqlite:../trivium_dev.db\" cargo sqlx migrate:*)",
+      "Bash(DATABASE_URL=\"sqlite:/Users/why/repos/trivium/trivium_dev.db\" cargo sqlx prepare:*)",
+      "WebFetch(domain:stephenhaney.com)",
+      "WebFetch(domain:w3c.github.io)",
+      "WebFetch(domain:discuss.prosemirror.net)",
+      "WebFetch(domain:medium.com)"
     ],
     "deny": [],
     "ask": []

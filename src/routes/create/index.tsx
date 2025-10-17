@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/lib/components/ui/button';
-import { ArrowLeft, HelpCircle, X } from 'lucide-react';
+import { ArrowLeft, X } from 'lucide-react';
 import { ScopeSelector } from '@/lib/components/create/ScopeSelector';
-import { MarkNavigation } from '@/lib/components/create/MarkNavigation';
-import { MarkContext } from '@/lib/components/create/MarkContext';
+import { MarkDisplay } from '@/lib/components/create/MarkDisplay';
 import { CardCreator } from '@/lib/components/create/CardCreator';
 import { CreatedCardsList } from '@/lib/components/create/CreatedCardsList';
 import { useCardCreationStore } from '@/lib/stores/cardCreation';
@@ -13,15 +12,16 @@ export function CreateCardsPage() {
   const navigate = useNavigate();
   const [showHelp, setShowHelp] = useState(false);
 
-  // Connect to cardCreation store
   const marks = useCardCreationStore((state) => state.marks);
   const currentMarkIndex = useCardCreationStore((state) => state.currentMarkIndex);
   const createdCards = useCardCreationStore((state) => state.createdCards);
+  const buriedMarkIds = useCardCreationStore((state) => state.buriedMarkIds);
   const isLoading = useCardCreationStore((state) => state.isLoading);
   const error = useCardCreationStore((state) => state.error);
   const loadMarks = useCardCreationStore((state) => state.loadMarks);
   const createCard = useCardCreationStore((state) => state.createCard);
-  const skipMark = useCardCreationStore((state) => state.skipMark);
+  const nextMark = useCardCreationStore((state) => state.nextMark);
+  const prevMark = useCardCreationStore((state) => state.prevMark);
   const buryMark = useCardCreationStore((state) => state.buryMark);
   const deleteCard = useCardCreationStore((state) => state.deleteCard);
   const reset = useCardCreationStore((state) => state.reset);
@@ -67,14 +67,6 @@ export function CreateCardsPage() {
     }
   };
 
-  const handleSkipMark = async () => {
-    try {
-      await skipMark();
-    } catch (error) {
-      console.error('Failed to skip mark:', error);
-    }
-  };
-
   const handleBuryMark = async () => {
     try {
       await buryMark();
@@ -85,8 +77,6 @@ export function CreateCardsPage() {
 
   const handleDeleteCard = async (cardId: number) => {
     try {
-      // Note: The store's deleteCard only removes from local state
-      // If API deletion is needed, it should be added to the store
       deleteCard(cardId);
     } catch (error) {
       console.error('Failed to delete card:', error);
@@ -95,8 +85,6 @@ export function CreateCardsPage() {
   };
 
   const handleEditCard = (card: any) => {
-    // TODO: Implement edit dialog or inline editing
-    // For now, we'll just log it
     console.log('Edit card:', card);
   };
 
@@ -118,15 +106,6 @@ export function CreateCardsPage() {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowHelp(true)}
-              title="Show keyboard shortcuts"
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span className="ml-2">Shortcuts</span>
-            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -187,15 +166,6 @@ export function CreateCardsPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowHelp(true)}
-              title="Show keyboard shortcuts"
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span className="ml-2">Shortcuts</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
               onClick={() => navigate('/')}
               title="Close"
             >
@@ -250,15 +220,6 @@ export function CreateCardsPage() {
             </Button>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowHelp(true)}
-              title="Show keyboard shortcuts"
-            >
-              <HelpCircle className="h-4 w-4" />
-              <span className="ml-2">Shortcuts</span>
-            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -334,15 +295,6 @@ export function CreateCardsPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowHelp(true)}
-            title="Show keyboard shortcuts"
-          >
-            <HelpCircle className="h-4 w-4" />
-            <span className="ml-2">Shortcuts</span>
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
             onClick={() => navigate('/')}
             title="Close"
           >
@@ -359,12 +311,17 @@ export function CreateCardsPage() {
             {/* Scope Selector */}
             <ScopeSelector />
 
-            {/* Mark Navigation */}
-            <MarkNavigation />
-
-            {/* Mark Context */}
+            {/* Mark Display (integrated navigation + context) */}
             {currentMark && (
-              <MarkContext mark={currentMark} className="mb-6" />
+              <MarkDisplay
+                mark={currentMark}
+                currentIndex={currentMarkIndex}
+                totalMarks={marks.length}
+                isBuried={buriedMarkIds.has(currentMark.id)}
+                onBury={handleBuryMark}
+                onPrevious={prevMark}
+                onNext={nextMark}
+              />
             )}
 
             {/* Card Creator */}
@@ -380,8 +337,6 @@ export function CreateCardsPage() {
                     markedText: currentMark.markedText,
                   }}
                   onCreateCard={handleCreateCard}
-                  onSkip={handleSkipMark}
-                  onBury={handleBuryMark}
                 />
               </div>
             )}
@@ -425,19 +380,43 @@ export function CreateCardsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Next mark</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">→</kbd>
+                    <div className="flex gap-2">
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">→</kbd>
+                      <span className="text-muted-foreground text-xs">or</span>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+J</kbd>
+                    </div>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Previous mark</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">←</kbd>
+                    <div className="flex gap-2">
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">←</kbd>
+                      <span className="text-muted-foreground text-xs">or</span>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+K</kbd>
+                    </div>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-sm">Skip mark</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Space</kbd>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-sm">Bury mark (0-card)</span>
+                    <span className="text-sm">Bury mark (permanent, 0-card)</span>
                     <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Shift+B</kbd>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-medium mb-3 text-sm uppercase tracking-wide text-muted-foreground">
+                  Scope Selection
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Library scope</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+1</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Folder scope</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+2</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Text scope</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+3</kbd>
                   </div>
                 </div>
               </div>
@@ -448,8 +427,24 @@ export function CreateCardsPage() {
                 </h3>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Wrap selection in cloze</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Shift+C</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Create/Update card</span>
                     <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Shift+Enter</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Undo</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Z</kbd>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Redo</span>
+                    <div className="flex gap-2">
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Shift+Z</kbd>
+                      <span className="text-muted-foreground text-xs">or</span>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Y</kbd>
+                    </div>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Clear/Cancel</span>
@@ -463,6 +458,10 @@ export function CreateCardsPage() {
                   Global
                 </h3>
                 <div className="space-y-2">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-sm">Open Flashcard Hub</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+4</kbd>
+                  </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Show this help</span>
                     <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">?</kbd>
