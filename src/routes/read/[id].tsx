@@ -19,7 +19,7 @@ import {
   Input,
   Label
 } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar } from '../../lib/components/reading'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar } from '../../lib/components/reading'
 import { expandToSentenceBoundary } from '../../lib/utils/sentenceBoundary'
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
@@ -251,16 +251,25 @@ export function ReadPage() {
   const handleActivateSelectionEdit = () => {
     if (!selectionInfo || !currentText) return
 
+    // Selection positions are in RENDERED space (DOM textContent)
+    // Need to convert to CLEANED space (with markdown) for text extraction
+    const { cleanedContent } = parseExcludedRanges(currentText.content)
+
+    // Convert rendered positions to cleaned positions
+    const cleanedStart = renderedPosToCleanedPos(selectionInfo.start, cleanedContent)
+    const cleanedEnd = renderedPosToCleanedPos(selectionInfo.end, cleanedContent)
+
+    // Expand to sentence boundaries in cleaned space
     const { start, end } = expandToSentenceBoundary(
-      currentText.content,
-      selectionInfo.start,
-      selectionInfo.end
+      cleanedContent,
+      cleanedStart,
+      cleanedEnd
     )
 
     setEditRegion({
       start,
       end,
-      extractedText: currentText.content.substring(start, end)
+      extractedText: cleanedContent.substring(start, end)
     })
 
     setSelectionInfo(null)
@@ -270,10 +279,14 @@ export function ReadPage() {
     if (!currentText || !editRegion) return
 
     try {
+      // editRegion positions are in CLEANED space (with markdown)
+      // Merge the edited text back using cleaned content
+      const { cleanedContent } = parseExcludedRanges(currentText.content)
+
       const mergedText =
-        currentText.content.substring(0, editRegion.start) +
+        cleanedContent.substring(0, editRegion.start) +
         newText +
-        currentText.content.substring(editRegion.end)
+        cleanedContent.substring(editRegion.end)
 
       await api.texts.updateContent(currentText.id, mergedText)
 

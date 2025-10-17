@@ -83,8 +83,18 @@ function stripMarkdownLinks(text: string): string {
   return stripped
 }
 
-// Convert a position in rendered space (no markdown) to cleaned space (with markdown)
-function renderedPosToCleanedPos(renderedPos: number, cleanedContent: string): number {
+/**
+ * Convert position from rendered space to cleaned space
+ *
+ * Position Spaces:
+ * - RENDERED: What you see in DOM textContent (no markdown, no HTML)
+ * - CLEANED: Content with markdown syntax but without [[exclude]] tags
+ *
+ * @param renderedPos - Position in rendered space (from DOM selection)
+ * @param cleanedContent - The cleaned content string (with markdown)
+ * @returns Position in cleaned space
+ */
+export function renderedPosToCleanedPos(renderedPos: number, cleanedContent: string): number {
   // Use stripMarkdownLinks to get the rendered version (strips both links and headers)
   const renderedContent = stripMarkdownLinks(cleanedContent)
 
@@ -155,6 +165,12 @@ function renderedPosToCleanedPos(renderedPos: number, cleanedContent: string): n
   return cleanedIdx
 }
 
+/**
+ * Parse text content and remove [[exclude]] tags
+ *
+ * @param content - Original content with potential [[exclude]] tags and markdown
+ * @returns Object with cleanedContent (no exclude tags, has markdown) and renderedContent (no markdown)
+ */
 export function parseExcludedRanges(content: string): {
   cleanedContent: string;
   renderedContent: string;

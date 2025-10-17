@@ -10,6 +10,7 @@ import {
 import { useReadingStore } from '../../stores/reading'
 import { FlashcardCreator } from '../flashcard/FlashcardCreator'
 import { api } from '../../utils/tauri'
+import { getSelectionRange } from '@/lib/utils/domPosition'
 
 interface TextSelectionMenuProps {
   children: React.ReactNode
@@ -30,29 +31,14 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
     const articleElement = document.getElementById('article-content')
     if (!articleElement) return
 
-    const range = selection.getRangeAt(0)
+    // Positions are in RENDERED space (match DOM textContent)
+    // This is consistent with how read ranges and marks are stored
+    const positionRange = getSelectionRange(articleElement)
+    if (!positionRange) return
 
-    const preRange = document.createRange()
-    preRange.selectNodeContents(articleElement)
-    preRange.setEnd(range.startContainer, range.startOffset)
-
-    const textBeforeSelection = preRange.toString()
+    const startPosition = positionRange.start
+    const endPosition = positionRange.end
     const selectedText = selection.toString()
-
-    const startPosition = textBeforeSelection.length
-    const endPosition = startPosition + selectedText.length
-
-    // DEBUG LOGGING
-    console.log('=== TextSelectionMenu: handleToggleRead ===')
-    console.log('Article DOM length:', articleElement.textContent?.length)
-    console.log('Article innerHTML sample (first 200 chars):', articleElement.innerHTML.substring(0, 200))
-    console.log('Article textContent sample (first 200 chars):', articleElement.textContent?.substring(0, 200))
-    console.log('Selected text:', `"${selectedText}"`)
-    console.log('Selected text length:', selectedText.length)
-    console.log('Calculated positions:', { startPosition, endPosition })
-    console.log('Text at positions in DOM:', `"${articleElement.textContent?.substring(startPosition, endPosition)}"`)
-    console.log('Does selected text match DOM text at positions?', selectedText === articleElement.textContent?.substring(startPosition, endPosition))
-    console.log('=========================================')
 
     if (isRangeExcluded(startPosition, endPosition)) {
       console.log('Cannot mark excluded text as read')

@@ -2,7 +2,7 @@ export { ArticleViewer } from './ArticleViewer';
 export { ReadingProgress } from './ReadingProgress';
 export { IngestModal } from './IngestModal';
 export { TextSelectionMenu } from './TextSelectionMenu';
-export { ReadHighlighter, parseExcludedRanges } from './ReadHighlighter';
+export { ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos } from './ReadHighlighter';
 export { SearchBar } from './SearchBar';
 export { TextEditor } from './TextEditor';
 export { InlineEditor } from './InlineEditor';
