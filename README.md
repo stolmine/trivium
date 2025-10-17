@@ -10,6 +10,7 @@ A powerful reading and spaced repetition application designed for deep learning 
 - **Smart Search**: Real-time search across library and within documents
 - **Wikipedia Integration**: Auto-fetch and parse Wikipedia articles
 - **Truly Inline Text Editing**: Edit text directly in the reading view with smart boundary detection, dual markdown modes (styled/literal), and automatic mark position preservation
+- **Unified Undo/Redo**: Undo text edits and mark operations with Ctrl+Z, redo with Ctrl+Shift+Z
 
 ### Flashcard Creation & Study
 - **Cloze Deletion Cards**: Create flashcards with multiple cloze deletions
@@ -30,16 +31,26 @@ A powerful reading and spaced repetition application designed for deep learning 
 - **Rich Text**: Unified/Remark for markdown processing
 - **Testing**: Vitest for automated testing
 
-## Recent Developments (Phase 14)
+## Recent Developments (Phase 15)
 
-The latest update brings truly inline text editing capabilities:
+The latest update brings unified undo/redo capabilities to the reading view:
 
-- **Smart Boundary Detection**: Automatically expands to sentence or paragraph boundaries
-- **Dual Markdown Modes**: Switch between styled rendering and raw markdown syntax
-- **Context Preservation**: Dimmed before/after context for focused editing
-- **Mark Position Updates**: Automatic repositioning of highlights when text changes
-- **Cursor Tracking**: Marker-based system preserves cursor position through mode switches
-- **UTF-16 Position Tracking**: Accurate handling of emoji, CJK, and all Unicode characters
+- **Unified History Stack**: Single undo/redo system for text edits, mark operations, and unmark operations
+- **Page Isolation**: Undo/redo only active on reading page, preventing unintended actions
+- **Per-Text History**: Separate history for each text with 50-action limit
+- **Backend-Synced**: All operations synchronized with backend for data consistency
+- **Keyboard Shortcuts**: Ctrl+Z to undo, Ctrl+Shift+Z to redo
+- **Position-Safe**: Automatic mark position tracking when undoing text edits
+
+### Previous Update (Phase 14)
+
+Truly inline text editing capabilities:
+- Smart boundary detection (sentence/paragraph)
+- Dual markdown modes (styled/literal)
+- Context preservation with dimming
+- Automatic mark position updates
+- Cursor tracking through transformations
+- UTF-16 position tracking for all Unicode
 
 ## Current Status
 

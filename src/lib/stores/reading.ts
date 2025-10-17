@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Text, CreateTextRequest, ReadRange, Paragraph, ExcludedRange } from '../types';
 import { api } from '../utils/tauri';
 import { invalidateProgressCache, invalidateFolderProgressCache } from '../hooks/useTextProgress';
+import { useReadingHistoryStore } from './readingHistory';
 
 interface ReadingState {
   texts: Text[];
@@ -98,11 +99,30 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
   markRangeAsRead: async (textId: number, startPosition: number, endPosition: number) => {
     try {
+      const historyStore = useReadingHistoryStore.getState();
+      const isUndoRedo = historyStore.isUndoRedoInProgress;
+
+      let contentSnapshot = '';
+      let markedText = '';
+
+      if (!isUndoRedo) {
+        contentSnapshot = get().currentText?.content || '';
+        markedText = contentSnapshot.substring(startPosition, endPosition);
+      }
+
       await api.reading.markRangeAsRead(textId, startPosition, endPosition);
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
       invalidateProgressCache(textId);
-      // Invalidate folder progress cache if text belongs to a folder
+
+      if (!isUndoRedo) {
+        historyStore.recordMark({
+          range: { start: startPosition, end: endPosition },
+          contentSnapshot,
+          markedText
+        });
+      }
+
       const currentText = get().currentText;
       if (currentText?.folderId) {
         invalidateFolderProgressCache(currentText.folderId);
@@ -118,11 +138,33 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
   unmarkRangeAsRead: async (textId: number, startPosition: number, endPosition: number) => {
     try {
+      const historyStore = useReadingHistoryStore.getState();
+      const isUndoRedo = historyStore.isUndoRedoInProgress;
+
+      let previousReadRanges: ReadRange[] = [];
+      let contentSnapshot = '';
+      let unmarkedText = '';
+
+      if (!isUndoRedo) {
+        previousReadRanges = [...get().readRanges];
+        contentSnapshot = get().currentText?.content || '';
+        unmarkedText = contentSnapshot.substring(startPosition, endPosition);
+      }
+
       await api.reading.unmarkRangeAsRead(textId, startPosition, endPosition);
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
       invalidateProgressCache(textId);
-      // Invalidate folder progress cache if text belongs to a folder
+
+      if (!isUndoRedo) {
+        historyStore.recordUnmark({
+          range: { start: startPosition, end: endPosition },
+          previousReadRanges,
+          contentSnapshot,
+          unmarkedText
+        });
+      }
+
       const currentText = get().currentText;
       if (currentText?.folderId) {
         invalidateFolderProgressCache(currentText.folderId);

@@ -24,6 +24,9 @@ import { expandToSentenceBoundary, expandToSmartBoundary, shouldRespectExactSele
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
+import { detectEditRegion } from '../../lib/utils/markdownEdit'
+import { updateMarkPositions } from '../../lib/utils/markPositions'
+import { useReadingHistoryStore } from '../../lib/stores/readingHistory'
 import { ChevronLeft, MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
 import { useSearchStore } from '../../lib/stores/search'
@@ -60,6 +63,8 @@ export function ReadPage() {
     start: number
     end: number
   } | null>(null)
+  const [isUndoing, setIsUndoing] = useState(false)
+  const [isRedoing, setIsRedoing] = useState(false)
   const {
     currentText,
     isLoading,
@@ -74,6 +79,7 @@ export function ReadPage() {
     markAsFinished,
     clearProgress
   } = useReadingStore()
+  const { undo, redo, canUndo, canRedo, setOnReadingPage } = useReadingHistoryStore()
   const { renameText, deleteText } = useLibraryStore()
   const { linksEnabled, toggleLinks, fontSize, setFontSize } = useSettingsStore()
   const {
@@ -131,6 +137,27 @@ export function ReadPage() {
       setRenameTextTitle(currentText.title)
     }
   }, [currentText, setExcludedRanges])
+
+  useEffect(() => {
+    if (currentText) {
+      const historyStore = useReadingHistoryStore.getState()
+
+      if (historyStore.currentTextId !== currentText.id) {
+        console.log('[ReadPage] Resetting history for new text:', currentText.id)
+        historyStore.resetForText(currentText.id)
+      }
+    }
+  }, [currentText?.id])
+
+  useEffect(() => {
+    console.log('[ReadPage] Component mounted - setting isOnReadingPage to true')
+    setOnReadingPage(true)
+
+    return () => {
+      console.log('[ReadPage] Component unmounting - setting isOnReadingPage to false')
+      setOnReadingPage(false)
+    }
+  }, [])
 
   // Sync editing content when currentText changes
   useEffect(() => {
@@ -216,15 +243,53 @@ export function ReadPage() {
     }
 
     try {
+      console.log('[ReadPage] Changes detected, processing...');
+
+      const editRegion = detectEditRegion(currentText.content, editingContent);
+      console.log('[ReadPage] Edit region detected:', editRegion);
+
+      const marksBeforeEdit = [...marks];
+
+      const { marks: marksAfterEdit } = updateMarkPositions(
+        marksBeforeEdit,
+        {
+          start: editRegion.start,
+          end: editRegion.end,
+          originalText: editRegion.deletedText
+        },
+        editRegion.insertedText
+      );
+      console.log('[ReadPage] Marks updated:', {
+        before: marksBeforeEdit.length,
+        after: marksAfterEdit.length
+      });
+
       console.log('[ReadPage] Saving content update...');
       await api.texts.updateContent(currentText.id, editingContent)
-      console.log('[ReadPage] Reloading text...');
+
+      console.log('[ReadPage] Reloading text and marks...');
       await loadText(currentText.id)
       await loadMarks(currentText.id)
+
+      const historyStore = useReadingHistoryStore.getState();
+      if (!historyStore.isUndoRedoInProgress) {
+        console.log('[ReadPage] Recording text edit in history');
+        historyStore.recordTextEdit({
+          editRegion: { start: editRegion.start, end: editRegion.end },
+          previousContent: currentText.content,
+          newContent: editingContent,
+          editedText: editRegion.insertedText,
+          originalText: editRegion.deletedText,
+          marksBeforeEdit,
+          marksAfterEdit
+        });
+      }
+
       console.log('[ReadPage] Deactivating inline edit');
       setInlineEditActive(false)
     } catch (error) {
       console.error('[ReadPage] Failed to save:', error)
+      alert('Failed to save: ' + (error instanceof Error ? error.message : String(error)))
     }
   }
 
@@ -409,8 +474,70 @@ export function ReadPage() {
     }
   }
 
+  const handleUndo = async () => {
+    if (!currentText || isUndoing) return
+
+    console.log('[ReadPage] Undo requested')
+    setIsUndoing(true)
+
+    try {
+      await undo()
+
+      console.log('[ReadPage] Reloading state after undo')
+      await loadText(currentText.id)
+      await loadMarks(currentText.id)
+      await getReadRanges(currentText.id)
+      await calculateProgress(currentText.id)
+
+      console.log('[ReadPage] Undo complete')
+    } catch (error) {
+      console.error('[ReadPage] Undo failed:', error)
+      alert('Failed to undo: ' + (error instanceof Error ? error.message : String(error)))
+    } finally {
+      setIsUndoing(false)
+    }
+  }
+
+  const handleRedo = async () => {
+    if (!currentText || isRedoing) return
+
+    console.log('[ReadPage] Redo requested')
+    setIsRedoing(true)
+
+    try {
+      await redo()
+
+      console.log('[ReadPage] Reloading state after redo')
+      await loadText(currentText.id)
+      await loadMarks(currentText.id)
+      await getReadRanges(currentText.id)
+      await calculateProgress(currentText.id)
+
+      console.log('[ReadPage] Redo complete')
+    } catch (error) {
+      console.error('[ReadPage] Redo failed:', error)
+      alert('Failed to redo: ' + (error instanceof Error ? error.message : String(error)))
+    } finally {
+      setIsRedoing(false)
+    }
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
+        e.preventDefault()
+        if (canUndo() && !isUndoing) {
+          console.log('[ReadPage] Ctrl+Z pressed - undoing')
+          handleUndo()
+        }
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
+        e.preventDefault()
+        if (canRedo() && !isRedoing) {
+          console.log('[ReadPage] Ctrl+Shift+Z pressed - redoing')
+          handleRedo()
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
         e.preventDefault()
         if (selectionInfo) {
@@ -475,7 +602,7 @@ export function ReadPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, isEditMode, inlineEditActive, editRegion, inlineEditRegion, selectionInfo, editingContent, currentText, openSearch, closeSearch])
+  }, [isOpen, isEditMode, inlineEditActive, editRegion, inlineEditRegion, selectionInfo, editingContent, currentText, openSearch, closeSearch, canUndo, canRedo, isUndoing, isRedoing, handleUndo, handleRedo])
 
   useEffect(() => {
     if (matches.length > 0 && currentIndex >= 0) {
@@ -757,17 +884,62 @@ export function ReadPage() {
                   editRegion={inlineEditRegion}
                   marks={marks}
                   onSave={async (mergedContent: string) => {
-                    await api.texts.updateContent(currentText.id, mergedContent)
-                    await loadText(currentText.id)
-                    await loadMarks(currentText.id)
-                    setInlineEditRegion(null)
+                    try {
+                      console.log('[ReadPage] InlineRegionEditor save - detecting changes...');
 
-                    requestAnimationFrame(() => {
-                      if (scrollPositionRef.current !== null) {
-                        window.scrollTo(0, scrollPositionRef.current)
-                        scrollPositionRef.current = null
+                      // Detect what was edited
+                      const editRegion = detectEditRegion(currentText.content, mergedContent);
+                      console.log('[ReadPage] Edit region detected:', editRegion);
+
+                      const marksBeforeEdit = [...marks];
+
+                      // Update mark positions based on the edit
+                      const { marks: marksAfterEdit } = updateMarkPositions(
+                        marksBeforeEdit,
+                        {
+                          start: editRegion.start,
+                          end: editRegion.end,
+                          originalText: editRegion.deletedText
+                        },
+                        editRegion.insertedText
+                      );
+                      console.log('[ReadPage] Marks updated:', {
+                        before: marksBeforeEdit.length,
+                        after: marksAfterEdit.length
+                      });
+
+                      // Save the updated content
+                      await api.texts.updateContent(currentText.id, mergedContent)
+                      await loadText(currentText.id)
+                      await loadMarks(currentText.id)
+
+                      // Record in history
+                      const historyStore = useReadingHistoryStore.getState();
+                      if (!historyStore.isUndoRedoInProgress) {
+                        console.log('[ReadPage] Recording inline region edit in history');
+                        historyStore.recordTextEdit({
+                          editRegion: { start: editRegion.start, end: editRegion.end },
+                          previousContent: currentText.content,
+                          newContent: mergedContent,
+                          editedText: editRegion.insertedText,
+                          originalText: editRegion.deletedText,
+                          marksBeforeEdit,
+                          marksAfterEdit
+                        });
                       }
-                    })
+
+                      setInlineEditRegion(null)
+
+                      requestAnimationFrame(() => {
+                        if (scrollPositionRef.current !== null) {
+                          window.scrollTo(0, scrollPositionRef.current)
+                          scrollPositionRef.current = null
+                        }
+                      })
+                    } catch (error) {
+                      console.error('[ReadPage] Failed to save inline region edit:', error)
+                      alert('Failed to save: ' + (error instanceof Error ? error.message : String(error)))
+                    }
                   }}
                   onCancel={() => {
                     setInlineEditRegion(null)

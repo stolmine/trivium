@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual markdown modes, smart boundaries, context dimming, mark preservation)
+Last Updated: 2025-10-17 (Phase 15 Complete: Unified undo/redo for reading view with text edits, marks, and position tracking)
 
 ---
 
@@ -53,8 +53,8 @@ Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝), current capabilities (63 user-facing features including truly inline text editing with smart boundaries, dual markdown modes, context dimming, mark preservation, cursor tracking, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual markdown modes)
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝, **Phase 15: Unified Undo/Redo System** ↩️↪️), current capabilities (65 user-facing features including unified undo/redo for text edits and marks, truly inline text editing with smart boundaries, dual markdown modes, context dimming, mark preservation, cursor tracking, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation, testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-10-17 (Phase 15 Complete: Unified undo/redo system)
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
@@ -208,6 +208,30 @@ Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual
 
 ---
 
+### Undo/Redo System (Phase 15)
+
+#### `/Users/why/repos/trivium/UNDO_RESEARCH_SUMMARY.md`
+**Description**: Executive summary of undo/redo research covering key findings from codebase analysis, proposed unified history stack architecture, implementation plan overview with 7 phases, key files identified (1 created, 2 modified), edge cases and solutions (10 identified), testing strategy, success criteria, and recommendations for implementation
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/UNDO_IMPLEMENTATION_QUICKSTART.md`
+**Description**: Step-by-step implementation guide for undo/redo system with prerequisites checklist, phase-by-phase instructions with complete copy-paste ready code snippets, testing steps after each phase, troubleshooting guide, success checklist, time estimates, and next steps. Practical guide for developers implementing the feature
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/UNDO_STACK_ARCHITECTURE.md`
+**Description**: Visual guide for undo/redo system architecture including system diagrams, action types hierarchy, state machine visualizations, complete examples (text edit with mark tracking, mark operation sequences), sequence diagrams (undo flow, edit recording), data flow diagrams, edge case handling matrix, performance considerations, testing checklist, and quick reference commands
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/UNDO_STACK_IMPLEMENTATION_PLAN.md`
+**Description**: Comprehensive implementation plan for unified undo/redo system (800+ lines). Covers current state analysis, proposed architecture, complete TypeScript interfaces for data structures, exact integration points with code locations, 7 implementation phases with detailed tasks, 10 edge cases and solutions, testing strategy with scenarios, success metrics, questions for clarification, file structure, and complete implementation checklist. Main reference document for implementation
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/stores/readingHistory.ts`
+**Description**: Unified history store for reading view undo/redo functionality. Manages chronological stack of actions (text edits, mark operations, unmark operations) with 50-action limit, per-text history tracking, backend-synced operations, position-safe mark tracking, and page isolation. Implements undo/redo with Ctrl+Z/Ctrl+Shift+Z keyboard shortcuts
+**Last Updated**: 2025-10-17
+
+---
+
 ## Design System
 
 ### `/Users/why/repos/trivium/src/lib/design-system.md`
@@ -254,14 +278,14 @@ Last Updated: 2025-10-17 (Phase 14 Complete: Truly inline text editing with dual
 
 ## Statistics
 
-**Total Documentation Files**: 42 markdown files
-**Total Lines of Documentation**: ~40,000+ lines
+**Total Documentation Files**: 47 markdown files
+**Total Lines of Documentation**: ~45,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 18 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 2 research/architecture docs)
+- Feature-Specific: 23 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 1 history store implementation)
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files

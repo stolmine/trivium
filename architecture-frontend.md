@@ -164,6 +164,82 @@ export const useFolderStore = create<FolderState>((set, get) => ({
 }));
 ```
 
+### Reading History Store (Phase 15)
+
+```typescript
+// stores/readingHistory.ts
+import { create } from 'zustand';
+import { invoke } from '@tauri-apps/api/tauri';
+
+interface HistoryAction {
+  id: string;
+  timestamp: number;
+  type: 'text_edit' | 'mark' | 'unmark';
+}
+
+interface TextEditAction extends HistoryAction {
+  type: 'text_edit';
+  editRegion: { start: number; end: number };
+  previousContent: string;
+  newContent: string;
+  marksBeforeEdit: ClozeNote[];
+  marksAfterEdit: ClozeNote[];
+}
+
+interface MarkAction extends HistoryAction {
+  type: 'mark';
+  range: { start: number; end: number };
+  contentSnapshot: string;
+  markedText: string;
+}
+
+interface UnmarkAction extends HistoryAction {
+  type: 'unmark';
+  range: { start: number; end: number };
+  previousReadRanges: ReadRange[];
+  contentSnapshot: string;
+}
+
+interface ReadingHistoryStore {
+  past: Action[];
+  future: Action[];
+  maxHistorySize: number;
+  currentTextId: number | null;
+  isUndoRedoInProgress: boolean;
+  isOnReadingPage: boolean;
+
+  recordTextEdit: (action: Omit<TextEditAction, 'id' | 'timestamp' | 'type'>) => void;
+  recordMark: (action: Omit<MarkAction, 'id' | 'timestamp' | 'type'>) => void;
+  recordUnmark: (action: Omit<UnmarkAction, 'id' | 'timestamp' | 'type'>) => void;
+  undo: () => Promise<void>;
+  redo: () => Promise<void>;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
+  clearHistory: () => void;
+  resetForText: (textId: number) => void;
+  setOnReadingPage: (isOnPage: boolean) => void;
+}
+
+export const useReadingHistoryStore = create<ReadingHistoryStore>((set, get) => ({
+  // ... implementation with 50-action history limit
+  // ... page isolation (only active on reading page)
+  // ... per-text history tracking
+  // ... backend-synced undo/redo operations
+}));
+```
+
+**Key Features**:
+- **Unified History Stack**: Single stack for text edits, marks, and unmarks
+- **Page Isolation**: Only active when on reading page (/read/[id])
+- **Per-Text History**: Separate history for each text (cleared on switch)
+- **50-Action Limit**: Automatic trimming of old actions
+- **Backend-Synced**: All undo/redo operations call backend APIs
+- **Position-Safe**: Stores mark positions for accurate restoration
+
+**Keyboard Shortcuts**:
+- `Ctrl+Z` or `Cmd+Z`: Undo last action
+- `Ctrl+Shift+Z` or `Cmd+Shift+Z`: Redo undone action
+
 ### Reading Store (Enhanced)
 
 ```typescript
@@ -542,6 +618,7 @@ src/
 │   ├── stores/                          # State management
 │   │   ├── folder.ts                    # Folder tree state
 │   │   ├── reading.ts                   # Reading state with read ranges
+│   │   ├── readingHistory.ts            # Undo/redo history for reading view (Phase 15)
 │   │   ├── flashcard.ts                 # Flashcard operations
 │   │   ├── study.ts                     # Study session state
 │   │   ├── stats.ts                     # Statistics state
@@ -1531,6 +1608,8 @@ const GLOBAL_SHORTCUTS = {
   'Ctrl/Cmd + Shift + J': 'nextUnreadParagraph',
   'Ctrl/Cmd + N': 'createFlashcard',
   'Ctrl/Cmd + B': 'toggleFlashcardSidebar',
+  'Ctrl/Cmd + Z': 'undo',                   // Phase 15: Undo (reading page only)
+  'Ctrl/Cmd + Shift + Z': 'redo',           // Phase 15: Redo (reading page only)
 
   // Folder navigation
   'ArrowUp': 'selectPreviousFolder',
