@@ -3,7 +3,7 @@ use crate::models::flashcard::Flashcard;
 use crate::services::cloze_parser::ClozeParser;
 use crate::services::cloze_renderer::ClozeRenderer;
 use chrono::Utc;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
@@ -13,6 +13,20 @@ use tokio::sync::Mutex;
 pub struct FlashcardPreview {
     pub html: String,
     pub cloze_number: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClozeNoteWithPositions {
+    pub id: i64,
+    pub text_id: i64,
+    pub original_text: String,
+    pub start_position: Option<i64>,
+    pub end_position: Option<i64>,
+    pub status: String,
+    pub notes: Option<String>,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
 }
 
 #[tauri::command]
@@ -273,4 +287,40 @@ pub async fn create_mark(
     .map_err(|e| format!("Failed to create mark: {}", e))?;
 
     Ok(cloze_note_result.last_insert_rowid())
+}
+
+#[tauri::command]
+pub async fn get_marks_for_text(
+    text_id: i64,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<Vec<ClozeNoteWithPositions>, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    let marks = sqlx::query_as!(
+        ClozeNoteWithPositions,
+        r#"
+        SELECT
+            id as "id!",
+            text_id as "text_id!",
+            original_text as "original_text!",
+            start_position,
+            end_position,
+            status as "status!",
+            notes,
+            created_at as "created_at: _",
+            updated_at as "updated_at: _"
+        FROM cloze_notes
+        WHERE text_id = ?
+          AND start_position IS NOT NULL
+          AND end_position IS NOT NULL
+        ORDER BY start_position ASC
+        "#,
+        text_id
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch marks for text: {}", e))?;
+
+    Ok(marks)
 }

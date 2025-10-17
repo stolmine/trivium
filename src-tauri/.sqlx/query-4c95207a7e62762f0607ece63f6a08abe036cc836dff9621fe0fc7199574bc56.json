@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT content_length FROM texts WHERE id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "content_length",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4c95207a7e62762f0607ece63f6a08abe036cc836dff9621fe0fc7199574bc56"
+}

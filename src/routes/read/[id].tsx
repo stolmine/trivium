@@ -19,7 +19,10 @@ import {
   Input,
   Label
 } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, TextEditor, InlineEditor } from '../../lib/components/reading'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar } from '../../lib/components/reading'
+import { expandToSentenceBoundary } from '../../lib/utils/sentenceBoundary'
+import { getSelectionRange } from '../../lib/utils/domPosition'
+import type { ClozeNote } from '../../lib/types/flashcard'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
 import { ChevronLeft, MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
@@ -39,6 +42,18 @@ export function ReadPage() {
   const [isEditMode, setIsEditMode] = useState(false)
   const [inlineEditActive, setInlineEditActive] = useState(false)
   const [editingContent, setEditingContent] = useState('')
+  const [marks, setMarks] = useState<ClozeNote[]>([])
+  const [selectionInfo, setSelectionInfo] = useState<{
+    text: string
+    start: number
+    end: number
+    position: { x: number; y: number }
+  } | null>(null)
+  const [editRegion, setEditRegion] = useState<{
+    start: number
+    end: number
+    extractedText: string
+  } | null>(null)
   const {
     currentText,
     isLoading,
@@ -67,6 +82,30 @@ export function ReadPage() {
     setMatches
   } = useSearchStore()
 
+  const loadMarks = async (textId: number) => {
+    try {
+      const fetchedMarks = await api.flashcards.getMarksForText(textId)
+      const convertedMarks: ClozeNote[] = fetchedMarks.map(m => ({
+        id: m.id,
+        textId: m.textId,
+        userId: 1,
+        originalText: m.originalText,
+        parsedSegments: '[]',
+        clozeCount: 0,
+        createdAt: m.createdAt,
+        updatedAt: m.updatedAt,
+        startPosition: m.startPosition ?? 0,
+        endPosition: m.endPosition ?? 0,
+        status: m.status,
+        notes: m.notes ?? undefined
+      }))
+      setMarks(convertedMarks)
+    } catch (error) {
+      console.error('Failed to load marks:', error)
+      setMarks([])
+    }
+  }
+
   useEffect(() => {
     if (id) {
       const textId = parseInt(id, 10)
@@ -74,6 +113,7 @@ export function ReadPage() {
         getReadRanges(textId)
         getParagraphs(textId)
         calculateProgress(textId)
+        loadMarks(textId)
       })
     }
   }, [id, loadText, getReadRanges, getParagraphs, calculateProgress])
@@ -119,8 +159,8 @@ export function ReadPage() {
     if (currentText && renameTextTitle.trim() && renameTextTitle.trim() !== currentText.title) {
       await renameText(currentText.id, renameTextTitle.trim())
       setShowRenameDialog(false)
-      // Reload the text to get updated title
       await loadText(currentText.id)
+      await loadMarks(currentText.id)
     }
   }
 
@@ -151,6 +191,7 @@ export function ReadPage() {
     if (!currentText) return
     await api.texts.updateContent(currentText.id, newContent)
     await loadText(currentText.id)
+    await loadMarks(currentText.id)
     setIsEditMode(false)
   }
 
@@ -173,6 +214,7 @@ export function ReadPage() {
       await api.texts.updateContent(currentText.id, editingContent)
       console.log('[ReadPage] Reloading text...');
       await loadText(currentText.id)
+      await loadMarks(currentText.id)
       console.log('[ReadPage] Deactivating inline edit');
       setInlineEditActive(false)
     } catch (error) {
@@ -180,13 +222,105 @@ export function ReadPage() {
     }
   }
 
+  const handleTextSelection = () => {
+    const selection = window.getSelection()
+    if (!selection || selection.isCollapsed) {
+      setSelectionInfo(null)
+      return
+    }
+
+    const container = document.getElementById('article-content')
+    if (!container) return
+
+    const range = getSelectionRange(container)
+    if (!range) return
+
+    const rect = selection.getRangeAt(0).getBoundingClientRect()
+
+    setSelectionInfo({
+      text: selection.toString(),
+      start: range.start,
+      end: range.end,
+      position: {
+        x: rect.left + rect.width / 2,
+        y: rect.top
+      }
+    })
+  }
+
+  const handleActivateSelectionEdit = () => {
+    if (!selectionInfo || !currentText) return
+
+    const { start, end } = expandToSentenceBoundary(
+      currentText.content,
+      selectionInfo.start,
+      selectionInfo.end
+    )
+
+    setEditRegion({
+      start,
+      end,
+      extractedText: currentText.content.substring(start, end)
+    })
+
+    setSelectionInfo(null)
+  }
+
+  const handleSaveSelectionEdit = async (newText: string, updatedMarks: ClozeNote[]) => {
+    if (!currentText || !editRegion) return
+
+    try {
+      const mergedText =
+        currentText.content.substring(0, editRegion.start) +
+        newText +
+        currentText.content.substring(editRegion.end)
+
+      await api.texts.updateContent(currentText.id, mergedText)
+
+      await loadText(currentText.id)
+      await loadMarks(currentText.id)
+
+      setEditRegion(null)
+
+      console.log(`Text updated. ${updatedMarks.length} marks affected.`)
+    } catch (error) {
+      console.error('[ReadPage] Failed to save selection edit:', error)
+      alert('Failed to save changes: ' + (error instanceof Error ? error.message : String(error)))
+    }
+  }
+
+  const handleMarkSelectionRead = async () => {
+    if (!selectionInfo || !currentText) return
+
+    try {
+      await api.reading.markRangeAsRead(
+        currentText.id,
+        selectionInfo.start,
+        selectionInfo.end
+      )
+
+      await getReadRanges(currentText.id)
+      await calculateProgress(currentText.id)
+
+      setSelectionInfo(null)
+    } catch (error) {
+      console.error('[ReadPage] Failed to mark as read:', error)
+      alert('Failed to mark as read: ' + (error instanceof Error ? error.message : String(error)))
+    }
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !isEditMode && !inlineEditActive) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion) {
         e.preventDefault()
-        console.log('[ReadPage] Ctrl+E pressed - activating inline edit');
-        setEditingContent(currentText?.content || '')  // Sync BEFORE activating
-        setInlineEditActive(true)
+        if (selectionInfo) {
+          console.log('[ReadPage] Ctrl+E pressed with selection - activating selection edit');
+          handleActivateSelectionEdit()
+        } else {
+          console.log('[ReadPage] Ctrl+E pressed without selection - activating inline edit');
+          setEditingContent(currentText?.content || '')
+          setInlineEditActive(true)
+        }
       }
       if (e.key === 'Escape' && inlineEditActive) {
         e.preventDefault()
@@ -194,10 +328,20 @@ export function ReadPage() {
         setInlineEditActive(false)
         setEditingContent(currentText?.content || '')
       }
+      if (e.key === 'Escape' && editRegion) {
+        e.preventDefault()
+        console.log('[ReadPage] Escape pressed - canceling selection edit');
+        setEditRegion(null)
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 's' && inlineEditActive) {
         e.preventDefault()
         console.log('[ReadPage] Ctrl+S pressed - saving inline edit');
         handleSaveInlineEdit()
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'm' && selectionInfo && !editRegion) {
+        e.preventDefault()
+        console.log('[ReadPage] Ctrl+M pressed - marking selection as read');
+        handleMarkSelectionRead()
       }
       if (!e.shiftKey && (e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
@@ -219,7 +363,7 @@ export function ReadPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, isEditMode, inlineEditActive, editingContent, currentText, openSearch, closeSearch])
+  }, [isOpen, isEditMode, inlineEditActive, editRegion, selectionInfo, editingContent, currentText, openSearch, closeSearch])
 
   useEffect(() => {
     if (matches.length > 0 && currentIndex >= 0) {
@@ -473,30 +617,56 @@ export function ReadPage() {
                 onCancel={() => setIsEditMode(false)}
                 fontSize={fontSize * 16}
               />
+            ) : editRegion ? (
+              <SelectionEditor
+                fullText={currentText.content}
+                marks={marks}
+                editRegion={editRegion}
+                onSave={handleSaveSelectionEdit}
+                onCancel={() => setEditRegion(null)}
+                fontSize={fontSize}
+              />
             ) : (
-              <article className="reading-content mx-auto space-y-4" style={{ fontSize: `${fontSize}rem` }}>
-                <TextSelectionMenu textId={currentText.id}>
-                  {inlineEditActive ? (
-                    <InlineEditor
-                      initialContent={currentText.content}
-                      onContentChange={setEditingContent}
-                      onActivate={() => setInlineEditActive(true)}
-                      onDeactivate={handleSaveInlineEdit}
-                      isActive={true}
-                      className="font-serif"
-                      fontSize={fontSize}
-                    />
-                  ) : (
-                    <ReadHighlighter
-                      content={currentText.content}
-                      readRanges={readRanges}
-                      linksEnabled={linksEnabled}
-                      searchMatches={matches}
-                      activeSearchIndex={currentIndex}
-                    />
-                  )}
-                </TextSelectionMenu>
-              </article>
+              <>
+                <article className="reading-content mx-auto space-y-4" style={{ fontSize: `${fontSize}rem` }}>
+                  <TextSelectionMenu textId={currentText.id}>
+                    {inlineEditActive ? (
+                      <InlineEditor
+                        initialContent={currentText.content}
+                        onContentChange={setEditingContent}
+                        onActivate={() => setInlineEditActive(true)}
+                        onDeactivate={handleSaveInlineEdit}
+                        isActive={true}
+                        className="font-serif"
+                        fontSize={fontSize}
+                      />
+                    ) : (
+                      <div
+                        id="article-content"
+                        onMouseUp={handleTextSelection}
+                        onKeyUp={handleTextSelection}
+                      >
+                        <ReadHighlighter
+                          content={currentText.content}
+                          readRanges={readRanges}
+                          linksEnabled={linksEnabled}
+                          searchMatches={matches}
+                          activeSearchIndex={currentIndex}
+                        />
+                      </div>
+                    )}
+                  </TextSelectionMenu>
+                </article>
+
+                {selectionInfo && !inlineEditActive && (
+                  <SelectionToolbar
+                    selection={selectionInfo}
+                    onEdit={handleActivateSelectionEdit}
+                    onMarkAsRead={handleMarkSelectionRead}
+                    position={selectionInfo.position}
+                  />
+                )}
+              </>
             )}
           </div>
         </div>

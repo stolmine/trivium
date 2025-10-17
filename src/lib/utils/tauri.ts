@@ -73,6 +73,23 @@ export const api = {
     updateContent: async (textId: number, newContent: string): Promise<void> => {
       return await invoke('update_text_content', { textId, newContent });
     },
+    updateTextWithSmartMarks: async (
+      textId: number,
+      editStart: number,
+      editEnd: number,
+      newContent: string
+    ) => {
+      return invoke<{
+        updated_marks: number[];
+        flagged_marks: number[];
+        unchanged_marks: number[];
+      }>('update_text_with_smart_marks', {
+        textId,
+        editStart,
+        editEnd,
+        newContent,
+      });
+    },
   },
   reading: {
     markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
@@ -124,6 +141,19 @@ export const api = {
     },
     createMark: async (textId: number, selectedText: string, startPosition: number, endPosition: number): Promise<number> => {
       return await invoke('create_mark', { textId, selectedText, startPosition, endPosition });
+    },
+    getMarksForText: async (textId: number) => {
+      return invoke<Array<{
+        id: number;
+        textId: number;
+        originalText: string;
+        startPosition: number | null;
+        endPosition: number | null;
+        status: string;
+        notes: string | null;
+        createdAt: string;
+        updatedAt: string;
+      }>>('get_marks_for_text', { textId });
     },
   },
   review: {
