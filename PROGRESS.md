@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 12 Complete ✅ - Flashcard Creation Hub
+## Current Status: Phase 13 Complete ✅ - Reading UI Improvements & Dashboard Refinements
 
 **Branch**: `9_features`
-**Last Updated**: 2025-10-16 (Phase 12: Flashcard Creation Hub - centralized mark processing and card creation workspace)
+**Last Updated**: 2025-10-17 (Phase 13: Enhanced reading controls, unified dashboard, streamlined card creation hub)
 
 ---
 
@@ -1084,6 +1084,134 @@
 - Route integration: Main route + nav + dashboard
 - Critical fixes: Schema alignment + command implementation
 - Documentation: Complete design and implementation docs
+
+---
+
+### ✅ Phase 13: Reading UI Improvements & Dashboard Refinements (Branch 9_features) - COMPLETE
+**Completed**: 2025-10-17
+**Branch**: `9_features`
+**Implementation Time**: ~3 hours (with parallel agents)
+
+**Overview**: Enhanced reading experience with user-adjustable font sizes, progress management controls, and streamlined dashboard layout. Improved usability and removed redundant UI elements from Flashcard Creation Hub.
+
+**Reading View Enhancements**:
+- ✅ **Font Size Adjustment**: User-selectable font sizes (Small/Medium/Large/Extra Large)
+  - Settings store enhanced with `fontSize` state (1rem/1.25rem/1.5rem/1.75rem)
+  - Dropdown menu integration with visual checkmark for current selection
+  - Persisted to localStorage via Zustand middleware
+  - Dynamic application to reading content with inline styles
+
+- ✅ **Clear Progress Button**: Modal-confirmed action to reset all read marks
+  - Backend command `clear_read_progress(text_id)` deletes all read_ranges
+  - Confirmation dialog warns about irreversibility
+  - Proper cache invalidation and progress reset to 0%
+  - Enter key support for quick confirmation
+
+- ✅ **Mark as Finished Button**: One-click completion to 100% progress
+  - Uses existing `markRangeAsRead` to mark entire text (0 to contentLength)
+  - Modal confirmation with clear messaging
+  - Keyboard shortcut (Enter) for quick confirmation
+  - Preserves ability to create flashcards from marked text
+
+**Dashboard UI Refinements**:
+- ✅ **Removed Hover Effects**: Eliminated scale-up animation from all dashboard cards
+  - Cleaner, more professional static appearance
+  - Removed `hover-lift` class from 5 dashboard components
+  - Cards: ContinueReading, DueReview, CreateCards, Stats, QuickImport
+
+- ✅ **Unified Grid Layout**: Integrated Recent Activity as same-sized grid pane
+  - Moved RecentActivity from separate section into main grid
+  - Removed `max-w-4xl` constraint for consistent sizing
+  - Now displays in unified 1/2/3 column responsive grid with other cards
+
+**Flashcard Hub UI Cleanup**:
+- ✅ **Removed Skip Functionality**: Eliminated redundant skip feature
+  - Users can simply navigate to next mark instead
+  - Removed skip button, keyboard handler, and backend references
+  - Removed from store state (`skippedMarkIds`) and UI
+  - Updated help modal to remove skip shortcuts
+
+- ✅ **Integrated Navigation**: Combined MarkContext and MarkNavigation into unified MarkDisplay
+  - Single cohesive component showing context + navigation controls
+  - Bury button moved to integrated display (skip removed)
+  - Cleaner component hierarchy with better UX
+
+- ✅ **Removed Keyboard Shortcut Legends**: Cleaned up visual clutter
+  - Removed inline keyboard hint displays from navigation
+  - All shortcuts now documented exclusively in help modal (? key)
+  - Shortcuts button removed from header (help still accessible with ?)
+
+- ✅ **Clickable Scope Labels**: Improved scope selection UX
+  - Radio button labels now fully clickable (not just circles)
+  - Larger hit targets for Library/Folder/Text selection
+  - Better accessibility and usability
+
+**Backend Changes**:
+- ✅ New command: `clear_read_progress(text_id)` - Deletes all read_ranges for text
+- ✅ Command registration in invoke_handler list
+- ✅ TypeScript API wrapper added to reading namespace
+
+**Frontend Changes**:
+- ✅ Settings store: Added `fontSize` state and `setFontSize` action
+- ✅ Reading store: Added `clearProgress` and `markAsFinished` actions
+- ✅ Reading page: Added 2 confirmation dialogs (Clear Progress, Mark as Finished)
+- ✅ Reading page: Font size menu items with checkmarks in dropdown
+- ✅ Dashboard: 5 cards updated to remove hover effects
+- ✅ Dashboard: RecentActivity integrated into grid layout
+- ✅ Card Creation Hub: Removed skip functionality (store, UI, backend references)
+- ✅ Card Creation Hub: Created unified MarkDisplay component
+- ✅ Card Creation Hub: Removed keyboard legend displays
+- ✅ Card Creation Hub: Made scope labels clickable
+
+**Files Modified** (14 files):
+- Backend (3): `reading.rs` (new command), `lib.rs` (registration)
+- Settings (1): `settings.ts` (font size state)
+- Reading (2): `reading.ts` (new actions), `read/[id].tsx` (UI controls)
+- Dashboard (6): All 5 card components + `dashboard/index.tsx` (grid layout)
+- Card Creation (3): `cardCreation.ts` (removed skip), `MarkDisplay.tsx` (new unified component), `create/index.tsx` (UI cleanup)
+- Utilities (1): `tauri.ts` (API wrapper)
+
+**Files Created** (1):
+- `MarkDisplay.tsx`: Unified component combining navigation + context display
+
+**Files Deleted** (2):
+- `MarkNavigation.tsx`: Replaced by MarkDisplay
+- `MarkContext.tsx`: Replaced by MarkDisplay
+
+**User-Facing Features** (6 features):
+1. **Adjustable Font Size**: 4 size options for comfortable reading
+2. **Clear Progress**: Reset all reading progress with confirmation
+3. **Mark as Finished**: Quickly set text to 100% complete
+4. **Cleaner Dashboard**: No distracting hover animations
+5. **Unified Grid**: Consistent card sizes across dashboard
+6. **Streamlined Hub**: Simpler navigation without redundant skip feature
+
+**Performance**:
+- Font size change: Instant (CSS inline style)
+- Clear progress: < 100ms (DELETE query)
+- Mark as finished: < 200ms (uses existing mark command)
+- No performance impact from removed features
+
+**Success Criteria Met**:
+- ✅ Font sizes persist across sessions (localStorage)
+- ✅ Clear progress deletes all ranges and resets to 0%
+- ✅ Mark as finished sets progress to 100%
+- ✅ Dashboard cards no longer animate on hover
+- ✅ Recent Activity properly sized in grid
+- ✅ Skip functionality completely removed from hub
+- ✅ Navigation and context unified in single component
+- ✅ TypeScript and Rust compile without errors
+
+**Commits**:
+- Reading UI: Font size adjustment feature
+- Reading UI: Clear progress button with backend command
+- Reading UI: Mark as finished button implementation
+- Dashboard: Remove hover effects from all cards
+- Dashboard: Integrate Recent Activity into grid
+- Card Hub: Remove skip functionality
+- Card Hub: Create unified MarkDisplay component
+- Card Hub: UI cleanup and improvements
+- Documentation: Update PROGRESS.md and documentation_index.md
 
 ---
 
