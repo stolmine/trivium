@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 17 Complete ✅ - Global UI Update
+## Current Status: Phase 17+ Complete ✅ - Navigation & Layout Refinements
 
-**Branch**: `11_readingFinal`
-**Last Updated**: 2025-10-18 (Phase 17: Global UI Update with navigation, standardized layouts, and hotkey realignment)
+**Branch**: `15_globalUIupdate`
+**Last Updated**: 2025-10-18 (Phase 17+: Navigation improvements, ingest integration, and layout refinements)
 
 ---
 
@@ -2111,6 +2111,87 @@ const matches = text.match(/\{\{c\d+::/g);
 
 **Implementation Time**: ~8 hours with parallel agents
 **Lines of Code**: ~600 added (stores + components), ~100 modified
+
+---
+
+### ✅ Phase 17+: Navigation & Layout Refinements (2025-10-18) - COMPLETE
+**Completed**: 2025-10-18
+**Implementation Time**: ~3 hours with parallel agents
+
+**Overview**: Post-Phase 17 refinements addressing layout inconsistencies, navigation integration, and UX polish discovered during testing.
+
+**Core Improvements**:
+
+#### 1. Ingest Page Integration into Main Navigation
+- ✅ Added Ingest to main navigation system with Ctrl+5 hotkey
+- ✅ Consistent with other main pages (Dashboard, Review, Create, Library)
+- ✅ Keyboard shortcut works cross-platform (Cmd+5 on macOS, Ctrl+5 on Windows/Linux)
+- ✅ Sidebar navigation button added with proper icon and styling
+- ✅ ShortcutHelp component updated to reflect new navigation
+
+#### 2. Hotkey Realignment for Visual Order
+- ✅ Realigned Ctrl+1-5 to match visual sidebar order (top to bottom)
+- ✅ **New mapping**: Ctrl+1 (Dashboard), Ctrl+2 (Library), Ctrl+3 (Review), Ctrl+4 (Create), Ctrl+5 (Ingest)
+- ✅ Matches user expectation: shortcuts follow visual layout
+- ✅ Previous mapping was Dashboard→Review→Create→Library which didn't match sidebar order
+- ✅ Updated all documentation and shortcut help dialogs
+
+#### 3. Back to Reading Button Repositioning
+- ✅ Moved from sidebar to right side of page title headers
+- ✅ More discoverable and contextually relevant placement
+- ✅ Appears on Dashboard, Review, Create, Library, and Ingest pages
+- ✅ Consistent positioning across all main views
+- ✅ Icon-only design with tooltip for clean UI
+- ✅ Preserves existing Ctrl+Shift+R keyboard shortcut
+
+#### 4. Library Tree Header Fixed While Contents Scroll
+- ✅ Fixed header with search bar and action buttons
+- ✅ Only tree contents scroll (folder/text nodes)
+- ✅ Prevents header from scrolling out of view in large libraries
+- ✅ Improved UX for libraries with many items
+- ✅ Search bar always accessible
+
+#### 5. Reading View Header Alignment
+- ✅ Reading view header constrained to 70ch width matching article content
+- ✅ Eliminates visual misalignment where header was full-width but article was centered
+- ✅ Professional typography alignment
+- ✅ Consistent with reading experience design
+- ✅ Title, metadata, and controls all align with article text
+
+#### 6. Sidebar Layout Fixes
+- ✅ Fixed scroll jumping when navigating between pages
+- ✅ Proper flex layout preventing sidebar content overflow
+- ✅ Navigation buttons remain in view without scroll issues
+- ✅ Consistent sidebar height and scroll behavior
+- ✅ Logo and back to reading button properly positioned
+
+**Files Modified**: 8 files
+- `src/hooks/useKeyboardShortcuts.ts` - Updated hotkey mapping to Ctrl+1-5 matching visual order, added Ctrl+5 for ingest
+- `src/components/shell/Sidebar.tsx` - Added ingest navigation button, fixed layout scroll issues
+- `src/components/shared/ShortcutHelp.tsx` - Updated shortcuts documentation to reflect new mapping
+- `src/routes/dashboard/index.tsx` - Added back to reading button to header
+- `src/routes/review/index.tsx` - Added back to reading button to header
+- `src/routes/create/index.tsx` - Added back to reading button to header
+- `src/routes/library/index.tsx` - Added back to reading button to header, fixed tree header scrolling
+- `src/routes/read/[id].tsx` - Constrained header to 70ch width matching article
+
+**Testing**:
+- ✅ All hotkeys work correctly (Ctrl+1-5 navigate to correct pages)
+- ✅ Ingest page accessible via Ctrl+5 and sidebar button
+- ✅ Back to reading button appears on all main pages
+- ✅ Library tree header stays fixed while contents scroll
+- ✅ Reading view header aligns with article content
+- ✅ No sidebar scroll jumping when navigating
+- ✅ Cross-platform keyboard shortcuts (Cmd on macOS, Ctrl elsewhere)
+- ✅ ShortcutHelp displays accurate information
+
+**Performance**:
+- ✅ No performance impact from layout changes
+- ✅ Smooth navigation transitions maintained
+- ✅ Scroll restoration works correctly
+
+**Implementation Time**: ~3 hours with parallel agents
+**Lines of Code**: ~80 modified across 8 files
 
 ---
 
