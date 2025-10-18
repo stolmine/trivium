@@ -1,6 +1,10 @@
 import { useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettingsStore } from '../lib/stores/settings';
+import { useNavigationHistory } from '../lib/stores/navigationHistory';
+import { useLastReadStore } from '../lib/stores/lastRead';
+import type { ReadPageLocationState } from '../lib/types';
+import { isMac } from '../lib/utils/platform';
 
 export interface KeyboardShortcut {
   key: string;
@@ -17,8 +21,6 @@ interface UseKeyboardShortcutsOptions {
   shortcuts?: KeyboardShortcut[];
   enabled?: boolean;
 }
-
-const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
 export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) {
   const { shortcuts = [], enabled = true } = options;
@@ -57,11 +59,67 @@ export function useKeyboardShortcuts(options: UseKeyboardShortcutsOptions = {}) 
 
 export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: () => void) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toggleLinks } = useSettingsStore();
+  const { goBack, goForward } = useNavigationHistory();
+  const { textId, scrollPosition, hasLastRead } = useLastReadStore();
 
   const handleNavigation = (path: string) => () => navigate(path);
 
+  const handleBackToReading = useCallback(() => {
+    if (hasLastRead() && textId) {
+      const state: ReadPageLocationState = {
+        restoreScrollPosition: scrollPosition
+      };
+      navigate(`/read/${textId}`, { state });
+    }
+  }, [hasLastRead, textId, scrollPosition, navigate]);
+
+  const handleHistoryBack = useCallback(() => {
+    if (location.pathname.startsWith('/ingest')) {
+      return;
+    }
+
+    const entry = goBack();
+    if (entry) {
+      // Add __fromHistory flag to prevent NavigationTracker from pushing duplicate entry
+      navigate(entry.pathname, {
+        state: { ...entry.state, __fromHistory: true },
+        replace: true
+      });
+    }
+  }, [goBack, navigate, location.pathname]);
+
+  const handleHistoryForward = useCallback(() => {
+    if (location.pathname.startsWith('/ingest')) {
+      return;
+    }
+
+    const entry = goForward();
+    if (entry) {
+      // Add __fromHistory flag to prevent NavigationTracker from pushing duplicate entry
+      navigate(entry.pathname, {
+        state: { ...entry.state, __fromHistory: true },
+        replace: true
+      });
+    }
+  }, [goForward, navigate, location.pathname]);
+
   const globalShortcuts: KeyboardShortcut[] = [
+    {
+      key: '[',
+      ctrlKey: true,
+      action: handleHistoryBack,
+      description: 'Navigate back in history',
+      category: 'navigation',
+    },
+    {
+      key: ']',
+      ctrlKey: true,
+      action: handleHistoryForward,
+      description: 'Navigate forward in history',
+      category: 'navigation',
+    },
     {
       key: 'b',
       ctrlKey: true,
@@ -93,15 +151,22 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
     {
       key: '3',
       ctrlKey: true,
-      action: handleNavigation('/review'),
-      description: 'Go to Review',
+      action: handleNavigation('/create'),
+      description: 'Go to Create Cards',
       category: 'navigation',
     },
     {
       key: '4',
       ctrlKey: true,
-      action: handleNavigation('/create'),
-      description: 'Go to Create Cards',
+      action: handleNavigation('/review'),
+      description: 'Go to Review',
+      category: 'navigation',
+    },
+    {
+      key: '5',
+      ctrlKey: true,
+      action: handleNavigation('/ingest'),
+      description: 'Go to Ingest',
       category: 'navigation',
     },
     {
@@ -110,6 +175,14 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       action: handleNavigation('/ingest'),
       description: 'Open ingest view',
       category: 'actions',
+    },
+    {
+      key: 'r',
+      ctrlKey: true,
+      shiftKey: true,
+      action: handleBackToReading,
+      description: 'Back to reading',
+      category: 'navigation',
     },
     {
       key: '/',

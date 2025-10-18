@@ -104,6 +104,7 @@ export function SelectionToolbar({
   return (
     <div
       id="selection-toolbar"
+      data-selection-toolbar
       className={cn(
         'fixed flex items-center gap-1 bg-popover border border-border rounded-lg p-1 shadow-lg',
         'transition-all duration-150 ease-in-out'

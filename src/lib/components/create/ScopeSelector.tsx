@@ -58,9 +58,16 @@ export function ScopeSelector() {
     }
   }, [scope, folderTree.length, textsWithMarks.length, loadFolderTree, handleLoadTexts]);
 
+  const handleScopeChange = useCallback((newScope: HubScope) => {
+    setLocalScope(newScope);
+    setLocalSelectedId(null);
+    setScope(newScope, null);
+  }, [setScope]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+      // Use Alt+1/2/3 for scope selection to avoid conflict with global Ctrl+1/2/3/4 navigation
+      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         if (e.key === '1') {
           e.preventDefault();
           handleScopeChange('library');
@@ -76,13 +83,7 @@ export function ScopeSelector() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleScopeChange = (newScope: HubScope) => {
-    setLocalScope(newScope);
-    setLocalSelectedId(null);
-    setScope(newScope, null);
-  };
+  }, [handleScopeChange]);
 
   const handleFolderChange = (folderId: string | null) => {
     setLocalSelectedId(folderId);
@@ -156,7 +157,7 @@ export function ScopeSelector() {
               <span className="flex items-center gap-2">
                 <Library className="h-4 w-4" />
                 All Library
-                <span className="text-xs text-muted-foreground">(Ctrl+1)</span>
+                <span className="text-xs text-muted-foreground">(Alt+1)</span>
               </span>
             </Label>
 
@@ -169,7 +170,7 @@ export function ScopeSelector() {
               <span className="flex items-center gap-2">
                 <FolderIcon className="h-4 w-4" />
                 Folder
-                <span className="text-xs text-muted-foreground">(Ctrl+2)</span>
+                <span className="text-xs text-muted-foreground">(Alt+2)</span>
               </span>
             </Label>
 
@@ -182,7 +183,7 @@ export function ScopeSelector() {
               <span className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
                 Text
-                <span className="text-xs text-muted-foreground">(Ctrl+3)</span>
+                <span className="text-xs text-muted-foreground">(Alt+3)</span>
               </span>
             </Label>
           </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
@@ -382,34 +382,37 @@ export function ReadPage() {
     }, 400)
   }
 
-  const handleTextSelection = () => {
-    const selection = window.getSelection()
-    if (!selection || selection.isCollapsed) {
-      setSelectionInfo(null)
-      return
-    }
-
-    const container = document.getElementById('article-content')
-    if (!container) return
-
-    const range = getSelectionRange(container)
-    if (!range) return
-
-    const rect = selection.getRangeAt(0).getBoundingClientRect()
-
-    setSelectionInfo({
-      text: selection.toString(),
-      start: range.start,
-      end: range.end,
-      position: {
-        x: rect.right,
-        y: rect.top,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height
+  const handleTextSelection = useCallback(() => {
+    // Delay state update to avoid re-renders during active selection
+    setTimeout(() => {
+      const selection = window.getSelection()
+      if (!selection || selection.isCollapsed) {
+        setSelectionInfo(null)
+        return
       }
-    })
-  }
+
+      const container = document.getElementById('article-content')
+      if (!container) return
+
+      const range = getSelectionRange(container)
+      if (!range) return
+
+      const rect = selection.getRangeAt(0).getBoundingClientRect()
+
+      setSelectionInfo({
+        text: selection.toString(),
+        start: range.start,
+        end: range.end,
+        position: {
+          x: rect.right,
+          y: rect.top,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height
+        }
+      })
+    }, 150) // 150ms debounce - enough for browser to stabilize selection
+  }, [])
 
   const handleActivateSelectionEdit = () => {
     if (!selectionInfo || !currentText) return
@@ -769,16 +772,18 @@ export function ReadPage() {
     }
   }, [currentIndex, matches, isUndoing, isRedoing, location.state])
 
+  // Handle click-away to clear selection toolbar
   useEffect(() => {
-    const handleSelectionChange = () => {
-      const selection = window.getSelection()
-      if (!selection || selection.isCollapsed) {
+    const handleClickAway = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      // Clear selection if clicking outside article content and not on toolbar
+      if (!target.closest('#article-content') && !target.closest('[data-selection-toolbar]')) {
         setSelectionInfo(null)
       }
     }
 
-    document.addEventListener('selectionchange', handleSelectionChange)
-    return () => document.removeEventListener('selectionchange', handleSelectionChange)
+    document.addEventListener('mousedown', handleClickAway)
+    return () => document.removeEventListener('mousedown', handleClickAway)
   }, [])
 
   // Add keyboard shortcuts for rename dialog

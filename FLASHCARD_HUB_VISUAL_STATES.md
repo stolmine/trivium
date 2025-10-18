@@ -541,13 +541,13 @@ High-fidelity ASCII mockups showing the hub in various states and scenarios.
 │                          ║                                       ║                  │
 │                          ║  SCOPE                                ║                  │
 │                          ║  ────────────────────────────────     ║                  │
-│                          ║  Ctrl+1            All Library        ║                  │
-│                          ║  Ctrl+2            Folder             ║                  │
-│                          ║  Ctrl+3            Text               ║                  │
+│                          ║  Alt+1             All Library        ║                  │
+│                          ║  Alt+2             Folder             ║                  │
+│                          ║  Alt+3             Text               ║                  │
 │                          ║                                       ║                  │
 │                          ║  GLOBAL                               ║                  │
 │                          ║  ────────────────────────────────     ║                  │
-│                          ║  Ctrl+4            Create Cards hub   ║                  │
+│                          ║  Ctrl+3            Create Cards hub   ║                  │
 │                          ║  ?                 Show this help     ║                  │
 │                          ║                                       ║                  │
 │                          ║           ┌───────────────────┐       ║                  │

@@ -71,12 +71,12 @@ Unlike the existing flashcard creation workflow (mark text → create card immed
 ### 8. **Sidebar Navigation**
 - New "Create Cards" item with Sparkles icon
 - Positioned after "Review", before "Stats"
-- Keyboard shortcut: Ctrl+4 (Cmd+4 on macOS)
+- Keyboard shortcut: Ctrl+3 (Cmd+3 on macOS)
 
 ### 9. **Comprehensive Keyboard Support**
 All operations possible without mouse:
-- **Ctrl+4**: Navigate to Create Cards hub from anywhere
-- **Ctrl+1/2/3**: Switch Library/Folder/Text scope
+- **Ctrl+3**: Navigate to Create Cards hub from anywhere
+- **Alt+1/2/3**: Switch Library/Folder/Text scope
 - **←/→** or **Ctrl+K/J**: Navigate marks
 - **Space**: Skip mark
 - **Shift+B**: Bury mark
@@ -462,16 +462,16 @@ Added `formatRelativeTime()` function for timestamp display ("Just now", "2 minu
 ### Global
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+4` / `Cmd+4` | Navigate to Create Cards hub |
+| `Ctrl+3` / `Cmd+3` | Navigate to Create Cards hub |
 
 ### Navigation
 | Shortcut | Action |
 |----------|--------|
 | `←` / `Ctrl+K` | Previous mark |
 | `→` / `Ctrl+J` | Next mark |
-| `Ctrl+1` | Switch to Library scope |
-| `Ctrl+2` | Switch to Folder scope |
-| `Ctrl+3` | Switch to Text scope |
+| `Alt+1` | Switch to Library scope |
+| `Alt+2` | Switch to Folder scope |
+| `Alt+3` | Switch to Text scope |
 
 ### Mark Actions
 | Shortcut | Action |

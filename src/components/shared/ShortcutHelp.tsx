@@ -11,15 +11,17 @@ interface ShortcutHelpProps {
 
 export function ShortcutHelp({ shortcuts, open, onClose }: ShortcutHelpProps) {
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && open) {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!open) return;
+
+      if (e.key === 'Escape' || e.key === 'Enter') {
         e.preventDefault();
         onClose();
       }
     };
 
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, onClose]);
 
   useEffect(() => {
@@ -105,7 +107,7 @@ export function ShortcutHelp({ shortcuts, open, onClose }: ShortcutHelpProps) {
 
         <div className="sticky bottom-0 p-4 border-t bg-card/95 backdrop-blur">
           <p className="text-sm text-muted-foreground text-center">
-            Press <kbd className="px-2 py-1 text-xs font-semibold bg-muted text-muted-foreground rounded border border-border">Esc</kbd> to close
+            Press <kbd className="px-2 py-1 text-xs font-semibold bg-muted text-muted-foreground rounded border border-border">Esc</kbd> or <kbd className="px-2 py-1 text-xs font-semibold bg-muted text-muted-foreground rounded border border-border">Enter</kbd> to close
           </p>
         </div>
       </div>

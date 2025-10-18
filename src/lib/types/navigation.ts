@@ -12,4 +12,5 @@ export interface IngestPageLocationState {
 
 export interface ReadPageLocationState {
   restoreScrollPosition?: number;
+  __fromHistory?: boolean;
 }

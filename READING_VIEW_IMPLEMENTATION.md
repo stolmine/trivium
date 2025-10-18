@@ -187,8 +187,9 @@ The **Links Toggle Button** position (right side of header) would be the natural
 - `Ctrl+B`: Toggle sidebar
 - `Ctrl+L`: Toggle links
 - `Ctrl+1`: Go to Dashboard
-- `Ctrl+2`: Go to Library
-- `Ctrl+3`: Go to Review
+- `Ctrl+2`: Go to Review
+- `Ctrl+3`: Go to Create Cards
+- `Ctrl+4`: Go to Library
 - `Ctrl+N`: Open ingest view (conflicts with flashcard creation!)
 - `Ctrl+/`: Show shortcuts help
 

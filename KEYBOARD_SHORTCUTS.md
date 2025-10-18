@@ -26,10 +26,11 @@ These shortcuts work from anywhere in the application.
 | Action | Windows/Linux | macOS | Description |
 |--------|---------------|-------|-------------|
 | Go to Dashboard | `Ctrl + 1` | `⌘ + 1` | Navigate to main dashboard |
-| Go to Review | `Ctrl + 2` | `⌘ + 2` | Navigate to review setup |
+| Go to Library | `Ctrl + 2` | `⌘ + 2` | Navigate to library view |
 | Go to Create Cards | `Ctrl + 3` | `⌘ + 3` | Navigate to flashcard creation hub |
-| Go to Library | `Ctrl + 4` | `⌘ + 4` | Navigate to library view |
-| Open Ingest | `Ctrl + N` | `⌘ + N` | Open text import/ingest page |
+| Go to Review | `Ctrl + 4` | `⌘ + 4` | Navigate to review setup |
+| Go to Ingest | `Ctrl + 5` | `⌘ + 5` | Open text import/ingest page |
+| New Ingest (Alt) | `Ctrl + N` | `⌘ + N` | Alternative hotkey for ingest page |
 
 ---
 
@@ -222,7 +223,7 @@ All the following dialogs support Enter to confirm:
 ## Tips & Best Practices
 
 ### Conflict Resolution
-- **Ctrl+1-4**: Reserved for global navigation (Dashboard/Review/Create/Library)
+- **Ctrl+1-5**: Reserved for global navigation (Dashboard/Library/Create/Review/Ingest)
 - **Alt+1-3**: Used for scope selection in Create Cards page only
 - This separation ensures no conflicts between global and page-specific shortcuts
 
@@ -234,7 +235,7 @@ All the following dialogs support Enter to confirm:
 ### Discovery
 - Press `Ctrl + /` (or `⌘ + /` on Mac) anywhere to see available shortcuts
 - Press `?` in Create Cards view for page-specific help
-- Tooltips on buttons show keyboard shortcuts where applicable
+- Tooltips on buttons and sidebar items show keyboard shortcuts where applicable
 
 ### Accessibility
 - All keyboard shortcuts are optional - full functionality available via mouse/touch
@@ -271,13 +272,27 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 
 4. **Modal dialogs**: Some shortcuts are disabled when dialogs are open
    - Close dialogs with Esc first
-   - Global navigation (Ctrl+1-4) still works in most cases
+   - Global navigation (Ctrl+1-5) still works in most cases
 
 ---
 
 ## Version History
 
-### 2025-10-18
+### 2025-10-18 (Phase 17.5 - Navigation Integration)
+- Integrated Ingest page into main navigation system
+- Realigned global navigation hotkeys to match visual order:
+  - Ctrl+1: Dashboard
+  - Ctrl+2: Library (moved from Ctrl+4)
+  - Ctrl+3: Create Cards (unchanged)
+  - Ctrl+4: Review (moved from Ctrl+2)
+  - Ctrl+5: Ingest (new - was only Ctrl+N)
+- Added Ingest to sidebar with FileInput icon
+- Back to Reading button now appears on Ingest page
+- Standardized Ingest page layout to match other main pages
+- Removed redundant back/close buttons from Ingest page
+- Updated all documentation with new hotkey mappings
+
+### 2025-10-18 (Phase 17 - Hotkey Improvements)
 - Fixed Ctrl+1-4 conflict: Changed Create Cards scope shortcuts to Alt+1/2/3
 - Added Enter key support to ShortcutHelp and Create page help modals
 - Verified all shortcuts use platform-aware Cmd/Ctrl detection

@@ -143,7 +143,7 @@ export function ReviewSessionPage() {
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-8" role="main">
+      <main className="flex-1 flex items-center justify-center px-8 pb-8" role="main">
         <div className="w-full max-w-2xl">
           <ReviewCard card={currentCard} showAnswer={showAnswer} onToggleAnswer={toggleAnswer} />
         </div>

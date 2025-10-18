@@ -292,13 +292,13 @@
   background-color: var(--muted);
   color: var(--muted-foreground);
   border-left: 3px solid var(--border);
-  padding-left: 0.75rem;
+  padding-left: 0.5rem;
   padding-right: 0.25rem;
-  padding-top: 0.125rem;
-  padding-bottom: 0.125rem;
-  margin-left: 0.5rem;
-  display: block;
-  border-radius: 0.25rem;
+  padding-top: 0.0625rem;
+  padding-bottom: 0.0625rem;
+  margin-left: 0.25rem;
+  display: inline;
+  border-radius: 0.125rem;
 }
 
 .read-header {
@@ -307,6 +307,7 @@
   padding: 0 4px;
   border-radius: 4px;
   font-style: italic;
+  display: inline;
 }
 
 .clickable-link {
@@ -336,4 +337,75 @@
 
 .dark .clickable-link:active {
   color: hsl(217, 91%, 60%) !important;
+}
+
+/* Read text styling - using class instead of inline styles for better selection support */
+.read-text {
+  background-color: black;
+  color: white;
+  display: inline;
+}
+
+.dark .read-text {
+  background-color: rgb(30, 30, 30);
+  color: white;
+  display: inline;
+}
+
+/* Search match highlighting - overrides read-text styling */
+.search-match {
+  background-color: #fef08a !important;
+  color: black !important;
+  display: inline;
+}
+
+.search-match-active {
+  background-color: #fed7aa !important;
+  color: black !important;
+  display: inline;
+}
+
+/* Search match selection */
+.search-match::selection,
+.search-match-active::selection {
+  background-color: rgba(66, 153, 225, 0.6);
+  color: black;
+}
+
+.search-match::-moz-selection,
+.search-match-active::-moz-selection {
+  background-color: rgba(66, 153, 225, 0.6);
+  color: black;
+}
+
+/* Text selection styling - ensures selection is always visible */
+::selection {
+  background-color: rgba(66, 153, 225, 0.5);
+  color: inherit;
+}
+
+::-moz-selection {
+  background-color: rgba(66, 153, 225, 0.5);
+  color: inherit;
+}
+
+/* Selection on read text (black background) - needs high contrast */
+.read-text::selection {
+  background-color: rgba(96, 165, 250, 0.7);
+  color: white;
+}
+
+.read-text::-moz-selection {
+  background-color: rgba(96, 165, 250, 0.7);
+  color: white;
+}
+
+.dark .read-text::selection {
+  background-color: rgba(147, 197, 253, 0.6);
+  color: white;
+}
+
+.dark .read-text::-moz-selection {
+  background-color: rgba(147, 197, 253, 0.6);
+  color: white;
 }

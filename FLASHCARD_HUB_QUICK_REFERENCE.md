@@ -99,7 +99,7 @@ Tab              →  Cycle through options
 ## User Workflows
 
 ### Workflow 1: Process All Library Marks
-1. Press `Ctrl+4` (go to Create Cards)
+1. Press `Ctrl+3` (go to Create Cards)
 2. Select "All Library" scope
 3. Review mark context
 4. Type question and answer

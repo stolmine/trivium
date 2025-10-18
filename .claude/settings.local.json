@@ -185,7 +185,9 @@
       "WebFetch(domain:dtang.dev)",
       "WebFetch(domain:devmuscle.com)",
       "WebFetch(domain:liveblocks.io)",
-      "WebFetch(domain:jkrsp.com)"
+      "WebFetch(domain:jkrsp.com)",
+      "WebFetch(domain:code.visualstudio.com)",
+      "Bash(git -C /Users/why/repos/trivium status)"
     ],
     "deny": [],
     "ask": []
