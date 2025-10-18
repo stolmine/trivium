@@ -7,6 +7,7 @@ interface EditableLinkProps {
   isEditable: boolean
   sourcePosition: { start: number; end: number }
   onLinkTextChange: (newText: string, sourcePosition: { start: number; end: number }) => void
+  onNavigateToIngest?: (url: string) => void
 }
 
 export function EditableLink({
@@ -14,7 +15,8 @@ export function EditableLink({
   url,
   isEditable,
   sourcePosition,
-  onLinkTextChange
+  onLinkTextChange,
+  onNavigateToIngest
 }: EditableLinkProps) {
   const spanRef = useRef<HTMLSpanElement>(null)
 
@@ -36,8 +38,10 @@ export function EditableLink({
   }
 
   const handleClick = (e: React.MouseEvent) => {
-    if (!isEditable) {
-      e.preventDefault()
+    e.preventDefault()
+    if (e.altKey && onNavigateToIngest) {
+      onNavigateToIngest(url)
+    } else if (!isEditable) {
       openUrl(url).catch((error: Error) => {
         console.error('Failed to open URL:', error)
       })
@@ -45,6 +49,11 @@ export function EditableLink({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.altKey && e.key === 'Enter' && onNavigateToIngest) {
+      e.preventDefault()
+      onNavigateToIngest(url)
+      return
+    }
     if (e.key === 'Enter') {
       e.preventDefault()
       if (spanRef.current) {
@@ -79,6 +88,8 @@ export function EditableLink({
       className="clickable-link"
       data-url={url}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
     >
       {text}
     </a>

@@ -10,6 +10,7 @@ interface ReadHighlighterProps {
   linksEnabled?: boolean
   searchMatches?: Array<{ start: number; end: number }>
   activeSearchIndex?: number
+  onNavigateToIngest?: (url: string) => void
 }
 
 interface TextSegment {
@@ -51,7 +52,7 @@ function renderTextWithLinks(text: string, linksEnabled: boolean): string {
   }
 
   let processed = textWithoutEmptyLinks.replace(/\[([^\]]+)\]\(([^\)]+)\)/g,
-    '<a href="$2" class="clickable-link" data-url="$2">$1</a>'
+    '<a href="$2" class="clickable-link" data-url="$2" tabindex="0">$1</a>'
   )
 
   const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g
@@ -66,7 +67,7 @@ function renderTextWithLinks(text: string, linksEnabled: boolean): string {
     if (processedUrls.has(url)) {
       return url
     }
-    return `<a href="${url}" class="clickable-link" data-url="${url}">${url}</a>`
+    return `<a href="${url}" class="clickable-link" data-url="${url}" tabindex="0">${url}</a>`
   })
 
   return processed
@@ -254,7 +255,8 @@ const ReadHighlighterComponent = ({
   className,
   linksEnabled = false,
   searchMatches = [],
-  activeSearchIndex = -1
+  activeSearchIndex = -1,
+  onNavigateToIngest
 }: ReadHighlighterProps) => {
   const segments = useMemo(() => {
     const { cleanedContent, excludedRanges } = parseExcludedRanges(content)
@@ -361,9 +363,26 @@ const ReadHighlighterComponent = ({
       e.preventDefault()
       const url = target.getAttribute('data-url')
       if (url) {
-        openUrl(url).catch((error: Error) => {
-          console.error('Failed to open URL:', error)
-        })
+        if (e.altKey && onNavigateToIngest) {
+          onNavigateToIngest(url)
+        } else {
+          openUrl(url).catch((error: Error) => {
+            console.error('Failed to open URL:', error)
+          })
+        }
+      }
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const target = e.target as HTMLElement
+    if (target.tagName === 'A' && target.classList.contains('clickable-link')) {
+      if (e.altKey && e.key === 'Enter' && onNavigateToIngest) {
+        e.preventDefault()
+        const url = target.getAttribute('data-url')
+        if (url) {
+          onNavigateToIngest(url)
+        }
       }
     }
   }
@@ -448,6 +467,7 @@ const ReadHighlighterComponent = ({
       id="article-content"
       className={`whitespace-pre-wrap not-prose ${className || ''}`}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
     >
       {renderableSegments.map((segment) => {
         let className = ''

@@ -19,6 +19,7 @@ interface InlineRegionEditorProps {
   onSave: (newContent: string, deletedMarks?: ClozeNote[]) => Promise<void>;
   onCancel: () => void;
   initialMode?: 'styled' | 'literal';
+  onNavigateToIngest?: (url: string) => void;
 }
 
 export function InlineRegionEditor({
@@ -29,7 +30,8 @@ export function InlineRegionEditor({
   textId,
   onSave,
   onCancel,
-  initialMode = 'styled'
+  initialMode = 'styled',
+  onNavigateToIngest
 }: InlineRegionEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const editableRef = useRef<HTMLDivElement>(null);
@@ -220,6 +222,7 @@ export function InlineRegionEditor({
               onTextEdit={() => {}}
               marks={undefined}
               mode="styled"
+              onNavigateToIngest={onNavigateToIngest}
             />
           ) : (
             <div className="whitespace-pre-wrap">{contextBefore}</div>
@@ -281,6 +284,7 @@ export function InlineRegionEditor({
               onTextEdit={() => {}}
               marks={undefined}
               mode="styled"
+              onNavigateToIngest={onNavigateToIngest}
             />
           ) : (
             <div className="whitespace-pre-wrap">{contextAfter}</div>

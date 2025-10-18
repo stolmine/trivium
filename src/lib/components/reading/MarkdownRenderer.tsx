@@ -13,6 +13,7 @@ interface MarkdownRendererProps {
   marks?: ClozeNote[]
   mode: 'styled' | 'literal'
   suppressMarkHighlighting?: boolean
+  onNavigateToIngest?: (url: string) => void
 }
 
 interface PositionInfo {
@@ -131,7 +132,8 @@ function renderLinkNode(
   markdown: string,
   onTextEdit: (newMarkdown: string) => void,
   key: string,
-  suppressMarkHighlighting?: boolean
+  suppressMarkHighlighting?: boolean,
+  onNavigateToIngest?: (url: string) => void
 ) {
   const position = getNodePosition(node)
   if (!position) {
@@ -155,6 +157,7 @@ function renderLinkNode(
         isEditable={isEditable}
         sourcePosition={position}
         onLinkTextChange={handleLinkTextChange}
+        onNavigateToIngest={onNavigateToIngest}
       />
     </span>
   )
@@ -169,7 +172,8 @@ function renderParagraphNode(
   key: string,
   cursorPosRef: React.MutableRefObject<number | null>,
   containerRef: React.MutableRefObject<HTMLDivElement | null>,
-  suppressMarkHighlighting?: boolean
+  suppressMarkHighlighting?: boolean,
+  onNavigateToIngest?: (url: string) => void
 ) {
   const isEditable = isNodeEditable(node, editableRange)
 
@@ -200,7 +204,8 @@ function renderParagraphNode(
             markdown,
             onTextEdit,
             childKey,
-            suppressMarkHighlighting
+            suppressMarkHighlighting,
+            onNavigateToIngest
           )
         }
 
@@ -217,7 +222,8 @@ const MarkdownRendererComponent = ({
   editableRange,
   marks,
   mode,
-  suppressMarkHighlighting
+  suppressMarkHighlighting,
+  onNavigateToIngest
 }: MarkdownRendererProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const cursorPosRef = useRef<number | null>(null)
@@ -247,7 +253,8 @@ const MarkdownRendererComponent = ({
           nodeKey,
           cursorPosRef,
           containerRef,
-          suppressMarkHighlighting
+          suppressMarkHighlighting,
+          onNavigateToIngest
         )
       }
 

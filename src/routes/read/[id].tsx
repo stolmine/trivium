@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
 import { useSettingsStore } from '../../lib/stores/settings'
@@ -23,6 +23,7 @@ import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToC
 import { expandToSentenceBoundary, expandToSmartBoundary, shouldRespectExactSelection } from '../../lib/utils/sentenceBoundary'
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
+import type { ReadPageLocationState } from '@/lib/types'
 import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSidebar'
 import { detectEditRegion } from '../../lib/utils/markdownEdit'
 import { updateMarkPositions } from '../../lib/utils/markPositions'
@@ -36,6 +37,7 @@ import { api } from '../../lib/utils/tauri'
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const scrollPositionRef = useRef<number | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -169,6 +171,35 @@ export function ReadPage() {
       setEditingContent(currentText.content)
     }
   }, [currentText])
+
+  // Restore scroll position when returning from ingest page
+  useEffect(() => {
+    const state = location.state as ReadPageLocationState | undefined
+
+    // Only restore if we have a scroll position, the container exists, AND currentText is loaded
+    // The currentText check ensures content is rendered before we try to scroll
+    if (state?.restoreScrollPosition !== undefined && scrollContainerRef.current && currentText && !isLoading) {
+      const scrollPosition = state.restoreScrollPosition
+
+      console.log('[ReadPage] Preparing to restore scroll position:', scrollPosition)
+
+      // Use triple RAF to ensure DOM is fully rendered including highlights and marks
+      // Single RAF = paint scheduled, Double RAF = paint complete, Triple RAF = layout stable
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTop = scrollPosition
+              console.log('[ReadPage] Successfully restored scroll position to:', scrollPosition)
+
+              // Only clear the state AFTER successfully restoring scroll
+              navigate(location.pathname, { replace: true, state: {} })
+            }
+          })
+        })
+      })
+    }
+  }, [location.state, currentText, isLoading, navigate, location.pathname])
 
   useEffect(() => {
     if (!query || !currentText?.content) {
@@ -580,6 +611,28 @@ export function ReadPage() {
     }
   }
 
+  const handleNavigateToIngest = (url: string) => {
+    try {
+      new URL(url)
+    } catch {
+      console.warn('[ReadPage] Invalid URL:', url)
+      return
+    }
+
+    const currentScrollPosition = scrollContainerRef.current?.scrollTop ?? 0
+
+    navigate('/ingest', {
+      state: {
+        wikipediaUrl: url,
+        returnTo: {
+          path: location.pathname,
+          scrollPosition: currentScrollPosition,
+          textId: currentText?.id
+        }
+      }
+    })
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
@@ -666,6 +719,10 @@ export function ReadPage() {
     // Don't scroll to search matches during undo/redo to preserve scroll position
     if (isUndoing || isRedoing) return
 
+    // Don't scroll to search matches if we're restoring scroll position from navigation
+    const state = location.state as ReadPageLocationState | undefined
+    if (state?.restoreScrollPosition !== undefined) return
+
     if (matches.length > 0 && currentIndex >= 0) {
       requestAnimationFrame(() => {
         const matchElement = document.querySelector(`[data-search-index="${currentIndex}"]`)
@@ -679,7 +736,7 @@ export function ReadPage() {
         }
       })
     }
-  }, [currentIndex, matches, isUndoing, isRedoing])
+  }, [currentIndex, matches, isUndoing, isRedoing, location.state])
 
   useEffect(() => {
     const handleSelectionChange = () => {
@@ -964,6 +1021,7 @@ export function ReadPage() {
                     }));
                   })()}
                   textId={currentText.id}
+                  onNavigateToIngest={handleNavigateToIngest}
                   onSave={async (mergedContent: string, deletedMarks?: ClozeNote[]) => {
                     try {
                       console.log('[ReadPage] InlineRegionEditor save - detecting changes...');
@@ -1071,6 +1129,7 @@ export function ReadPage() {
                           linksEnabled={linksEnabled}
                           searchMatches={matches}
                           activeSearchIndex={currentIndex}
+                          onNavigateToIngest={handleNavigateToIngest}
                         />
                       </div>
                     )}

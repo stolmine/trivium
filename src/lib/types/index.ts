@@ -22,3 +22,4 @@ export type {
   CreateCardRequest,
   ScopeSelection
 } from './hub';
+export type { ReturnNavigationState, IngestPageLocationState, ReadPageLocationState } from './navigation';

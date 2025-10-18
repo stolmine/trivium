@@ -13,15 +13,14 @@ import { ChevronLeft, X, Loader2 } from 'lucide-react'
 import { useTextHistory } from '../../hooks/useTextHistory'
 import { api } from '../../lib/utils/tauri'
 import { FolderSelect } from '@/lib/components/folders/FolderSelect'
+import type { IngestPageLocationState } from '@/lib/types'
 
 export function IngestPage() {
   const navigate = useNavigate()
   const location = useLocation()
-  const initialState = location.state as {
-    wikipediaUrl?: string;
-    selectedFolderId?: string;
-  } | undefined
+  const initialState = location.state as IngestPageLocationState | undefined
 
+  const [returnTo] = useState(initialState?.returnTo)
   const [title, setTitle] = useState('')
   const {
     content,
@@ -89,14 +88,30 @@ export function IngestPage() {
 
       await loadLibrary()
 
-      navigate('/library')
+      if (returnTo) {
+        navigate(returnTo.path, {
+          state: {
+            restoreScrollPosition: returnTo.scrollPosition
+          }
+        })
+      } else {
+        navigate('/library')
+      }
     } catch (error) {
       console.error('Failed to create text:', error)
     }
   }
 
   const handleCancel = () => {
-    navigate(-1)
+    if (returnTo) {
+      navigate(returnTo.path, {
+        state: {
+          restoreScrollPosition: returnTo.scrollPosition
+        }
+      })
+    } else {
+      navigate(-1)
+    }
   }
 
   const wrapSelection = (before: string, after: string) => {
