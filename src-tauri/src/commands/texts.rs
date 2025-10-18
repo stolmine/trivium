@@ -449,3 +449,106 @@ pub async fn update_text_with_smart_marks(
         unchanged_marks,
     })
 }
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteMarksResult {
+    pub deleted_count: usize,
+    pub mark_ids: Vec<i64>,
+}
+
+#[tauri::command]
+pub async fn delete_marks(
+    mark_ids: Vec<i64>,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<DeleteMarksResult, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    if mark_ids.is_empty() {
+        return Ok(DeleteMarksResult {
+            deleted_count: 0,
+            mark_ids: vec![],
+        });
+    }
+
+    // Build SQL with placeholders for IN clause
+    let placeholders = mark_ids.iter()
+        .map(|_| "?")
+        .collect::<Vec<_>>()
+        .join(",");
+
+    let query_str = format!(
+        "DELETE FROM cloze_notes WHERE id IN ({})",
+        placeholders
+    );
+
+    // Execute with transaction
+    let mut tx = pool.begin().await
+        .map_err(|e| format!("Transaction error: {}", e))?;
+
+    let mut query = sqlx::query(&query_str);
+    for id in &mark_ids {
+        query = query.bind(id);
+    }
+
+    let result = query.execute(&mut *tx).await
+        .map_err(|e| format!("Delete error: {}", e))?;
+
+    tx.commit().await
+        .map_err(|e| format!("Commit error: {}", e))?;
+
+    Ok(DeleteMarksResult {
+        deleted_count: result.rows_affected() as usize,
+        mark_ids: mark_ids.clone(),
+    })
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteReadRangesResult {
+    pub deleted_count: usize,
+}
+
+#[tauri::command]
+pub async fn delete_read_ranges(
+    text_id: i64,
+    ranges: Vec<(i64, i64)>,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<DeleteReadRangesResult, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    if ranges.is_empty() {
+        return Ok(DeleteReadRangesResult {
+            deleted_count: 0,
+        });
+    }
+
+    let mut tx = pool.begin().await
+        .map_err(|e| format!("Transaction error: {}", e))?;
+
+    let mut deleted_count = 0;
+
+    for (start_pos, end_pos) in ranges {
+        let result = sqlx::query(
+            "DELETE FROM read_ranges
+             WHERE text_id = ? AND start_position = ? AND end_position = ?"
+        )
+        .bind(text_id)
+        .bind(start_pos)
+        .bind(end_pos)
+        .execute(&mut *tx)
+        .await
+        .map_err(|e| format!("Delete error: {}", e))?;
+
+        deleted_count += result.rows_affected() as usize;
+    }
+
+    tx.commit().await
+        .map_err(|e| format!("Commit error: {}", e))?;
+
+    Ok(DeleteReadRangesResult {
+        deleted_count,
+    })
+}

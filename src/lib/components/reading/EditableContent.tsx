@@ -63,6 +63,7 @@ export function EditableContent({
         editableRange={editableRange}
         marks={marks}
         mode={mode}
+        suppressMarkHighlighting={true}
       />
     )
   }

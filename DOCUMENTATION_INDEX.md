@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-17 (Phase 15 Complete: Unified undo/redo for reading view with text edits, marks, and position tracking)
+Last Updated: 2025-10-17 (Phase 16 Complete: Mark and read range deletion on edit with flashcard preservation)
 
 ---
 
@@ -232,6 +232,30 @@ Last Updated: 2025-10-17 (Phase 15 Complete: Unified undo/redo for reading view 
 
 ---
 
+### Mark and Read Range Deletion (Phase 16)
+
+#### `/Users/why/repos/trivium/PHASE_16_MARK_DELETION_ON_EDIT.md`
+**Description**: Complete implementation documentation for Phase 16 mark and read range deletion on edit with flashcard preservation. Covers automatic cleanup of marks/read ranges when text is edited, warning dialog before deletion, database migration (ON DELETE SET NULL for flashcards), overlap detection algorithm, coordinate space conversion fixes, and complete undo/redo support. Includes 31 passing unit tests, architectural decisions, performance metrics, known limitations, and future enhancements. Solves critical data integrity issue where marks persisted after referenced text was modified
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/utils/markOverlap.ts`
+**Description**: Overlap detection utilities for marks and read ranges during text editing. Functions: detectMarkOverlap, detectReadRangeOverlap. Uses exclusive boundary algorithm (O(n) complexity) to identify which marks/ranges overlap an edit region and should be deleted. Returns overlapping items, safe items, and IDs to delete
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/utils/__tests__/markOverlap.test.ts`
+**Description**: Comprehensive unit test suite for overlap detection utilities. 31 tests covering: no overlap cases, full containment, partial overlap, exact boundaries, edge cases (empty lists, zero-width regions), and multiple mark scenarios. 100% passing test rate
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src/lib/components/reading/MarkDeletionWarning.tsx`
+**Description**: User confirmation dialog component displayed before deleting marks and read ranges during text edits. Shows count and list of affected items, clear messaging about flashcard preservation, accessible keyboard navigation (Enter/Escape), and cancel/confirm actions
+**Last Updated**: 2025-10-17
+
+#### `/Users/why/repos/trivium/src-tauri/migrations/20251017215100_preserve_flashcards_on_mark_delete.sql`
+**Description**: Database migration changing flashcards.cloze_note_id foreign key constraint from ON DELETE CASCADE to ON DELETE SET NULL. Preserves flashcards when source marks are deleted, preventing loss of user study progress while maintaining data integrity
+**Last Updated**: 2025-10-17
+
+---
+
 ## Design System
 
 ### `/Users/why/repos/trivium/src/lib/design-system.md`
@@ -278,14 +302,14 @@ Last Updated: 2025-10-17 (Phase 15 Complete: Unified undo/redo for reading view 
 
 ## Statistics
 
-**Total Documentation Files**: 47 markdown files
-**Total Lines of Documentation**: ~45,000+ lines
+**Total Documentation Files**: 52 markdown files
+**Total Lines of Documentation**: ~50,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 23 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 1 history store implementation)
+- Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files

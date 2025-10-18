@@ -175,9 +175,20 @@ CREATE TABLE flashcards (
     state INTEGER NOT NULL DEFAULT 0,  -- 0=New, 1=Learning, 2=Review, 3=Relearning
     last_review DATETIME,
 
-    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE
+    -- Phase 16: Flashcard preservation
+    cloze_note_id INTEGER,             -- Source mark reference (nullable as of Phase 16)
+    display_index INTEGER,             -- Sequential card number
+    cloze_number INTEGER,
+
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE,
+    FOREIGN KEY (cloze_note_id) REFERENCES cloze_notes(id) ON DELETE SET NULL  -- Phase 16: Preserve flashcards when marks deleted
 );
 ```
+
+**Phase 16 Update (2025-10-17):**
+- Changed `cloze_note_id` foreign key from `ON DELETE CASCADE` to `ON DELETE SET NULL`
+- Flashcards now preserved when source marks are deleted (preventing loss of study progress)
+- Orphaned flashcards (with `cloze_note_id = NULL`) still function in review system
 
 ### Review History Table
 Tracks all card reviews for analytics.

@@ -12,6 +12,7 @@ interface MarkdownRendererProps {
   editableRange?: { start: number; end: number }
   marks?: ClozeNote[]
   mode: 'styled' | 'literal'
+  suppressMarkHighlighting?: boolean
 }
 
 interface PositionInfo {
@@ -59,7 +60,8 @@ function renderTextNode(
   onTextEdit: (newMarkdown: string) => void,
   key: string,
   cursorPosRef: React.MutableRefObject<number | null>,
-  containerRef: React.MutableRefObject<HTMLDivElement | null>
+  containerRef: React.MutableRefObject<HTMLDivElement | null>,
+  suppressMarkHighlighting?: boolean
 ) {
   const position = getNodePosition(node)
   if (!position) {
@@ -67,7 +69,7 @@ function renderTextNode(
   }
 
   const mark = getMarkAtPosition(position.start, marks)
-  const backgroundColor = mark ? '#fef08a' : undefined
+  const backgroundColor = (mark && !suppressMarkHighlighting) ? '#fef08a' : undefined
 
   // Trim trailing newlines from text node to prevent visual selection extending beyond paragraph
   // The markdown source includes trailing \n\n after paragraphs, but we don't want these to be
@@ -128,7 +130,8 @@ function renderLinkNode(
   marks: ClozeNote[] | undefined,
   markdown: string,
   onTextEdit: (newMarkdown: string) => void,
-  key: string
+  key: string,
+  suppressMarkHighlighting?: boolean
 ) {
   const position = getNodePosition(node)
   if (!position) {
@@ -145,7 +148,7 @@ function renderLinkNode(
   }
 
   return (
-    <span key={key} style={{ backgroundColor: mark ? '#fef08a' : undefined }}>
+    <span key={key} style={{ backgroundColor: (mark && !suppressMarkHighlighting) ? '#fef08a' : undefined }}>
       <EditableLink
         text={linkText}
         url={node.url}
@@ -165,7 +168,8 @@ function renderParagraphNode(
   onTextEdit: (newMarkdown: string) => void,
   key: string,
   cursorPosRef: React.MutableRefObject<number | null>,
-  containerRef: React.MutableRefObject<HTMLDivElement | null>
+  containerRef: React.MutableRefObject<HTMLDivElement | null>,
+  suppressMarkHighlighting?: boolean
 ) {
   const isEditable = isNodeEditable(node, editableRange)
 
@@ -183,7 +187,8 @@ function renderParagraphNode(
             onTextEdit,
             childKey,
             cursorPosRef,
-            containerRef
+            containerRef,
+            suppressMarkHighlighting
           )
         }
 
@@ -194,7 +199,8 @@ function renderParagraphNode(
             marks,
             markdown,
             onTextEdit,
-            childKey
+            childKey,
+            suppressMarkHighlighting
           )
         }
 
@@ -210,7 +216,8 @@ const MarkdownRendererComponent = ({
   onTextEdit,
   editableRange,
   marks,
-  mode
+  mode,
+  suppressMarkHighlighting
 }: MarkdownRendererProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const cursorPosRef = useRef<number | null>(null)
@@ -239,7 +246,8 @@ const MarkdownRendererComponent = ({
           onTextEdit,
           nodeKey,
           cursorPosRef,
-          containerRef
+          containerRef,
+          suppressMarkHighlighting
         )
       }
 
@@ -253,13 +261,14 @@ const MarkdownRendererComponent = ({
           onTextEdit,
           nodeKey,
           cursorPosRef,
-          containerRef
+          containerRef,
+          suppressMarkHighlighting
         )
       }
 
       return <div key={nodeKey}>[unsupported: {node.type}]</div>
     })
-  }, [ast, markdown, editableRange, marks, mode, onTextEdit])
+  }, [ast, markdown, editableRange, marks, mode, onTextEdit, suppressMarkHighlighting])
 
   return (
     <div

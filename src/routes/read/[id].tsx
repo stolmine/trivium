@@ -882,8 +882,28 @@ export function ReadPage() {
                 <InlineRegionEditor
                   content={parseExcludedRanges(currentText.content).cleanedContent}
                   editRegion={inlineEditRegion}
-                  marks={marks}
-                  onSave={async (mergedContent: string) => {
+                  marks={(() => {
+                    // Convert marks from RENDERED to CLEANED space for overlap detection
+                    const cleanedContent = parseExcludedRanges(currentText.content).cleanedContent;
+                    return marks.map(mark => ({
+                      ...mark,
+                      startPosition: renderedPosToCleanedPos(mark.startPosition, cleanedContent),
+                      endPosition: renderedPosToCleanedPos(mark.endPosition, cleanedContent)
+                    }));
+                  })()}
+                  readRanges={(() => {
+                    const cleanedContent = parseExcludedRanges(currentText.content).cleanedContent;
+                    // Convert positions to CLEANED space for overlap detection, but preserve original RENDERED positions for deletion
+                    return readRanges.map(range => ({
+                      ...range,
+                      originalStartPosition: range.startPosition,  // Store RENDERED position for deletion
+                      originalEndPosition: range.endPosition,      // Store RENDERED position for deletion
+                      startPosition: renderedPosToCleanedPos(range.startPosition, cleanedContent),
+                      endPosition: renderedPosToCleanedPos(range.endPosition, cleanedContent)
+                    }));
+                  })()}
+                  textId={currentText.id}
+                  onSave={async (mergedContent: string, deletedMarks?: ClozeNote[]) => {
                     try {
                       console.log('[ReadPage] InlineRegionEditor save - detecting changes...');
 
@@ -912,6 +932,7 @@ export function ReadPage() {
                       await api.texts.updateContent(currentText.id, mergedContent)
                       await loadText(currentText.id)
                       await loadMarks(currentText.id)
+                      await getReadRanges(currentText.id)
 
                       // Record in history
                       const historyStore = useReadingHistoryStore.getState();
@@ -924,7 +945,8 @@ export function ReadPage() {
                           editedText: editRegion.insertedText,
                           originalText: editRegion.deletedText,
                           marksBeforeEdit,
-                          marksAfterEdit
+                          marksAfterEdit,
+                          deletedMarks
                         });
                       }
 

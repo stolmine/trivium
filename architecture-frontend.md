@@ -600,6 +600,7 @@ src/
 │   │   │   ├── EditableContent.tsx      # Phase 14: Mode-aware content container
 │   │   │   ├── MarkdownRenderer.tsx     # Phase 14: Styled mode renderer
 │   │   │   ├── EditableLink.tsx         # Phase 14: Link editing component
+│   │   │   ├── MarkDeletionWarning.tsx  # Phase 16: Deletion warning dialog
 │   │   │   └── IngestModal.tsx          # Text import/metadata entry
 │   │   ├── flashcard/
 │   │   │   ├── FlashcardCreator.tsx     # Flashcard creation interface
@@ -632,6 +633,7 @@ src/
 │   │   ├── preserveCursorThroughTransform.ts # Marker-based cursor tracking (Phase 14)
 │   │   ├── parseMarkdownWithPositions.ts # Unified/remark integration (Phase 14)
 │   │   ├── positionMapping.ts           # Rendered ↔ source position mapping (Phase 14)
+│   │   ├── markOverlap.ts               # Phase 16: Mark/range overlap detection
 │   │   └── rangeCalculator.ts           # Read range merging/calculation
 │   └── types/                           # TypeScript types
 │       ├── folder.ts

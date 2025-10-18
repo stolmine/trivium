@@ -155,6 +155,17 @@ export const api = {
         updatedAt: string;
       }>>('get_marks_for_text', { textId });
     },
+    deleteMarks: async (markIds: number[]): Promise<{
+      deletedCount: number;
+      markIds: number[];
+    }> => {
+      return await invoke('delete_marks', { markIds });
+    },
+    deleteReadRanges: async (textId: number, ranges: [number, number][]): Promise<{
+      deletedCount: number;
+    }> => {
+      return await invoke('delete_read_ranges', { textId, ranges });
+    },
   },
   review: {
     getDueCards: async (limit: number): Promise<Flashcard[]> => {

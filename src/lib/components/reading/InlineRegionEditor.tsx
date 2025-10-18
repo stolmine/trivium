@@ -5,12 +5,18 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { parseMarkdownWithPositions } from '@/lib/utils/markdownParser';
 import { cn } from '@/lib/utils';
 import type { ClozeNote } from '@/lib/types/flashcard';
+import type { ReadRange } from '@/lib/types/reading';
+import { detectMarkOverlap } from '@/lib/utils/markOverlap';
+import { MarkDeletionWarning } from './MarkDeletionWarning';
+import { api } from '@/lib/utils/tauri';
 
 interface InlineRegionEditorProps {
   content: string;
   editRegion: { start: number; end: number };
   marks?: ClozeNote[];
-  onSave: (newContent: string) => Promise<void>;
+  readRanges?: ReadRange[];
+  textId?: number;
+  onSave: (newContent: string, deletedMarks?: ClozeNote[]) => Promise<void>;
   onCancel: () => void;
   initialMode?: 'styled' | 'literal';
 }
@@ -19,6 +25,8 @@ export function InlineRegionEditor({
   content,
   editRegion,
   marks,
+  readRanges,
+  textId,
   onSave,
   onCancel,
   initialMode = 'styled'
@@ -29,6 +37,9 @@ export function InlineRegionEditor({
   const [mode, setMode] = useState<'styled' | 'literal'>(initialMode);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showMarkWarning, setShowMarkWarning] = useState(false);
+  const [marksToDelete, setMarksToDelete] = useState<ClozeNote[]>([]);
+  const [readRangesToDelete, setReadRangesToDelete] = useState<ReadRange[]>([]);
 
   const contextBefore = content.substring(0, editRegion.start);
   const contextAfter = content.substring(editRegion.end);
@@ -129,18 +140,65 @@ export function InlineRegionEditor({
       return;
     }
 
+    const overlapResult = detectMarkOverlap(
+      editRegion.start,
+      editRegion.end,
+      marks || [],
+      readRanges || []
+    );
+
+    if (overlapResult.hasOverlap) {
+      setMarksToDelete(overlapResult.overlappingMarks);
+      setReadRangesToDelete(overlapResult.overlappingReadRanges);
+      setShowMarkWarning(true);
+      return;
+    }
+
+    await performSave();
+  };
+
+  const performSave = async () => {
     setIsSaving(true);
 
     try {
+      if (marksToDelete.length > 0) {
+        const markIds = marksToDelete.map(m => m.id);
+        await api.flashcards.deleteMarks(markIds);
+      }
+
+      if (readRangesToDelete.length > 0 && textId !== undefined) {
+        // Use original RENDERED positions for deletion (the database stores RENDERED positions)
+        // If originalStartPosition is not available, fall back to startPosition (for backwards compatibility)
+        const ranges = readRangesToDelete.map(r => [
+          r.originalStartPosition ?? r.startPosition,
+          r.originalEndPosition ?? r.endPosition
+        ] as [number, number]);
+        await api.flashcards.deleteReadRanges(textId, ranges);
+      }
+
       const mergedText =
         content.substring(0, editRegion.start) +
         editedContent +
         content.substring(editRegion.end);
 
-      await onSave(mergedText);
+      await onSave(mergedText, marksToDelete.length > 0 ? marksToDelete : undefined);
     } finally {
       setIsSaving(false);
+      setShowMarkWarning(false);
+      setMarksToDelete([]);
+      setReadRangesToDelete([]);
     }
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowMarkWarning(false);
+    await performSave();
+  };
+
+  const handleCancelWarning = () => {
+    setShowMarkWarning(false);
+    setMarksToDelete([]);
+    setReadRangesToDelete([]);
   };
 
   const characterCount = editedContent.length;
@@ -229,6 +287,15 @@ export function InlineRegionEditor({
           )}
         </div>
       )}
+
+      <MarkDeletionWarning
+        open={showMarkWarning}
+        onOpenChange={setShowMarkWarning}
+        marks={marksToDelete}
+        readRanges={readRangesToDelete}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelWarning}
+      />
     </div>
   );
 }

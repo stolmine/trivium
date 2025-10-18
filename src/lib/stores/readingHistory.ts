@@ -21,6 +21,7 @@ interface TextEditAction extends HistoryAction {
   originalText: string;
   marksBeforeEdit: ClozeNote[];
   marksAfterEdit: ClozeNote[];
+  deletedMarks?: ClozeNote[];
   cursorPosition?: number;
 }
 
@@ -213,6 +214,18 @@ export const useReadingHistoryStore = create<ReadingHistoryStore>((set, get) => 
       case 'text_edit': {
         console.log('[History] Restoring previous content');
         await api.texts.updateContent(state.currentTextId, action.previousContent);
+
+        if (action.deletedMarks && action.deletedMarks.length > 0) {
+          console.log('[History] Restoring deleted marks:', action.deletedMarks.length);
+          for (const mark of action.deletedMarks) {
+            await api.flashcards.createMark(
+              mark.textId,
+              mark.originalText,
+              mark.startPosition,
+              mark.endPosition
+            );
+          }
+        }
         break;
       }
 
@@ -296,6 +309,12 @@ export const useReadingHistoryStore = create<ReadingHistoryStore>((set, get) => 
       case 'text_edit': {
         console.log('[History] Applying new content');
         await api.texts.updateContent(state.currentTextId, action.newContent);
+
+        if (action.deletedMarks && action.deletedMarks.length > 0) {
+          console.log('[History] Re-deleting marks:', action.deletedMarks.length);
+          const markIds = action.deletedMarks.map(m => m.id);
+          await api.flashcards.deleteMarks(markIds);
+        }
         break;
       }
 
