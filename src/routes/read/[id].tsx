@@ -526,16 +526,25 @@ export function ReadPage() {
   const handleMarkSelectionRead = async () => {
     if (!selectionInfo || !currentText) return
 
+    console.log('[ReadPage] handleMarkSelectionRead - selectionInfo:', selectionInfo);
+    console.log('[ReadPage] Current readRanges:', readRanges);
+
     try {
       // Toggle logic: check if range is already read
-      if (isRangeRead(selectionInfo.start, selectionInfo.end)) {
+      const isAlreadyRead = isRangeRead(selectionInfo.start, selectionInfo.end);
+      console.log('[ReadPage] Is range already read?', isAlreadyRead);
+
+      if (isAlreadyRead) {
         // Unmark as read
+        console.log('[ReadPage] Unmarking range:', selectionInfo.start, '->', selectionInfo.end);
         await unmarkRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
       } else {
         // Mark as read
+        console.log('[ReadPage] Marking range:', selectionInfo.start, '->', selectionInfo.end);
         await markRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
       }
 
+      console.log('[ReadPage] After marking, new readRanges:', readRanges);
       setSelectionInfo(null)
     } catch (error) {
       console.error('[ReadPage] Failed to toggle read status:', error)

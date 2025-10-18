@@ -205,3 +205,50 @@ export function setSelectionRange(
 export function getTextContent(element: HTMLElement): string {
   return element.textContent || '';
 }
+
+/**
+ * Extract text from DOM at specified positions
+ *
+ * CRITICAL: Use this for text extraction when you have DOM-space positions.
+ * DO NOT use content.substring() with DOM positions - that will extract wrong text!
+ *
+ * With the paragraph-based rendering structure:
+ * - DOM positions are in textContent space (NO markdown syntax, NO \n\n separators)
+ * - cleanedContent has markdown syntax ([text](url)) and \n\n separators
+ * - Using DOM positions on cleanedContent extracts WRONG text with markdown leakage
+ *
+ * @param start - Start position in DOM space (from getSelectionRange)
+ * @param end - End position in DOM space (from getSelectionRange)
+ * @param containerId - ID of container element (default: 'article-content')
+ * @returns Extracted text from DOM, or empty string if extraction fails
+ *
+ * @example
+ * // ✅ CORRECT - Extract text from DOM with DOM positions
+ * const range = getSelectionRange(container);
+ * const text = extractTextFromDOM(range.start, range.end);
+ *
+ * @example
+ * // ❌ WRONG - Using markdown content with DOM positions
+ * const range = getSelectionRange(container);
+ * const text = cleanedContent.substring(range.start, range.end);  // Contains markdown!
+ */
+export function extractTextFromDOM(
+  start: number,
+  end: number,
+  containerId: string = 'article-content'
+): string {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.error(`[extractTextFromDOM] Container #${containerId} not found`);
+    return '';
+  }
+
+  const domText = container.textContent || '';
+
+  if (start < 0 || end > domText.length || start > end) {
+    console.error(`[extractTextFromDOM] Invalid range: start=${start}, end=${end}, textLength=${domText.length}`);
+    return '';
+  }
+
+  return domText.substring(start, end);
+}

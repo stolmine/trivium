@@ -3,6 +3,7 @@ import type { Text, CreateTextRequest, ReadRange, Paragraph, ExcludedRange } fro
 import { api } from '../utils/tauri';
 import { invalidateProgressCache, invalidateFolderProgressCache } from '../hooks/useTextProgress';
 import { useReadingHistoryStore } from './readingHistory';
+import { extractTextFromDOM } from '../utils/domPosition';
 
 interface ReadingState {
   texts: Text[];
@@ -99,6 +100,8 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
   markRangeAsRead: async (textId: number, startPosition: number, endPosition: number) => {
     try {
+      console.log('[reading.ts] markRangeAsRead called:', { textId, startPosition, endPosition, length: endPosition - startPosition });
+
       const historyStore = useReadingHistoryStore.getState();
       const isUndoRedo = historyStore.isUndoRedoInProgress;
 
@@ -107,11 +110,21 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
       if (!isUndoRedo) {
         contentSnapshot = get().currentText?.content || '';
-        markedText = contentSnapshot.substring(startPosition, endPosition);
+        // Extract text from DOM (NOT from markdown content)
+        // Positions are in DOM space, so we must use DOM textContent
+        markedText = extractTextFromDOM(startPosition, endPosition);
+        console.log('[reading.ts] Extracted text:', { markedText, length: markedText.length });
       }
 
+      console.log('[reading.ts] Calling backend markRangeAsRead...');
       await api.reading.markRangeAsRead(textId, startPosition, endPosition);
+
+      console.log('[reading.ts] Fetching updated read ranges...');
       await get().getReadRanges(textId);
+
+      const readRanges = get().readRanges;
+      console.log('[reading.ts] Read ranges after mark:', readRanges.length, readRanges);
+
       await get().calculateProgress(textId);
       invalidateProgressCache(textId);
 
@@ -148,7 +161,9 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
       if (!isUndoRedo) {
         previousReadRanges = [...get().readRanges];
         contentSnapshot = get().currentText?.content || '';
-        unmarkedText = contentSnapshot.substring(startPosition, endPosition);
+        // Extract text from DOM (NOT from markdown content)
+        // Positions are in DOM space, so we must use DOM textContent
+        unmarkedText = extractTextFromDOM(startPosition, endPosition);
       }
 
       await api.reading.unmarkRangeAsRead(textId, startPosition, endPosition);
