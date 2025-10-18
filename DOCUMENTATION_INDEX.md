@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-18 (Flashcard creation UI fixes: card preview counter, dynamic button text, clickable scope labels)
+Last Updated: 2025-10-18 (Phase 17: Global UI Update - navigation, standardized layouts, hotkey realignment)
 
 ---
 
@@ -53,7 +53,7 @@ Last Updated: 2025-10-18 (Flashcard creation UI fixes: card preview counter, dyn
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝, **Phase 15: Unified Undo/Redo System** ↩️↪️, **Phase 16: Mark and Read Range Deletion on Edit** 🗑️✨, **Post-Phase 16 Bug Fixes** 🐛), current capabilities (74 user-facing features including Alt+click link navigation to ingest with scroll restoration, mark/unmark toggle with overlap detection, scroll-preserving undo/redo, unified undo/redo for text edits and marks, truly inline text editing with smart boundaries, dual markdown modes, context dimming, mark preservation, cursor tracking, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation including 6 post-Phase 16 fixes (mark toggle, scroll preservation, Shift+Enter folder selection, card preview NaN counter, dynamic create button text, clickable scope labels), testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝, **Phase 15: Unified Undo/Redo System** ↩️↪️, **Phase 16: Mark and Read Range Deletion on Edit** 🗑️✨, **Phase 17: Global UI Update** 🧭✨, **Post-Phase 16 Bug Fixes** 🐛), current capabilities (82 user-facing features including universal back/forward navigation, back to reading button, standardized page layouts, realigned hotkeys, Alt+click link navigation to ingest with scroll restoration, mark/unmark toggle with overlap detection, scroll-preserving undo/redo, unified undo/redo for text edits and marks, truly inline text editing with smart boundaries, dual markdown modes, context dimming, mark preservation, cursor tracking, UTF-16 position tracking, Flashcard Creation Hub with scope selection, skip/bury workflow, Q&A card creation, session tracking, mark navigation, context display, dashboard integration, recursive folder detection, text filtering by marks, and complete keyboard support), upcoming phases, detailed bug fix documentation including 6 post-Phase 16 fixes (mark toggle, scroll preservation, Shift+Enter folder selection, card preview NaN counter, dynamic create button text, clickable scope labels), testing status. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
 **Last Updated**: 2025-10-18
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
@@ -256,6 +256,14 @@ Last Updated: 2025-10-18 (Flashcard creation UI fixes: card preview counter, dyn
 
 ---
 
+## User Reference
+
+### `/Users/why/repos/trivium/KEYBOARD_SHORTCUTS.md`
+**Description**: Comprehensive keyboard shortcuts reference organized by feature area (Global Navigation, Reading View, Review Session, Create Cards, Ingest, Library Navigation, Modal Dialogs). Documents all 60+ keyboard shortcuts with Windows/Linux and macOS variants, conflict resolution notes (Ctrl+1-4 vs Alt+1-3), platform consistency guidelines, accessibility features, and troubleshooting tips. Includes version history tracking shortcut changes
+**Last Updated**: 2025-10-18
+
+---
+
 ## Design System
 
 ### `/Users/why/repos/trivium/src/lib/design-system.md`
@@ -302,7 +310,7 @@ Last Updated: 2025-10-18 (Flashcard creation UI fixes: card preview counter, dyn
 
 ## Statistics
 
-**Total Documentation Files**: 52 markdown files
+**Total Documentation Files**: 53 markdown files
 **Total Lines of Documentation**: ~50,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
@@ -310,6 +318,7 @@ Last Updated: 2025-10-18 (Flashcard creation UI fixes: card preview counter, dyn
 - Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
 - Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
+- User Reference: 1 file
 - Design System: 1 file
 - Debugging: 3 files
 - Unicode & Text Processing: 4 files
