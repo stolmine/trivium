@@ -18,7 +18,7 @@ const hasClozes = (text: string): boolean => {
 }
 
 const countClozes = (text: string): number => {
-  const matches = text.matchAll(/\{\{c\d+::/g)
+  const matches = text.matchAll(/\{\{c(\d+)::/g)
   const numbers = Array.from(matches).map(m => parseInt(m[1]))
   return numbers.length > 0 ? Math.max(...numbers) : 0
 }
@@ -246,7 +246,7 @@ export function CardCreator({
           onClick={handleCreate}
           disabled={isCreating || !clozeText.trim() || !hasClozes(clozeText)}
         >
-          {isCreating ? 'Creating...' : 'Create Card (⇧↵)'}
+          {isCreating ? 'Creating...' : `Create ${totalClozes > 1 ? `${totalClozes} Cards` : 'Card'} (⇧↵)`}
         </Button>
       </div>
     </div>

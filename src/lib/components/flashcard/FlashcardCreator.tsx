@@ -24,6 +24,12 @@ const hasClozes = (text: string): boolean => {
   return /\{\{c\d+::.+?\}\}/.test(text)
 }
 
+const countClozes = (text: string): number => {
+  const matches = text.matchAll(/\{\{c(\d+)::/g)
+  const numbers = Array.from(matches).map(m => parseInt(m[1]))
+  return numbers.length > 0 ? Math.max(...numbers) : 0
+}
+
 export function FlashcardCreator({
   open,
   onOpenChange,
@@ -271,7 +277,10 @@ export function FlashcardCreator({
               Preview
             </Button>
             <Button type="submit" disabled={isLoading || !clozeText.trim() || !hasClozes(clozeText)}>
-              {isLoading ? 'Creating...' : 'Create'}
+              {isLoading ? 'Creating...' : (() => {
+                const totalClozes = countClozes(clozeText)
+                return totalClozes > 1 ? `Create ${totalClozes} Cards` : 'Create Card'
+              })()}
             </Button>
           </div>
         </form>

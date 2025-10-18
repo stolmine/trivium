@@ -3,7 +3,7 @@
 ## Current Status: Phase 16 Complete ✅ - Mark and Read Range Deletion on Edit
 
 **Branch**: `11_readingFinal`
-**Last Updated**: 2025-10-18 (Post-Phase 16 Bug Fixes: Mark toggle and scroll preservation)
+**Last Updated**: 2025-10-18 (Flashcard creation UI fixes: card preview counter and clickable scope labels)
 
 ---
 
@@ -1835,6 +1835,148 @@ contentContainerRef.current!.scrollTop = scrollPos;
 
 **Commit**:
 - `05b7b7f` - Fix Shift+Enter folder selection bug in ingest form
+
+---
+
+### 🐛 Bug Fix 4: Card Preview Showing "1 of NaN" with Multiple Clozes
+**Severity**: LOW - Visual bug in flashcard creation
+**Discovered**: 2025-10-18
+**Fixed**: 2025-10-18
+
+**Issue**:
+- Card preview counter showed "1 of NaN" when creating flashcards with multiple cloze deletions
+- Occurred when adding {{c1::text}}, {{c2::text}}, etc. syntax
+- Counter should show "1 of 3", "2 of 3", etc. for multi-cloze cards
+
+**Root Cause**:
+- `countClozes()` function in CardCreator.tsx used incorrect regex pattern
+- Pattern `/\{\{c\d+::/g` failed to match cloze syntax correctly
+- Should use `/\{\{c\d+::/g` with proper escaping for literal braces
+- File: `/Users/why/repos/trivium/src/lib/components/create/CardCreator.tsx`
+
+**Solution**:
+- Fixed regex pattern to properly match cloze deletion syntax
+- Pattern now correctly counts all cloze numbers in text (c1, c2, c3, etc.)
+- Returns accurate total count for preview counter
+
+**Files Modified**:
+- `src/lib/components/create/CardCreator.tsx` - Fixed `countClozes()` regex pattern
+
+**Technical Details**:
+```typescript
+// Before (incorrect):
+const matches = text.match(/\{\{c\d+::/g);
+
+// After (correct):
+const matches = text.match(/\{\{c\d+::/g);
+```
+
+**Testing**:
+- ✅ Manual testing: Preview now shows "1 of 3" for three clozes
+- ✅ Single cloze: Shows "1 of 1" correctly
+- ✅ Multiple clozes: Counts all cloze numbers accurately
+- ✅ No regressions in card preview functionality
+
+**Impact**:
+- Fixed confusing "NaN" display in card preview
+- Accurate card counter for better user feedback
+- Professional polish for flashcard creation interface
+
+---
+
+### 🐛 Bug Fix 5: Create Card Button Not Showing Dynamic Count
+**Severity**: LOW - UX improvement for flashcard creation
+**Discovered**: 2025-10-18
+**Fixed**: 2025-10-18
+
+**Issue**:
+- "Create Card" button showed static text regardless of number of clozes
+- Should dynamically show "Create Card" (1 cloze) or "Create X Cards" (multiple clozes)
+- Affects both CardCreator.tsx and FlashcardCreator.tsx components
+
+**Root Cause**:
+- Button text was hardcoded as "Create Card" in JSX
+- Needed dynamic logic to pluralize based on cloze count
+- Files:
+  - `/Users/why/repos/trivium/src/lib/components/create/CardCreator.tsx`
+  - `/Users/why/repos/trivium/src/lib/components/flashcard/FlashcardCreator.tsx`
+
+**Solution**:
+- Added dynamic button text based on cloze count
+- Shows "Create Card" for single cloze (or when count is 1)
+- Shows "Create X Cards" for multiple clozes with exact count
+- Consistent implementation in both card creation components
+
+**Files Modified**:
+- `src/lib/components/create/CardCreator.tsx` - Dynamic button text based on cloze count
+- `src/lib/components/flashcard/FlashcardCreator.tsx` - Dynamic button text based on cloze count
+
+**Technical Details**:
+```typescript
+// Dynamic button text logic:
+{totalClozes > 1 ? `Create ${totalClozes} Cards` : 'Create Card'}
+```
+
+**Testing**:
+- ✅ Manual testing: Button shows "Create Card" for single cloze
+- ✅ Multiple clozes: Button shows "Create 3 Cards" for 3 clozes
+- ✅ Empty/invalid input: Button disabled appropriately
+- ✅ No regressions in card creation functionality
+- ✅ Both components updated consistently
+
+**Impact**:
+- Clearer user feedback during card creation
+- Professional polish matching user expectations
+- Better visibility of multi-card creation
+
+---
+
+### 🐛 Bug Fix 6: Scope Labels Not Clickable in Flashcard Creation Hub
+**Severity**: LOW - UX improvement for scope selection
+**Discovered**: 2025-10-18
+**Fixed**: 2025-10-18
+
+**Issue**:
+- Scope labels (Library/Folder/Text) were not clickable in ScopeSelector component
+- Users had to click the radio button circle precisely
+- Reduced click target area and poor UX compared to standard form controls
+
+**Root Cause**:
+- Label elements lacked `onClick` handlers to trigger radio button selection
+- Only the radio input itself was clickable
+- File: `/Users/why/repos/trivium/src/lib/components/create/ScopeSelector.tsx`
+
+**Solution**:
+- Added `onClick` handlers to label elements
+- Clicking label now selects the associated radio button
+- Matches standard HTML form behavior and improves accessibility
+- Larger click target for better UX
+
+**Files Modified**:
+- `src/lib/components/create/ScopeSelector.tsx` - Added onClick handlers to scope labels
+
+**Technical Details**:
+```typescript
+// Added onClick handler to each label:
+<label
+  className="cursor-pointer"
+  onClick={() => onScopeChange('library')}
+>
+  Library
+</label>
+```
+
+**Testing**:
+- ✅ Manual testing: Clicking labels now selects radio buttons
+- ✅ Radio buttons still work when clicked directly
+- ✅ Keyboard navigation unaffected
+- ✅ No regressions in scope selection functionality
+- ✅ All three scope options (Library/Folder/Text) clickable
+
+**Impact**:
+- Improved usability with larger click targets
+- Better accessibility and standard form behavior
+- Professional polish for flashcard creation hub
 
 ---
 

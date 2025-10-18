@@ -147,7 +147,11 @@ export function ScopeSelector() {
       <div className="space-y-4">
         <RadioGroup value={localScope} onValueChange={(value) => handleScopeChange(value as HubScope)}>
           <div className="flex items-center gap-6">
-            <Label htmlFor="scope-library" className="flex items-center gap-2 cursor-pointer">
+            <Label
+              htmlFor="scope-library"
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleScopeChange('library')}
+            >
               <RadioGroupItem value="library" id="scope-library" />
               <span className="flex items-center gap-2">
                 <Library className="h-4 w-4" />
@@ -156,7 +160,11 @@ export function ScopeSelector() {
               </span>
             </Label>
 
-            <Label htmlFor="scope-folder" className="flex items-center gap-2 cursor-pointer">
+            <Label
+              htmlFor="scope-folder"
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleScopeChange('folder')}
+            >
               <RadioGroupItem value="folder" id="scope-folder" />
               <span className="flex items-center gap-2">
                 <FolderIcon className="h-4 w-4" />
@@ -165,7 +173,11 @@ export function ScopeSelector() {
               </span>
             </Label>
 
-            <Label htmlFor="scope-text" className="flex items-center gap-2 cursor-pointer">
+            <Label
+              htmlFor="scope-text"
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => handleScopeChange('text')}
+            >
               <RadioGroupItem value="text" id="scope-text" />
               <span className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
