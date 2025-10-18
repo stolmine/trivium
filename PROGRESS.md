@@ -113,61 +113,63 @@
 15. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
 16. **Read Content**: Open and read full text articles with visual progress tracking
 17. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
-18. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
-19. **Visual Feedback**: Read text appears as white on black (inverse styling)
-20. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
-21. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
-22. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
-23. **Preview Cards**: Live preview with complete sentence context
-24. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
-25. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
-26. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
-27. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
-28. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
-29. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
-30. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
-31. **Session Statistics**: Track unique cards completed vs total review actions
-32. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
-33. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
-34. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
-35. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
-36. **Session Limits**: Configure cards per session (10-100 cards)
-37. **Live Filter Stats**: See due/new card counts update based on selected filter
-38. **Better Dropdown Positioning**: All dropdowns appear directly under trigger buttons
-39. **Auto-Scroll Navigation**: Selected items automatically scroll into view
-40. **Persistent State**: All data saved to database, persists across sessions
-41. **Create Cards Hub**: Dedicated workspace for batch flashcard creation from marks
-42. **Mark Scope Selection**: Process marks from Library, Folder, or Text scope
-43. **Skip Marks**: Temporarily skip marks (Space key) - reappear next session
-44. **Bury Marks**: Permanently mark as 0-card (Shift+B) - won't reappear
-45. **Mark Navigation**: Navigate through pending marks with arrow keys
-46. **Context Display**: See 200 characters before/after marked text for context
-47. **Q&A Card Creation**: Create question/answer flashcards from marks (Shift+Enter)
-48. **Session Tracking**: View created cards list with edit/delete during session
-49. **Hub Statistics**: Dashboard tile shows pending marks and today's card count
-50. **Hub Shortcuts**: Ctrl+4 to access Create Cards from anywhere
-51. **Recursive Folder Mark Detection**: Marks detected in all nested subfolders when selecting folder scope
-52. **Text Filtering by Marks**: Dropdown shows only texts with available marks (80% reduction in noise)
-53. **Truly Inline Text Editing**: Edit text directly in reading view with smart boundaries and dual markdown modes
-54. **Smart Boundary Detection**: Single sentence expands to sentence, multi-sentence expands to paragraph
-55. **Context Dimming**: Before/after context shown at 40% opacity with subtle blur for visual focus
-56. **Dual Markdown Modes**: Styled mode (rendered links, editable text) and Literal mode (raw syntax)
-57. **Mode Toggle**: Switch between styled/literal with M key or toolbar button
-58. **Inline Editing Toolbar**: Bottom-attached toolbar with mode toggle, character count, save/cancel
-59. **Cursor Preservation**: Marker-based position tracking preserves cursor through mode switches
-60. **Mark Position Updates**: Marks automatically repositioned when text edited (before/within/after zones)
-61. **Keyboard Shortcuts**: Ctrl+E edit, Ctrl+S save, Esc cancel, M toggle mode
-62. **Smooth Animations**: 200ms transitions for mode switches and UI state changes
-63. **UTF-16 Position Tracking**: Accurate position handling for emoji, CJK, and all Unicode
-64. **Unified Undo System**: Undo text edits with Ctrl+Z (only on reading page)
-65. **Unified Redo System**: Redo undone actions with Ctrl+Shift+Z (only on reading page)
-66. **Hide Highlights During Edit**: Highlights automatically hidden in editable region for clean editing
-67. **Smart Mark Deletion**: Marks overlapping edited text are automatically detected and deleted
-68. **Read Range Cleanup**: Read ranges overlapping edited text are automatically cleaned up
-69. **Deletion Warning Dialog**: Preview which marks/ranges will be deleted before saving edits
-70. **Flashcard Preservation**: Flashcards preserved when source marks deleted (no study progress loss)
-71. **Undo Mark Deletion**: Deleted marks restored on undo with accurate position tracking
-72. **Coordinate Space Accuracy**: Automatic conversion between paragraph-relative and text-absolute positions
+18. **Alt+Click Link Navigation**: Alt+click or Alt+Enter on links in reading view to open ingest page with URL pre-filled
+19. **Scroll Position Restoration**: After ingest from link, returns to exact scroll position with triple RAF and search effect guards
+20. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+21. **Visual Feedback**: Read text appears as white on black (inverse styling)
+22. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
+23. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
+24. **Multiple Clozes**: Support {{c1::text}}, {{c2::text}}, {{c3::text}} syntax
+25. **Preview Cards**: Live preview with complete sentence context
+26. **Quick Submit**: Press Shift+Enter to submit flashcard creation from anywhere
+27. **Manage Flashcards**: View, sort, delete flashcards in collapsible sidebar
+28. **Time-Aware Due Dates**: See precise due times ("in 2 hours", "due in 33 min")
+29. **Review Cards**: Spaced repetition review system with FSRS-5 algorithm
+30. **Clear Cloze Indicators**: Bold [...] clearly shows cloze position during review
+31. **Grade Cards**: 4-button grading (Again/Hard/Good/Easy) with keyboard shortcuts
+32. **Re-Queue Cards**: "Again" grades put cards back in queue for retry
+33. **Session Statistics**: Track unique cards completed vs total review actions
+34. **Accurate Review Count**: Button shows exact due card count "Review Cards (5)"
+35. **Filter Reviews**: Choose to review all cards, specific folder, or specific text
+36. **Hierarchical Folder Selection**: Review configuration uses same hierarchical folder dropdown as ingest modal
+37. **Multi-Level Arrow Indicators**: Folder depth shown with multiple arrows (→, →→, →→→)
+38. **Session Limits**: Configure cards per session (10-100 cards)
+39. **Live Filter Stats**: See due/new card counts update based on selected filter
+40. **Better Dropdown Positioning**: All dropdowns appear directly under trigger buttons
+41. **Auto-Scroll Navigation**: Selected items automatically scroll into view
+42. **Persistent State**: All data saved to database, persists across sessions
+43. **Create Cards Hub**: Dedicated workspace for batch flashcard creation from marks
+44. **Mark Scope Selection**: Process marks from Library, Folder, or Text scope
+45. **Skip Marks**: Temporarily skip marks (Space key) - reappear next session
+46. **Bury Marks**: Permanently mark as 0-card (Shift+B) - won't reappear
+47. **Mark Navigation**: Navigate through pending marks with arrow keys
+48. **Context Display**: See 200 characters before/after marked text for context
+49. **Q&A Card Creation**: Create question/answer flashcards from marks (Shift+Enter)
+50. **Session Tracking**: View created cards list with edit/delete during session
+51. **Hub Statistics**: Dashboard tile shows pending marks and today's card count
+52. **Hub Shortcuts**: Ctrl+4 to access Create Cards from anywhere
+53. **Recursive Folder Mark Detection**: Marks detected in all nested subfolders when selecting folder scope
+54. **Text Filtering by Marks**: Dropdown shows only texts with available marks (80% reduction in noise)
+55. **Truly Inline Text Editing**: Edit text directly in reading view with smart boundaries and dual markdown modes
+56. **Smart Boundary Detection**: Single sentence expands to sentence, multi-sentence expands to paragraph
+57. **Context Dimming**: Before/after context shown at 40% opacity with subtle blur for visual focus
+58. **Dual Markdown Modes**: Styled mode (rendered links, editable text) and Literal mode (raw syntax)
+59. **Mode Toggle**: Switch between styled/literal with M key or toolbar button
+60. **Inline Editing Toolbar**: Bottom-attached toolbar with mode toggle, character count, save/cancel
+61. **Cursor Preservation**: Marker-based position tracking preserves cursor through mode switches
+62. **Mark Position Updates**: Marks automatically repositioned when text edited (before/within/after zones)
+63. **Keyboard Shortcuts**: Ctrl+E edit, Ctrl+S save, Esc cancel, M toggle mode
+64. **Smooth Animations**: 200ms transitions for mode switches and UI state changes
+65. **UTF-16 Position Tracking**: Accurate position handling for emoji, CJK, and all Unicode
+66. **Unified Undo System**: Undo text edits with Ctrl+Z (only on reading page)
+67. **Unified Redo System**: Redo undone actions with Ctrl+Shift+Z (only on reading page)
+68. **Hide Highlights During Edit**: Highlights automatically hidden in editable region for clean editing
+69. **Smart Mark Deletion**: Marks overlapping edited text are automatically detected and deleted
+70. **Read Range Cleanup**: Read ranges overlapping edited text are automatically cleaned up
+71. **Deletion Warning Dialog**: Preview which marks/ranges will be deleted before saving edits
+72. **Flashcard Preservation**: Flashcards preserved when source marks deleted (no study progress loss)
+73. **Undo Mark Deletion**: Deleted marks restored on undo with accurate position tracking
+74. **Coordinate Space Accuracy**: Automatic conversion between paragraph-relative and text-absolute positions
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
@@ -1795,6 +1797,44 @@ contentContainerRef.current!.scrollTop = scrollPos;
 - Significantly improved undo/redo UX
 - Smoother reading workflow without disruptive scroll jumps
 - Better performance (fewer unnecessary reloads for mark operations)
+
+---
+
+### 🐛 Bug Fix 3: Shift+Enter Folder Selection in Ingest Form
+**Severity**: LOW - Minor keyboard shortcut issue
+**Discovered**: 2025-10-18
+**Fixed**: 2025-10-18
+
+**Issue**:
+- Shift+Enter keyboard shortcut to submit ingest form was not working when folder dropdown was open
+- Users had to close the dropdown manually before pressing Shift+Enter
+- Inconsistent with expected keyboard workflow
+
+**Root Cause**:
+- Folder selection dropdown (FolderSelect component) was capturing keyboard events
+- Event propagation prevented Shift+Enter from reaching form submit handler
+- File: `/Users/why/repos/trivium/src/components/FolderSelect.tsx`
+
+**Solution**:
+- Allow keyboard events to propagate through folder dropdown
+- Form-level Shift+Enter handler now receives event even when dropdown open
+- Maintains expected keyboard workflow consistency
+
+**Files Modified**:
+- `src/components/FolderSelect.tsx` - Allow event propagation for Shift+Enter
+
+**Testing**:
+- ✅ Manual testing: Shift+Enter submits form with dropdown open
+- ✅ Dropdown still functions correctly with arrow key navigation
+- ✅ No regressions in folder selection functionality
+
+**Impact**:
+- Improved keyboard workflow for ingest form
+- Consistent behavior across all form states
+- Better user experience for keyboard-first users
+
+**Commit**:
+- `05b7b7f` - Fix Shift+Enter folder selection bug in ingest form
 
 ---
 
