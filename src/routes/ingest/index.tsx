@@ -3,16 +3,18 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
 import { useFolderStore } from '../../lib/stores/folder'
+import { getModifierKey } from '../../lib/utils/platform'
 import {
   Button,
   Input,
   Textarea,
   Label,
 } from '../../lib/components/ui'
-import { ChevronLeft, X, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useTextHistory } from '../../hooks/useTextHistory'
 import { api } from '../../lib/utils/tauri'
 import { FolderSelect } from '@/lib/components/folders/FolderSelect'
+import { BackToReadingButton } from '@/lib/components/shared/BackToReadingButton'
 import type { IngestPageLocationState } from '@/lib/types'
 
 export function IngestPage() {
@@ -43,6 +45,7 @@ export function IngestPage() {
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState<string | null>(null)
   const [titleError, setTitleError] = useState<string | null>(null)
+  const mod = getModifierKey()
 
   const handleFetchWikipedia = async () => {
     if (!wikipediaUrl.trim()) return
@@ -225,26 +228,14 @@ export function IngestPage() {
   }, [content, title, titleError, undo, redo, selectedFolderId])
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-6 py-4 max-w-6xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" onClick={handleCancel}>
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Back
-              </Button>
-              <h1 className="text-2xl font-bold">Import New Text</h1>
-            </div>
-            <Button variant="ghost" size="icon" onClick={handleCancel} aria-label="Close">
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
+    <div className="flex-1 overflow-auto">
+      <div className="border-b">
+        <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
+          <h1 className="text-3xl font-bold">Import New Text</h1>
+          <BackToReadingButton />
         </div>
-      </header>
-
-      <main className="flex-1 overflow-y-auto">
-        <div className="container mx-auto px-6 py-8 max-w-6xl">
+      </div>
+      <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-6">
@@ -368,7 +359,7 @@ export function IngestPage() {
                         size="sm"
                         onClick={handleWrapExclude}
                         disabled={isLoading}
-                        title="Exclude selection from progress (Ctrl+Shift+E)"
+                        title={`Exclude selection from progress (${mod}+Shift+E)`}
                       >
                         Exclude Text
                       </Button>
@@ -391,36 +382,31 @@ export function IngestPage() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Tip: Press Shift+Enter to import, Esc to cancel, Ctrl+Z to undo, or Ctrl+Shift+E to exclude selected text from progress tracking
+                    Tip: Press Shift+Enter to import, Esc to cancel, {mod}+Z to undo, or {mod}+Shift+E to exclude selected text from progress tracking
                   </p>
                 </div>
               </div>
             </div>
+
+            <div className="flex justify-end gap-3 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={isLoading || !title || !content || !!titleError}
+              >
+                {isLoading ? 'Importing...' : 'Import to Library'}
+              </Button>
+            </div>
           </form>
         </div>
-      </main>
-
-      <footer className="border-t bg-card sticky bottom-0">
-        <div className="container mx-auto px-6 py-4 max-w-6xl">
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              onClick={handleSubmit}
-              disabled={isLoading || !title || !content || !!titleError}
-            >
-              {isLoading ? 'Importing...' : 'Import to Library'}
-            </Button>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

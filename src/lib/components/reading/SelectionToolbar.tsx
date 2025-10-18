@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Edit2, Check } from 'lucide-react'
 import { Button } from '../ui'
 import { cn } from '../../utils'
+import { getModifierKey } from '../../utils/platform'
 
 interface SelectionToolbarProps {
   selection: {
@@ -98,6 +99,8 @@ export function SelectionToolbar({
     return null
   }
 
+  const mod = getModifierKey()
+
   return (
     <div
       id="selection-toolbar"
@@ -117,7 +120,7 @@ export function SelectionToolbar({
         variant="default"
         size="sm"
         onClick={handleEdit}
-        title="Edit selection (Ctrl+E)"
+        title={`Edit selection (${mod}+E)`}
         aria-label="Edit selection"
       >
         <Edit2 className="h-4 w-4 mr-1" />
@@ -127,7 +130,7 @@ export function SelectionToolbar({
         variant="ghost"
         size="sm"
         onClick={handleMarkAsRead}
-        title="Mark as read (Ctrl+M)"
+        title={`Mark as read (${mod}+M)`}
         aria-label="Mark as read"
       >
         <Check className="h-4 w-4 mr-1" />

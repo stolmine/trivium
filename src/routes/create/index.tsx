@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/lib/components/ui/button';
-import { ArrowLeft, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { ScopeSelector } from '@/lib/components/create/ScopeSelector';
 import { MarkDisplay } from '@/lib/components/create/MarkDisplay';
 import { CardCreator } from '@/lib/components/create/CardCreator';
 import { CreatedCardsList } from '@/lib/components/create/CreatedCardsList';
 import { useCardCreationStore } from '@/lib/stores/cardCreation';
+import { BackToReadingButton } from '@/lib/components/shared/BackToReadingButton';
+import { getModifierKey } from '@/lib/utils/platform';
 
 export function CreateCardsPage() {
   const navigate = useNavigate();
   const [showHelp, setShowHelp] = useState(false);
+  const mod = getModifierKey();
 
   const marks = useCardCreationStore((state) => state.marks);
   const currentMarkIndex = useCardCreationStore((state) => state.currentMarkIndex);
@@ -47,8 +50,8 @@ export function CreateCardsPage() {
         setShowHelp(true);
       }
 
-      // Escape: Close help
-      if (e.key === 'Escape' && showHelp) {
+      // Escape or Enter: Close help
+      if ((e.key === 'Escape' || e.key === 'Enter') && showHelp) {
         e.preventDefault();
         setShowHelp(false);
       }
@@ -91,36 +94,14 @@ export function CreateCardsPage() {
   // Empty state: no marks
   if (marks.length === 0 && !isLoading && !error) {
     return (
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <header className="h-14 border-b border-border flex items-center justify-between px-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Create Flashcards</span>
-            </Button>
+      <div className="flex-1 overflow-auto">
+        <div className="border-b">
+          <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Create Flashcards</h1>
+            <BackToReadingButton />
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              title="Close"
-            >
-              <X className="h-4 w-4" />
-              <span className="ml-2">Close</span>
-            </Button>
-          </div>
-        </header>
-
-        {/* Empty state content */}
-        <main className="flex-1 overflow-auto">
-          <div className="container max-w-6xl mx-auto px-8 py-8">
+        </div>
+        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             {/* Scope Selector */}
             <ScopeSelector />
 
@@ -140,7 +121,6 @@ export function CreateCardsPage() {
               </div>
             </div>
           </div>
-        </main>
       </div>
     );
   }
@@ -148,36 +128,14 @@ export function CreateCardsPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <header className="h-14 border-b border-border flex items-center justify-between px-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Create Flashcards</span>
-            </Button>
+      <div className="flex-1 overflow-auto">
+        <div className="border-b">
+          <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Create Flashcards</h1>
+            <BackToReadingButton />
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              title="Close"
-            >
-              <X className="h-4 w-4" />
-              <span className="ml-2">Close</span>
-            </Button>
-          </div>
-        </header>
-
-        {/* Error content */}
-        <main className="flex-1 overflow-auto">
-          <div className="container max-w-6xl mx-auto px-8 py-8">
+        </div>
+        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             <div className="flex flex-col items-center justify-center py-16 space-y-6">
               <div className="text-6xl">⚠️</div>
               <div className="text-center space-y-2">
@@ -197,7 +155,6 @@ export function CreateCardsPage() {
               </div>
             </div>
           </div>
-        </main>
       </div>
     );
   }
@@ -205,36 +162,14 @@ export function CreateCardsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <header className="h-14 border-b border-border flex items-center justify-between px-6">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Create Flashcards</span>
-            </Button>
+      <div className="flex-1 overflow-auto">
+        <div className="border-b">
+          <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Create Flashcards</h1>
+            <BackToReadingButton />
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/')}
-              title="Close"
-            >
-              <X className="h-4 w-4" />
-              <span className="ml-2">Close</span>
-            </Button>
-          </div>
-        </header>
-
-        {/* Loading content */}
-        <main className="flex-1 overflow-auto">
-          <div className="container max-w-6xl mx-auto px-8 py-8">
+        </div>
+        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             <div className="space-y-6">
               {/* Scope selector skeleton */}
               <div className="p-6 border rounded-lg animate-pulse">
@@ -270,43 +205,20 @@ export function CreateCardsPage() {
               </div>
             </div>
           </div>
-        </main>
       </div>
     );
   }
 
   // Main content with marks
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <header className="h-14 border-b border-border flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Create Flashcards</span>
-          </Button>
+    <div className="flex-1 overflow-auto">
+      <div className="border-b">
+        <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
+          <BackToReadingButton />
+          <h1 className="text-3xl font-bold">Create Flashcards</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/')}
-            title="Close"
-          >
-            <X className="h-4 w-4" />
-            <span className="ml-2">Close</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <div className="container max-w-6xl mx-auto px-8 py-8">
+      </div>
+      <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
           <div className="space-y-6">
             {/* Scope Selector */}
             <ScopeSelector />
@@ -341,15 +253,14 @@ export function CreateCardsPage() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Created Cards List */}
-        <CreatedCardsList
-          cards={createdCards}
-          onEdit={handleEditCard}
-          onDelete={handleDeleteCard}
-        />
-      </main>
+          {/* Created Cards List */}
+          <CreatedCardsList
+            cards={createdCards}
+            onEdit={handleEditCard}
+            onDelete={handleDeleteCard}
+          />
+        </div>
 
       {/* Keyboard Shortcuts Help Modal */}
       {showHelp && (
@@ -383,7 +294,7 @@ export function CreateCardsPage() {
                     <div className="flex gap-2">
                       <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">→</kbd>
                       <span className="text-muted-foreground text-xs">or</span>
-                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+J</kbd>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+J</kbd>
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-1">
@@ -391,7 +302,7 @@ export function CreateCardsPage() {
                     <div className="flex gap-2">
                       <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">←</kbd>
                       <span className="text-muted-foreground text-xs">or</span>
-                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+K</kbd>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+K</kbd>
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-1">
@@ -408,15 +319,15 @@ export function CreateCardsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Library scope</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+1</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Alt+1</kbd>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Folder scope</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+2</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Alt+2</kbd>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Text scope</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+3</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Alt+3</kbd>
                   </div>
                 </div>
               </div>
@@ -428,7 +339,7 @@ export function CreateCardsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Wrap selection in cloze</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Shift+C</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+Shift+C</kbd>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Create/Update card</span>
@@ -436,19 +347,15 @@ export function CreateCardsPage() {
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Undo</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Z</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+Z</kbd>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Redo</span>
                     <div className="flex gap-2">
-                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Shift+Z</kbd>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+Shift+Z</kbd>
                       <span className="text-muted-foreground text-xs">or</span>
-                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+Y</kbd>
+                      <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+Y</kbd>
                     </div>
-                  </div>
-                  <div className="flex justify-between items-center py-1">
-                    <span className="text-sm">Clear/Cancel</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Esc</kbd>
                   </div>
                 </div>
               </div>
@@ -460,7 +367,7 @@ export function CreateCardsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Open Flashcard Hub</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Ctrl+4</kbd>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">{mod}+3</kbd>
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-sm">Show this help</span>
@@ -472,7 +379,7 @@ export function CreateCardsPage() {
 
             <div className="mt-6 pt-6 border-t">
               <Button onClick={() => setShowHelp(false)} className="w-full">
-                Close (Esc)
+                Close (Esc or Enter)
               </Button>
             </div>
           </div>

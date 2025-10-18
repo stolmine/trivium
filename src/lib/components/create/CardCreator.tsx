@@ -3,6 +3,7 @@ import { useTextHistory } from '../../../hooks/useTextHistory'
 import { useFlashcardStore } from '../../stores/flashcard'
 import { Button, Textarea, Label } from '../ui'
 import { FlashcardPreview } from '../flashcard/FlashcardPreview'
+import { getModifierKey } from '../../utils/platform'
 
 interface CardCreatorProps {
   mark: {
@@ -41,6 +42,7 @@ export function CardCreator({
   const [isCreating, setIsCreating] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const { getPreview } = useFlashcardStore()
+  const mod = getModifierKey()
 
   useEffect(() => {
     setClozeText(mark.markedText)
@@ -195,7 +197,7 @@ export function CardCreator({
           className="font-mono text-sm"
         />
         <div className="text-xs text-muted-foreground">
-          Tip: Select text and press Ctrl+Shift+C to wrap in cloze deletion (auto-increments). Press Shift+Enter to create card.
+          Tip: Select text and press {mod}+Shift+C to wrap in cloze deletion (auto-increments). Press Shift+Enter to create card.
         </div>
         {clozeText && !hasClozes(clozeText) && (
           <div className="text-xs text-destructive">

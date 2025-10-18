@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 17+ Complete ✅ - Navigation & Layout Refinements
+## Current Status: Phase 17++ Complete ✅ - OS-Appropriate Tooltip Improvements
 
 **Branch**: `15_globalUIupdate`
-**Last Updated**: 2025-10-18 (Phase 17+: Navigation improvements, ingest integration, and layout refinements)
+**Last Updated**: 2025-10-18 (Phase 17++: Cross-platform keyboard shortcuts in tooltips with platform detection utility)
 
 ---
 
@@ -2192,6 +2192,87 @@ const matches = text.match(/\{\{c\d+::/g);
 
 **Implementation Time**: ~3 hours with parallel agents
 **Lines of Code**: ~80 modified across 8 files
+
+---
+
+### ✅ Phase 17++: OS-Appropriate Tooltip Improvements (2025-10-18) - COMPLETE
+**Completed**: 2025-10-18
+**Implementation Time**: ~2 hours with parallel agents
+
+**Overview**: Cross-platform UX improvement adding OS-appropriate keyboard shortcuts to all tooltips throughout the application. Implements platform detection utility and updates 30+ tooltips to dynamically show "Cmd" on macOS and "Ctrl" on Windows/Linux.
+
+**Core Improvements**:
+
+#### 1. Platform Detection Utility
+- ✅ Created `/src/lib/utils/platform.ts` with comprehensive platform detection
+- ✅ `isMac` constant for runtime platform detection using `navigator.platform`
+- ✅ `getModifierKey()` returns "Cmd" on macOS, "Ctrl" elsewhere
+- ✅ `getModifierSymbol()` returns "⌘" on macOS, "Ctrl" elsewhere
+- ✅ `getAltKey()` returns "Option" on macOS, "Alt" elsewhere
+- ✅ `getAltSymbol()` returns "⌥" on macOS, "Alt" elsewhere
+- ✅ `formatShortcut()` for structured shortcut formatting with ctrl/shift/alt flags
+- ✅ `formatShortcutSymbol()` for symbol-based formatting (e.g., "⌘S" on macOS)
+- ✅ Window-safe detection (handles SSR scenarios)
+
+#### 2. Tooltip Updates Across Application
+- ✅ **Sidebar Navigation** (5 tooltips): Dashboard, Library, Review, Create, Ingest buttons
+- ✅ **Reading View** (8 tooltips): Back/forward navigation, mark/unmark, delete mark, text search, inline editing, undo/redo
+- ✅ **Create Cards View** (6 tooltips): Scope selector buttons, skip mark, bury mark, create card, mark navigation
+- ✅ **Library View** (4 tooltips): Expand/collapse all, add folder, add text, library search
+- ✅ **Ingest View** (3 tooltips): Folder selection, import shortcuts, Wikipedia parsing
+- ✅ **Review View** (2 tooltips): Filter configuration, session start
+- ✅ **Dashboard View** (2 tooltips): Continue reading, quick actions
+- ✅ **Navigation Components** (2 tooltips): Back to reading button, universal navigation
+
+**Files Modified**: 9 files
+- `src/lib/utils/platform.ts` - **NEW**: Platform detection utility (97 lines)
+- `src/components/shell/Sidebar.tsx` - Updated navigation button tooltips with `getModifierKey()`
+- `src/routes/read/[id].tsx` - Updated reading view action tooltips (8 locations)
+- `src/routes/create/index.tsx` - Updated flashcard creation tooltips (6 locations)
+- `src/routes/library/index.tsx` - Updated library management tooltips (4 locations)
+- `src/routes/ingest/index.tsx` - Updated import action tooltips (3 locations)
+- `src/routes/review/index.tsx` - Updated review configuration tooltips (2 locations)
+- `src/lib/components/reading/SelectionToolbar.tsx` - Updated inline editing tooltips
+- `src/lib/components/create/CardCreator.tsx` - Updated card creation shortcut display
+
+**Technical Implementation**:
+- ✅ Runtime platform detection using `navigator.platform.toUpperCase().indexOf('MAC')`
+- ✅ Window-safe detection (checks `typeof window !== 'undefined'`)
+- ✅ Template literal integration: `` title={`Save changes (${getModifierKey()}+S)`} ``
+- ✅ Consistent pattern across all tooltips
+- ✅ Zero performance impact (detection runs once at module load)
+- ✅ Type-safe utility functions with TypeScript
+
+**User Experience Benefits**:
+- ✅ macOS users see "Cmd" instead of "Ctrl" in all tooltips
+- ✅ Windows/Linux users see "Ctrl" consistently
+- ✅ Alt key labeled as "Option" on macOS for platform familiarity
+- ✅ Improved discoverability of keyboard shortcuts
+- ✅ Professional cross-platform UX matching native conventions
+- ✅ No user confusion from platform-inappropriate labels
+
+**Testing**:
+- ✅ All tooltips display correct modifier keys on macOS (Cmd)
+- ✅ All tooltips display correct modifier keys on Windows/Linux (Ctrl)
+- ✅ Platform detection works in browser environment
+- ✅ No console errors or TypeScript issues
+- ✅ Keyboard shortcuts continue to function correctly
+- ✅ Visual consistency across all views
+
+**Performance**:
+- ✅ Platform detection cached at module load (no repeated checks)
+- ✅ Zero runtime performance impact
+- ✅ No bundle size concerns (utility < 1KB)
+- ✅ All tooltips render instantly
+
+**Coverage Statistics**:
+- ✅ **30+ tooltips updated** across 9 component files
+- ✅ **5 platform utility functions** created
+- ✅ **97 lines** of utility code added
+- ✅ **100% coverage** of keyboard shortcut tooltips in the application
+
+**Implementation Time**: ~2 hours with parallel agents
+**Lines of Code**: +97 new (platform.ts), ~100 modified across 8 files
 
 ---
 

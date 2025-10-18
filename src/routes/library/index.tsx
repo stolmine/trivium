@@ -7,6 +7,7 @@ import { Plus, ArrowUpDown } from 'lucide-react'
 import type { Text } from '../../lib/types'
 import { TextContextMenu } from '../../components/library/TextContextMenu'
 import { useTextProgress } from '../../lib/hooks/useTextProgress'
+import { BackToReadingButton } from '../../lib/components/shared/BackToReadingButton'
 
 type SortOption = 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'content-length'
 
@@ -86,10 +87,14 @@ export function LibraryPage() {
   const sortedTexts = useMemo(() => sortTexts(texts, sortBy), [texts, sortBy])
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Library</h1>
-        <div className="flex gap-3 items-center">
+    <div className="flex-1 overflow-auto">
+      <div className="border-b">
+        <div className="container max-w-6xl mx-auto px-8 h-14 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold">Library</h1>
+            <BackToReadingButton />
+          </div>
+          <div className="flex gap-3 items-center">
           {texts.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -135,48 +140,50 @@ export function LibraryPage() {
             <Plus className="h-4 w-4 mr-2" />
             Import Text
           </Button>
+          </div>
         </div>
       </div>
+      <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+        {error && (
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
 
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      {isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">Loading texts...</div>
-      ) : texts.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p className="mb-4">No texts in your library yet.</p>
-          <Button onClick={handleImportText}>
-            <Plus className="h-4 w-4 mr-2" />
-            Import Your First Text
-          </Button>
-        </div>
-      ) : (
-        <div className="grid gap-4">
-          {sortedTexts.map((text) => (
-            <TextContextMenu key={text.id} textId={text.id} textTitle={text.title}>
-              <div
-                className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition"
-                onClick={() => handleTextClick(text.id)}
-              >
-                <h2 className="text-xl font-semibold mb-2">{text.title}</h2>
-                {text.author && (
-                  <p className="text-sm text-muted-foreground mb-1">by {text.author}</p>
-                )}
-                <div className="flex items-center gap-3">
-                  <p className="text-sm text-muted-foreground">
-                    {text.contentLength.toLocaleString()} characters
-                  </p>
-                  <TextProgress textId={text.id} />
+        {isLoading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading texts...</div>
+        ) : texts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="mb-4">No texts in your library yet.</p>
+            <Button onClick={handleImportText}>
+              <Plus className="h-4 w-4 mr-2" />
+              Import Your First Text
+            </Button>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {sortedTexts.map((text) => (
+              <TextContextMenu key={text.id} textId={text.id} textTitle={text.title}>
+                <div
+                  className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition"
+                  onClick={() => handleTextClick(text.id)}
+                >
+                  <h2 className="text-xl font-semibold mb-2">{text.title}</h2>
+                  {text.author && (
+                    <p className="text-sm text-muted-foreground mb-1">by {text.author}</p>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <p className="text-sm text-muted-foreground">
+                      {text.contentLength.toLocaleString()} characters
+                    </p>
+                    <TextProgress textId={text.id} />
+                  </div>
                 </div>
-              </div>
-            </TextContextMenu>
-          ))}
-        </div>
-      )}
+              </TextContextMenu>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

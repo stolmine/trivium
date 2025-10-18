@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles, FileInput } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -10,6 +10,8 @@ import { LibraryTree } from '../library/LibraryTree';
 import { LibrarySearchBar } from '../library/LibrarySearchBar';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { searchLibrary } from '../../lib/utils/librarySearch';
+import { NavigationButtons } from '../../lib/components/shared/NavigationButtons';
+import { getModifierKey } from '../../lib/utils/platform';
 
 interface NavItem {
   id: string;
@@ -23,11 +25,17 @@ interface SidebarProps {
   onShowHelp?: () => void;
 }
 
-const navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/', shortcut: 'Ctrl+1' },
-  { id: 'review', label: 'Review', icon: GraduationCap, path: '/review', shortcut: 'Ctrl+3' },
-  { id: 'create', label: 'Create Cards', icon: Sparkles, path: '/create', shortcut: 'Ctrl+4' },
-];
+// Navigation items use dynamic shortcuts based on platform
+const getNavItems = (): NavItem[] => {
+  const mod = getModifierKey();
+  return [
+    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/', shortcut: `${mod}+1` },
+    { id: 'library', label: 'Library', icon: Search, path: '/library', shortcut: `${mod}+2` },
+    { id: 'create', label: 'Create Cards', icon: Sparkles, path: '/create', shortcut: `${mod}+3` },
+    { id: 'review', label: 'Review', icon: GraduationCap, path: '/review', shortcut: `${mod}+4` },
+    { id: 'ingest', label: 'Ingest', icon: FileInput, path: '/ingest', shortcut: `${mod}+5` },
+  ];
+};
 
 const getSortLabel = (sortBy: SortOption): string => {
   switch (sortBy) {
@@ -66,6 +74,8 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
 
   const width = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
   const transitionStyle = shouldReduceMotion() ? {} : getTransitionStyle('width', 300);
+  const mod = getModifierKey();
+  const navItems = getNavItems();
 
   useEffect(() => {
     if (!showCreateFolderDialog) return;
@@ -189,133 +199,137 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
       )}
       style={{ width: `${width}px`, ...transitionStyle }}
     >
-      <div className="flex items-center h-14 px-4 border-b border-sidebar-border">
+      <div className="flex items-center justify-between h-14 px-4 border-b border-sidebar-border">
+        <div className="flex items-center gap-3">
+          {!sidebarCollapsed && (
+            <h1 className="text-lg font-bold tracking-wide">TRIVIUM</h1>
+          )}
+          {sidebarCollapsed && (
+            <span className="text-lg font-bold">T</span>
+          )}
+        </div>
         {!sidebarCollapsed && (
-          <h1 className="text-lg font-bold tracking-wide">TRIVIUM</h1>
-        )}
-        {sidebarCollapsed && (
-          <span className="text-lg font-bold">T</span>
+          <div className="flex items-center">
+            <NavigationButtons />
+          </div>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 flex flex-col" role="navigation" aria-label="Main navigation">
-        <ul className="space-y-1 px-2 mb-4">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
+      <nav className="flex-1 flex flex-col overflow-hidden" role="navigation" aria-label="Main navigation">
+        <div className="py-4 flex-shrink-0">
+          <ul className="space-y-1 px-2">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
 
-            return (
-              <li key={item.id}>
-                <button
-                  onClick={() => navigate(item.path)}
-                  className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                    active
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                  )}
-                  aria-label={item.label}
-                  aria-current={active ? 'page' : undefined}
-                  title={sidebarCollapsed ? item.label : (item.shortcut ? `${item.label} (${item.shortcut})` : item.label)}
-                >
-                  <Icon className="h-5 w-5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span>{item.label}</span>}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => navigate(item.path)}
+                    className={cn(
+                      'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                      active
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    )}
+                    aria-label={item.label}
+                    aria-current={active ? 'page' : undefined}
+                    title={sidebarCollapsed ? item.label : (item.shortcut ? `${item.label} (${item.shortcut})` : item.label)}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    {!sidebarCollapsed && <span>{item.label}</span>}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {!sidebarCollapsed && (
-            <div className="px-4 py-2 flex items-center justify-between">
-              <button
-                onClick={() => navigate('/library')}
-                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring rounded px-1 py-0.5"
-                aria-label="Go to Library"
-                title="Go to Library (Ctrl+2)"
+        {!sidebarCollapsed && (
+          <div className="px-4 py-2 flex items-center justify-between flex-shrink-0">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Library Tree
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={() => navigate('/ingest')}
+                title={`New ingest (${mod}+N)`}
+                aria-label="Create new text"
               >
-                Library
-              </button>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() => navigate('/ingest')}
-                  title="New ingest (Ctrl+N)"
-                  aria-label="Create new text"
-                >
-                  <FilePlus className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={openSearch}
-                  title="Search library (Shift+Ctrl+F)"
-                  aria-label="Search library"
-                >
-                  <Search className="h-4 w-4" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      title={getSortLabel(sortBy)}
-                      aria-label="Sort library"
-                    >
-                      <ArrowUpDown className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}>
-                      Name (A-Z)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-desc' ? 'name-asc' : 'name-desc')}>
-                      Name (Z-A)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-newest' ? 'date-oldest' : 'date-newest')}>
-                      Date Created (Newest)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-oldest' ? 'date-newest' : 'date-oldest')}>
-                      Date Created (Oldest)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('content-length')}>
-                      Content Length
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={handleToggleExpandAll}
-                  title={allFoldersExpanded ? "Collapse all folders (Ctrl+Shift+E)" : "Expand all folders (Ctrl+Shift+E)"}
-                  aria-label={allFoldersExpanded ? "Collapse all folders" : "Expand all folders"}
-                >
-                  {allFoldersExpanded ? (
-                    <ChevronsUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronsDown className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowCreateFolderDialog(true)}
-                  className="h-6 w-6 p-0"
-                  aria-label="Create new folder"
-                  title="Create folder (Ctrl+Shift+N)"
-                >
-                  <FolderPlus className="h-4 w-4" />
-                </Button>
-              </div>
+                <FilePlus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={openSearch}
+                title={`Search library (Shift+${mod}+F)`}
+                aria-label="Search library"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    title={getSortLabel(sortBy)}
+                    aria-label="Sort library"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}>
+                    Name (A-Z)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-desc' ? 'name-asc' : 'name-desc')}>
+                    Name (Z-A)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-newest' ? 'date-oldest' : 'date-newest')}>
+                    Date Created (Newest)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-oldest' ? 'date-newest' : 'date-oldest')}>
+                    Date Created (Oldest)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('content-length')}>
+                    Content Length
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={handleToggleExpandAll}
+                title={allFoldersExpanded ? `Collapse all folders (${mod}+Shift+E)` : `Expand all folders (${mod}+Shift+E)`}
+                aria-label={allFoldersExpanded ? "Collapse all folders" : "Expand all folders"}
+              >
+                {allFoldersExpanded ? (
+                  <ChevronsUp className="h-4 w-4" />
+                ) : (
+                  <ChevronsDown className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCreateFolderDialog(true)}
+                className="h-6 w-6 p-0"
+                aria-label="Create new folder"
+                title={`Create folder (${mod}+Shift+N)`}
+              >
+                <FolderPlus className="h-4 w-4" />
+              </Button>
             </div>
-          )}
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto min-h-0">
           {isSearchOpen && !sidebarCollapsed && <LibrarySearchBar />}
           <LibraryTree collapsed={sidebarCollapsed} />
         </div>
@@ -329,7 +343,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
             onClick={onShowHelp}
             className="w-full"
             aria-label="Show keyboard shortcuts"
-            title={sidebarCollapsed ? 'Help' : 'Show keyboard shortcuts (Ctrl+/)'}
+            title={sidebarCollapsed ? 'Help' : `Show keyboard shortcuts (${mod}+/)`}
           >
             <HelpCircle className="h-5 w-5" />
             {!sidebarCollapsed && <span className="ml-2 text-sm">Help</span>}
@@ -341,7 +355,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
           onClick={toggleSidebar}
           className="w-full"
           aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={sidebarCollapsed ? `Expand sidebar (${mod}+B)` : `Collapse sidebar (${mod}+B)`}
         >
           {sidebarCollapsed ? (
             <ChevronRight className="h-5 w-5" />

@@ -9,6 +9,7 @@ import { Label } from '@/lib/components/ui/label';
 import { Slider } from '@/lib/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/lib/components/ui/select';
 import { FolderSelect } from '@/lib/components/folders/FolderSelect';
+import { BackToReadingButton } from '@/lib/components/shared/BackToReadingButton';
 import type { ReviewFilter, Text } from '@/lib/types';
 
 export function ReviewHubPage() {
@@ -75,14 +76,15 @@ export function ReviewHubPage() {
   };
 
   return (
-    <div className="flex flex-col items-center h-full p-8 overflow-auto">
-      <div className="w-full max-w-2xl space-y-8">
-        <div>
-          <h1 className="text-2xl font-semibold mb-2">Review</h1>
-          <p className="text-sm text-muted-foreground">
-            Choose what to review
-          </p>
+    <div className="flex-1 overflow-auto">
+      <div className="border-b">
+        <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
+          <h1 className="text-3xl font-bold">Review</h1>
+          <BackToReadingButton />
         </div>
+      </div>
+      <div className="flex flex-col items-center px-8 pb-8 pt-6">
+        <div className="w-full max-w-2xl space-y-8">
 
         <div className="space-y-4">
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
@@ -189,6 +191,7 @@ export function ReviewHubPage() {
         >
           Start Review ({loading ? '...' : Math.min(stats.dueCount ?? 0, config.sessionLimit)})
         </Button>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useReadingStore } from '../../lib/stores/reading'
 import { useLibraryStore } from '../../stores/library'
 import { useSettingsStore } from '../../lib/stores/settings'
+import { useLastReadStore } from '../../lib/stores/lastRead'
+import { getModifierKey } from '../../lib/utils/platform'
 import {
   Button,
   DropdownMenu,
@@ -28,7 +30,7 @@ import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSideba
 import { detectEditRegion } from '../../lib/utils/markdownEdit'
 import { updateMarkPositions } from '../../lib/utils/markPositions'
 import { useReadingHistoryStore } from '../../lib/stores/readingHistory'
-import { ChevronLeft, MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle } from 'lucide-react'
+import { MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
 import { useSearchStore } from '../../lib/stores/search'
 import { findMatches } from '../../lib/utils/textSearch'
@@ -88,6 +90,7 @@ export function ReadPage() {
   const { undo, redo, canUndo, canRedo, setOnReadingPage } = useReadingHistoryStore()
   const { renameText, deleteText } = useLibraryStore()
   const { linksEnabled, toggleLinks, fontSize, setFontSize } = useSettingsStore()
+  const { setLastRead } = useLastReadStore()
   const {
     isOpen,
     query,
@@ -99,6 +102,7 @@ export function ReadPage() {
     closeSearch,
     setMatches
   } = useSearchStore()
+  const mod = getModifierKey()
 
   const loadMarks = async (textId: number) => {
     try {
@@ -164,6 +168,33 @@ export function ReadPage() {
       setOnReadingPage(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!currentText || !scrollContainerRef.current) return
+
+    const updateLastRead = () => {
+      const scrollPosition = scrollContainerRef.current?.scrollTop ?? 0
+      setLastRead(currentText.id, currentText.title, scrollPosition, totalProgress)
+    }
+
+    updateLastRead()
+
+    let scrollTimeout: NodeJS.Timeout
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout)
+      scrollTimeout = setTimeout(() => {
+        updateLastRead()
+      }, 500)
+    }
+
+    const container = scrollContainerRef.current
+    container.addEventListener('scroll', handleScroll)
+
+    return () => {
+      container?.removeEventListener('scroll', handleScroll)
+      clearTimeout(scrollTimeout)
+    }
+  }, [currentText, totalProgress, setLastRead])
 
   // Sync editing content when currentText changes
   useEffect(() => {
@@ -827,7 +858,6 @@ export function ReadPage() {
           {error}
         </div>
         <Button variant="outline" onClick={() => navigate('/')}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
       </div>
@@ -840,7 +870,6 @@ export function ReadPage() {
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="text-center py-12 text-muted-foreground">Text not found</div>
         <Button variant="outline" onClick={() => navigate('/')}>
-          <ChevronLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </Button>
       </div>
@@ -851,22 +880,19 @@ export function ReadPage() {
   return (
     <div className="flex h-full overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-6 py-4 max-w-4xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-                  <ChevronLeft className="h-4 w-4 mr-1" />
-                  Back
-                </Button>
-                <div>
-                  <h1 className="text-lg font-semibold">{currentText.title}</h1>
-                  {currentText.author && (
-                    <p className="text-sm text-muted-foreground">by {currentText.author}</p>
-                  )}
+        <header className="sticky top-0 z-10 h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container mx-auto px-8 h-full max-w-4xl">
+            <div className="reading-content mx-auto h-full">
+              <div className="flex items-center justify-between h-full">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <h1 className="text-lg font-semibold">{currentText.title}</h1>
+                    {currentText.author && (
+                      <p className="text-sm text-muted-foreground">by {currentText.author}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4">
                 <div className="text-sm text-muted-foreground">
                   Progress: <span className="font-medium">{totalProgress.toFixed(0)}%</span>
                 </div>
@@ -882,7 +908,7 @@ export function ReadPage() {
                     }
                   }}
                   disabled={isEditButtonProcessing}
-                  title={inlineEditActive ? 'Cancel editing (Esc)' : 'Edit text inline (Ctrl+E)'}
+                  title={inlineEditActive ? 'Cancel editing (Esc)' : `Edit text inline (${mod}+E)`}
                   aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text globally'}
                   className="h-9"
                 >
@@ -893,7 +919,7 @@ export function ReadPage() {
                   variant={linksEnabled ? 'default' : 'outline'}
                   size="sm"
                   onClick={toggleLinks}
-                  title={linksEnabled ? 'Links enabled (Ctrl+L)' : 'Links disabled (Ctrl+L)'}
+                  title={linksEnabled ? `Links enabled (${mod}+L)` : `Links disabled (${mod}+L)`}
                   aria-label={linksEnabled ? 'Disable links' : 'Enable links'}
                   className="h-9 w-9 p-0"
                 >
@@ -912,7 +938,7 @@ export function ReadPage() {
                       }
                     }, 0)
                   }}
-                  title="Search in text (Ctrl+F)"
+                  title={`Search in text (${mod}+F)`}
                   aria-label="Search in text"
                 >
                   <Search className="h-4 w-4" />
@@ -980,13 +1006,14 @@ export function ReadPage() {
                 </Button>
               </div>
             </div>
+            </div>
           </div>
         </header>
 
         {isOpen && <SearchBar />}
 
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-8 py-12 max-w-4xl">
+          <div className="container mx-auto px-8 pt-6 pb-12 max-w-4xl">
 {isEditMode ? (
               <TextEditor
                 textId={currentText.id}
