@@ -207,7 +207,7 @@ export function IngestPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [content, title, titleError, undo, redo])
+  }, [content, title, titleError, undo, redo, selectedFolderId])
 
   return (
     <div className="flex flex-col h-full bg-background">
