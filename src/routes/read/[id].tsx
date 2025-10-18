@@ -37,6 +37,7 @@ export function ReadPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const scrollPositionRef = useRef<number | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -77,7 +78,10 @@ export function ReadPage() {
     calculateProgress,
     setExcludedRanges,
     markAsFinished,
-    clearProgress
+    clearProgress,
+    markRangeAsRead,
+    unmarkRangeAsRead,
+    isRangeRead
   } = useReadingStore()
   const { undo, redo, canUndo, canRedo, setOnReadingPage } = useReadingHistoryStore()
   const { renameText, deleteText } = useLibraryStore()
@@ -375,7 +379,7 @@ export function ReadPage() {
   const handleActivateInlineEdit = () => {
     if (!selectionInfo || !currentText) return
 
-    scrollPositionRef.current = window.scrollY
+    scrollPositionRef.current = scrollContainerRef.current?.scrollTop ?? 0
 
     const { cleanedContent } = parseExcludedRanges(currentText.content)
     const cleanedStart = renderedPosToCleanedPos(selectionInfo.start, cleanedContent)
@@ -458,36 +462,63 @@ export function ReadPage() {
     if (!selectionInfo || !currentText) return
 
     try {
-      await api.reading.markRangeAsRead(
-        currentText.id,
-        selectionInfo.start,
-        selectionInfo.end
-      )
-
-      await getReadRanges(currentText.id)
-      await calculateProgress(currentText.id)
+      // Toggle logic: check if range is already read
+      if (isRangeRead(selectionInfo.start, selectionInfo.end)) {
+        // Unmark as read
+        await unmarkRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
+      } else {
+        // Mark as read
+        await markRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
+      }
 
       setSelectionInfo(null)
     } catch (error) {
-      console.error('[ReadPage] Failed to mark as read:', error)
-      alert('Failed to mark as read: ' + (error instanceof Error ? error.message : String(error)))
+      console.error('[ReadPage] Failed to toggle read status:', error)
+      alert('Failed to toggle read status: ' + (error instanceof Error ? error.message : String(error)))
     }
   }
 
   const handleUndo = async () => {
     if (!currentText || isUndoing) return
 
+    // Capture current scroll position from the scrollable container (not window)
+    const scrollY = scrollContainerRef.current?.scrollTop ?? 0
+
     console.log('[ReadPage] Undo requested')
     setIsUndoing(true)
 
     try {
+      // Get the action we're about to undo to determine what needs reloading
+      const historyStore = useReadingHistoryStore.getState()
+      const actionToUndo = historyStore.past[historyStore.past.length - 1]
+
       await undo()
 
-      console.log('[ReadPage] Reloading state after undo')
-      await loadText(currentText.id)
-      await loadMarks(currentText.id)
-      await getReadRanges(currentText.id)
-      await calculateProgress(currentText.id)
+      console.log('[ReadPage] Reloading state after undo for action type:', actionToUndo?.type)
+
+      // Only reload what actually changed based on action type
+      if (actionToUndo?.type === 'text_edit') {
+        // Text content changed - need to reload everything
+        await loadText(currentText.id)
+        await loadMarks(currentText.id)
+        await getReadRanges(currentText.id)
+        await calculateProgress(currentText.id)
+      } else if (actionToUndo?.type === 'mark' || actionToUndo?.type === 'unmark') {
+        // Only read ranges changed - backend already refreshed them via markRangeAsRead/unmarkRangeAsRead
+        // Just need to update local state without reloading text (avoids DOM replacement)
+        await getReadRanges(currentText.id)
+        await calculateProgress(currentText.id)
+      }
+
+      // Restore scroll position to the container after re-render
+      // Double RAF ensures this runs after all other scroll effects (e.g., search)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollY
+          }
+        })
+      })
 
       console.log('[ReadPage] Undo complete')
     } catch (error) {
@@ -501,17 +532,44 @@ export function ReadPage() {
   const handleRedo = async () => {
     if (!currentText || isRedoing) return
 
+    // Capture current scroll position from the scrollable container (not window)
+    const scrollY = scrollContainerRef.current?.scrollTop ?? 0
+
     console.log('[ReadPage] Redo requested')
     setIsRedoing(true)
 
     try {
+      // Get the action we're about to redo to determine what needs reloading
+      const historyStore = useReadingHistoryStore.getState()
+      const actionToRedo = historyStore.future[historyStore.future.length - 1]
+
       await redo()
 
-      console.log('[ReadPage] Reloading state after redo')
-      await loadText(currentText.id)
-      await loadMarks(currentText.id)
-      await getReadRanges(currentText.id)
-      await calculateProgress(currentText.id)
+      console.log('[ReadPage] Reloading state after redo for action type:', actionToRedo?.type)
+
+      // Only reload what actually changed based on action type
+      if (actionToRedo?.type === 'text_edit') {
+        // Text content changed - need to reload everything
+        await loadText(currentText.id)
+        await loadMarks(currentText.id)
+        await getReadRanges(currentText.id)
+        await calculateProgress(currentText.id)
+      } else if (actionToRedo?.type === 'mark' || actionToRedo?.type === 'unmark') {
+        // Only read ranges changed - backend already refreshed them via markRangeAsRead/unmarkRangeAsRead
+        // Just need to update local state without reloading text (avoids DOM replacement)
+        await getReadRanges(currentText.id)
+        await calculateProgress(currentText.id)
+      }
+
+      // Restore scroll position to the container after re-render
+      // Double RAF ensures this runs after all other scroll effects (e.g., search)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollY
+          }
+        })
+      })
 
       console.log('[ReadPage] Redo complete')
     } catch (error) {
@@ -566,8 +624,8 @@ export function ReadPage() {
         setInlineEditRegion(null)
 
         requestAnimationFrame(() => {
-          if (scrollPositionRef.current !== null) {
-            window.scrollTo(0, scrollPositionRef.current)
+          if (scrollPositionRef.current !== null && scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollPositionRef.current
             scrollPositionRef.current = null
           }
         })
@@ -605,6 +663,9 @@ export function ReadPage() {
   }, [isOpen, isEditMode, inlineEditActive, editRegion, inlineEditRegion, selectionInfo, editingContent, currentText, openSearch, closeSearch, canUndo, canRedo, isUndoing, isRedoing, handleUndo, handleRedo])
 
   useEffect(() => {
+    // Don't scroll to search matches during undo/redo to preserve scroll position
+    if (isUndoing || isRedoing) return
+
     if (matches.length > 0 && currentIndex >= 0) {
       requestAnimationFrame(() => {
         const matchElement = document.querySelector(`[data-search-index="${currentIndex}"]`)
@@ -618,7 +679,7 @@ export function ReadPage() {
         }
       })
     }
-  }, [currentIndex, matches])
+  }, [currentIndex, matches, isUndoing, isRedoing])
 
   useEffect(() => {
     const handleSelectionChange = () => {
@@ -867,7 +928,7 @@ export function ReadPage() {
 
         {isOpen && <SearchBar />}
 
-        <div className="flex-1 overflow-y-auto">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
           <div className="container mx-auto px-8 py-12 max-w-4xl">
 {isEditMode ? (
               <TextEditor
@@ -953,8 +1014,8 @@ export function ReadPage() {
                       setInlineEditRegion(null)
 
                       requestAnimationFrame(() => {
-                        if (scrollPositionRef.current !== null) {
-                          window.scrollTo(0, scrollPositionRef.current)
+                        if (scrollPositionRef.current !== null && scrollContainerRef.current) {
+                          scrollContainerRef.current.scrollTop = scrollPositionRef.current
                           scrollPositionRef.current = null
                         }
                       })
@@ -967,8 +1028,8 @@ export function ReadPage() {
                     setInlineEditRegion(null)
 
                     requestAnimationFrame(() => {
-                      if (scrollPositionRef.current !== null) {
-                        window.scrollTo(0, scrollPositionRef.current)
+                      if (scrollPositionRef.current !== null && scrollContainerRef.current) {
+                        scrollContainerRef.current.scrollTop = scrollPositionRef.current
                         scrollPositionRef.current = null
                       }
                     })

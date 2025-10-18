@@ -3,7 +3,7 @@
 ## Current Status: Phase 16 Complete ✅ - Mark and Read Range Deletion on Edit
 
 **Branch**: `11_readingFinal`
-**Last Updated**: 2025-10-17 (Phase 16: Mark and read range deletion with flashcard preservation)
+**Last Updated**: 2025-10-18 (Post-Phase 16 Bug Fixes: Mark toggle and scroll preservation)
 
 ---
 
@@ -1674,6 +1674,130 @@ FOR EACH mark/read_range:
 
 ---
 
+## Post-Phase 16 Bug Fixes (2025-10-18)
+
+### 🐛 Bug Fix 1: Mark/Unmark Toggle (Ctrl+M) Not Working
+**Severity**: HIGH - Core feature broken
+**Discovered**: 2025-10-18
+**Fixed**: 2025-10-18
+
+**Issue**:
+- Ctrl+M keyboard shortcut for mark/unmark toggle not working in reading view
+- Selection menu mark button also not working
+- Users unable to toggle mark status on selected text
+
+**Root Cause**:
+- `toggleMarkAtSelection()` function using incorrect overlap detection logic
+- Used simple `start < range.end && end > range.start` which fails for exact boundary matches
+- Needed same exclusive boundary detection algorithm used in Phase 16 overlap detection
+- File: `/Users/why/repos/trivium/src/lib/stores/reading.ts:266-290`
+
+**Solution**:
+- Imported `detectMarkOverlap()` utility from Phase 16 mark deletion work
+- Replaced inline overlap check with proper overlap detection algorithm
+- Uses exclusive boundaries: mark overlaps if `mark.end > region.start AND mark.start < region.end`
+- Consistent with Phase 16 coordinate space handling
+
+**Files Modified**:
+- `src/lib/stores/reading.ts` - Updated `toggleMarkAtSelection()` to use `detectMarkOverlap()`
+
+**Technical Details**:
+```typescript
+// Before (incorrect):
+const existingMark = marks.find(m =>
+  start < m.end_pos && end > m.start_pos
+);
+
+// After (correct):
+const { overlapping } = detectMarkOverlap(
+  marks,
+  { start, end }
+);
+const existingMark = overlapping[0];
+```
+
+**Testing**:
+- ✅ Manual testing: Ctrl+M now correctly toggles mark/unmark
+- ✅ Boundary cases: Exact match boundaries work correctly
+- ✅ Overlap detection: Properly detects overlapping marks
+- ✅ No regressions in existing mark functionality
+
+**Impact**:
+- Restored core mark toggle functionality
+- Consistent overlap detection across all marking operations
+- Better code reuse (single source of truth for overlap logic)
+
+---
+
+### 🐛 Bug Fix 2: Undo/Redo Causing Scroll Jump
+**Severity**: MEDIUM - UX annoyance affecting workflow
+**Discovered**: 2025-10-18
+**Fixed**: 2025-10-18
+
+**Issue**:
+- Pressing Ctrl+Z (undo) or Ctrl+Shift+Z (redo) caused page to scroll to top
+- Disrupted reading flow and made undo/redo frustrating to use
+- Problem occurred on both text edits and mark operations
+
+**Root Cause**:
+- Two issues in `/Users/why/repos/trivium/src/routes/read/[id].tsx:516-565`:
+  1. **Wrong scroll container**: Code used `document.documentElement.scrollTop` (entire window)
+     - Reading view uses `.overflow-y-auto` container, not window scroll
+     - Should preserve scroll of `.flex-1.overflow-y-auto.p-8` container
+  2. **Unconditional reload**: Called `loadText(id)` after every undo/redo
+     - Backend already handles state updates (marks, text content)
+     - Reload triggers React re-render which resets scroll position
+     - Only needed for text edit undo/redo (content changes), not mark operations
+
+**Solution**:
+1. **Fixed scroll container reference**:
+   - Changed from `document.documentElement` to proper reading container
+   - Used ref to access the scrollable div: `contentContainerRef.current?.scrollTop`
+   - Preserves and restores scroll position of actual content area
+
+2. **Conditional reload logic**:
+   - Only reload text content if action type is `TextEditAction`
+   - Mark/unmark operations don't need reload (state already updated by backend)
+   - Reduces unnecessary re-renders and preserves scroll naturally
+
+**Files Modified**:
+- `src/routes/read/[id].tsx` - Fixed scroll preservation in undo/redo handlers
+  - Added proper scroll container ref
+  - Conditional reload based on action type
+  - Lines 516-565 (undo/redo handlers)
+
+**Technical Details**:
+```typescript
+// Before (incorrect):
+const scrollPos = document.documentElement.scrollTop;
+await readingHistory.undo();
+await loadText(id); // Always reload
+document.documentElement.scrollTop = scrollPos;
+
+// After (correct):
+const scrollPos = contentContainerRef.current?.scrollTop ?? 0;
+const action = readingHistory.undo();
+// Only reload for text edits
+if (action?.type === 'edit') {
+  await loadText(id);
+}
+contentContainerRef.current!.scrollTop = scrollPos;
+```
+
+**Testing**:
+- ✅ Manual testing: Undo/redo no longer causes scroll jump
+- ✅ Text edit undo: Content reloads correctly, scroll preserved
+- ✅ Mark operation undo: No reload, scroll naturally preserved
+- ✅ Multiple undo/redo: Scroll position remains stable throughout
+- ✅ No regressions in undo/redo functionality
+
+**Impact**:
+- Significantly improved undo/redo UX
+- Smoother reading workflow without disruptive scroll jumps
+- Better performance (fewer unnecessary reloads for mark operations)
+
+---
+
 ### 📁 Phase 7: Future Enhancements
 **Status**: Not Started
 
@@ -2073,6 +2197,6 @@ FOR EACH mark/read_range:
 
 ---
 
-**Last Updated**: 2025-10-17
-**Next Review**: After Phase 14 merge to main
-**Current Branch**: 10_inline (Phase 14 complete)
+**Last Updated**: 2025-10-18
+**Next Review**: After Phase 16 merge to main
+**Current Branch**: 12_touchup3 (Post-Phase 16 bug fixes complete)

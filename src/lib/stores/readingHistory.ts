@@ -240,12 +240,26 @@ export const useReadingHistoryStore = create<ReadingHistoryStore>((set, get) => 
       }
 
       case 'unmark': {
-        console.log('[History] Re-marking range:', action.range);
-        await api.reading.markRangeAsRead(
+        console.log('[History] Restoring previous read ranges:', action.previousReadRanges.length);
+
+        // First, clear the region (in case new marks were added after unmarking)
+        await api.reading.unmarkRangeAsRead(
           state.currentTextId,
           action.range.start,
           action.range.end
         );
+
+        // Then restore all previously overlapping ranges
+        for (const range of action.previousReadRanges) {
+          if (range.startPosition < action.range.end &&
+              range.endPosition > action.range.start) {
+            await api.reading.markRangeAsRead(
+              state.currentTextId,
+              range.startPosition,
+              range.endPosition
+            );
+          }
+        }
         break;
       }
 

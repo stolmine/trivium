@@ -218,8 +218,11 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
 
   isRangeRead: (startPosition: number, endPosition: number) => {
     const { readRanges } = get();
+    // Check for ANY overlap (not just full containment)
+    // A range overlaps if: range.start < end AND range.end > start
+    // This means selecting any part of a marked region will unmark the entire mark
     for (const range of readRanges) {
-      if (range.startPosition <= startPosition && range.endPosition >= endPosition) {
+      if (range.startPosition < endPosition && range.endPosition > startPosition) {
         return true;
       }
     }

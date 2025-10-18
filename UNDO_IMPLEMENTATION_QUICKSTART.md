@@ -6,6 +6,19 @@
 
 ---
 
+## ⚠️ Important Update (2025-10-18)
+
+**Bug Fix Applied**: The undo/redo handlers in this guide have been updated to fix a scroll position bug.
+
+**Changes Made**:
+1. **Scroll container**: Use `contentContainerRef.current?.scrollTop` instead of `document.documentElement.scrollTop`
+2. **Conditional reload**: Only call `loadText()` for text edit actions, not mark operations
+3. **Reason**: Prevents scroll jump on undo/redo by using correct container and avoiding unnecessary reloads
+
+See **PROGRESS.md - Post-Phase 16 Bug Fixes** for full details.
+
+---
+
 ## Prerequisites
 
 Before starting, ensure you understand:
