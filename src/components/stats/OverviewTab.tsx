@@ -20,7 +20,7 @@ export function OverviewTab() {
 
   useEffect(() => {
     loadStats(dateRange);
-  }, []);
+  }, [dateRange, loadStats]);
 
   if (isLoading) {
     return (

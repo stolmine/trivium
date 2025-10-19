@@ -28,8 +28,8 @@ export function ForecastChart({ data }: ForecastChartProps) {
   }));
 
   return (
-    <div className="w-full h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full" style={{ minHeight: '300px', height: '300px' }}>
+      <ResponsiveContainer width="100%" height={300}>
         <AreaChart
           data={chartData}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}

@@ -63,6 +63,11 @@ function CustomTooltip({ active, payload }: any) {
 }
 
 export function ReadingProgressChart({ data }: ReadingProgressChartProps) {
+  console.log('[ReadingChart] Component received props:', {
+    dataLength: data?.length,
+    data,
+  });
+
   // Sort by time spent and prepare chart data
   const sortedData = [...data].sort((a, b) => b.totalTimeSeconds - a.totalTimeSeconds);
 
@@ -75,9 +80,17 @@ export function ReadingProgressChart({ data }: ReadingProgressChartProps) {
     sessionCount: folder.sessionCount,
   }));
 
+  console.log('[ReadingChart] Chart data prepared:', {
+    sortedDataLength: sortedData.length,
+    chartDataLength: chartData.length,
+    chartData,
+  });
+
+  console.log('[ReadingChart] Rendering chart component');
+
   return (
-    <div className="w-full h-[350px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full" style={{ minHeight: '350px', height: '350px' }}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart
           data={chartData}
           margin={{ top: 10, right: 10, left: 0, bottom: 60 }}

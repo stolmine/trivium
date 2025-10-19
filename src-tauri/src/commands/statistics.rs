@@ -347,6 +347,8 @@ pub async fn get_reading_stats(
     end_date: String,
     db: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<ReadingStatistics, String> {
+    println!("[RUST: get_reading_stats] Called with start_date: {}, end_date: {}", start_date, end_date);
+
     let db = db.lock().await;
     let pool = db.pool();
 
@@ -357,6 +359,8 @@ pub async fn get_reading_stats(
     let end_dt = DateTime::parse_from_rfc3339(&end_date)
         .map_err(|e| format!("Invalid end date format: {}", e))?
         .with_timezone(&Utc);
+
+    println!("[RUST: get_reading_stats] Parsed dates - start_dt: {:?}, end_dt: {:?}", start_dt, end_dt);
 
     let stats = sqlx::query!(
         r#"
@@ -377,6 +381,9 @@ pub async fn get_reading_stats(
     .await
     .map_err(|e| format!("Failed to fetch reading statistics: {}", e))?;
 
+    println!("[RUST: get_reading_stats] Main stats: total_time={}, session_count={}, texts_read={}, avg_duration={}",
+        stats.total_time, stats.session_count, stats.texts_read, stats.avg_duration);
+
     let char_count = sqlx::query!(
         r#"
         SELECT COALESCE(SUM(end_position - start_position), 0) as "total_chars!: i64"
@@ -389,6 +396,8 @@ pub async fn get_reading_stats(
     .fetch_one(pool)
     .await
     .map_err(|e| format!("Failed to fetch character count: {}", e))?;
+
+    println!("[RUST: get_reading_stats] Character count: {}", char_count.total_chars);
 
     let folder_stats = sqlx::query!(
         r#"
@@ -419,7 +428,13 @@ pub async fn get_reading_stats(
     .await
     .map_err(|e| format!("Failed to fetch folder statistics: {}", e))?;
 
-    let by_folder = folder_stats
+    println!("[RUST: get_reading_stats] Folder stats count: {}", folder_stats.len());
+    for (idx, stat) in folder_stats.iter().enumerate() {
+        println!("[RUST: get_reading_stats] Folder[{}]: id={}, name={}, total_time={}, chars_read={}, sessions={}",
+            idx, stat.folder_id, stat.folder_name, stat.total_time, stat.chars_read, stat.sessions);
+    }
+
+    let by_folder: Vec<FolderReadingStats> = folder_stats
         .into_iter()
         .map(|row| FolderReadingStats {
             folder_id: row.folder_id.to_string(),
@@ -430,14 +445,21 @@ pub async fn get_reading_stats(
         })
         .collect();
 
-    Ok(ReadingStatistics {
+    println!("[RUST: get_reading_stats] by_folder array length: {}", by_folder.len());
+
+    let result = ReadingStatistics {
         total_time_seconds: stats.total_time,
         total_characters_read: char_count.total_chars,
         session_count: stats.session_count,
         avg_session_duration: stats.avg_duration,
         texts_read: stats.texts_read,
         by_folder,
-    })
+    };
+
+    println!("[RUST: get_reading_stats] Returning result: total_time_seconds={}, session_count={}, by_folder_length={}",
+        result.total_time_seconds, result.session_count, result.by_folder.len());
+
+    Ok(result)
 }
 
 #[tauri::command]

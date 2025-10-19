@@ -11,7 +11,7 @@ export function ReviewTab() {
 
   useEffect(() => {
     loadStats(dateRange);
-  }, []);
+  }, [dateRange, loadStats]);
 
   if (isLoading) {
     return (

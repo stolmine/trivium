@@ -74,8 +74,8 @@ export function AnswerDistributionChart({ data }: AnswerDistributionChartProps) 
   }));
 
   return (
-    <div className="w-full h-[350px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full" style={{ minHeight: '350px', height: '350px' }}>
+      <ResponsiveContainer width="100%" height={350}>
         <BarChart
           data={chartData}
           margin={{ top: 10, right: 10, left: 0, bottom: 0 }}

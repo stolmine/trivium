@@ -27,9 +27,19 @@ function formatNumber(num: number): string {
 export function ReadingTab() {
   const { isLoading, error, readingStats, loadStats, dateRange } = useStatsStore();
 
+  console.log('[ReadingTab] Component state:', {
+    isLoading,
+    error,
+    dateRange,
+    readingStats,
+    byFolderLength: readingStats?.byFolder?.length,
+    byFolderData: readingStats?.byFolder,
+  });
+
   useEffect(() => {
+    console.log('[ReadingTab] useEffect triggered - calling loadStats with dateRange:', dateRange);
     loadStats(dateRange);
-  }, []);
+  }, [dateRange, loadStats]);
 
   if (isLoading) {
     return (
@@ -49,6 +59,12 @@ export function ReadingTab() {
   }
 
   const hasData = readingStats && readingStats.sessionCount > 0;
+
+  console.log('[ReadingTab] hasData check:', {
+    hasData,
+    readingStats,
+    sessionCount: readingStats?.sessionCount,
+  });
 
   if (!hasData) {
     return (
@@ -87,7 +103,15 @@ export function ReadingTab() {
         />
       </div>
 
-      {readingStats.byFolder.length > 0 && (
+      {(() => {
+        const shouldRenderChart = readingStats.byFolder.length > 0;
+        console.log('[ReadingTab] Chart render check:', {
+          shouldRenderChart,
+          byFolderLength: readingStats.byFolder.length,
+          byFolderData: readingStats.byFolder,
+        });
+        return shouldRenderChart;
+      })() && (
         <div className="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-4">Reading by Folder</h3>
           <ReadingProgressChart data={readingStats.byFolder} />

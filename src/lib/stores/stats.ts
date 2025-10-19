@@ -76,10 +76,13 @@ export const useStatsStore = create<StatsState>((set, get) => ({
   studyTimeStats: null,
 
   loadStats: async (range: DateRange) => {
+    console.log('[StatsStore] loadStats called with range:', range);
     set({ isLoading: true, error: null });
     try {
       const startDate = calculateStartDate(range);
       const endDate = calculateEndDate();
+
+      console.log('[StatsStore] Date range calculated:', { startDate, endDate });
 
       const [reviewStats, hourlyDistribution, dailyReviewStats, readingStats, studyTimeStats] =
         await Promise.all([
@@ -90,6 +93,16 @@ export const useStatsStore = create<StatsState>((set, get) => ({
           api.statistics.getStudyTimeStats(startDate, endDate),
         ]);
 
+      console.log('[StatsStore] API data received:', {
+        reviewStats,
+        hourlyDistribution,
+        dailyReviewStats,
+        readingStats,
+        readingStatsByFolder: readingStats?.byFolder,
+        readingStatsByFolderLength: readingStats?.byFolder?.length,
+        studyTimeStats,
+      });
+
       set({
         dateRange: range,
         reviewStats,
@@ -99,6 +112,8 @@ export const useStatsStore = create<StatsState>((set, get) => ({
         studyTimeStats,
         isLoading: false,
       });
+
+      console.log('[StatsStore] State updated successfully');
     } catch (error) {
       console.error('Failed to load statistics:', error);
       set({
