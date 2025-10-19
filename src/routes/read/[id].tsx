@@ -804,9 +804,9 @@ export function ReadPage() {
         console.log('[ReadPage] Ctrl+S pressed - saving inline edit');
         handleSaveInlineEdit()
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'm' && selectionInfo && !editRegion) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd' && selectionInfo && !editRegion) {
         e.preventDefault()
-        console.log('[ReadPage] Ctrl+M pressed - marking selection as read');
+        console.log('[ReadPage] Ctrl+D pressed - marking selection as read');
         handleMarkSelectionRead()
       }
       if (!e.shiftKey && (e.ctrlKey || e.metaKey) && e.key === 'f') {

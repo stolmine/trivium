@@ -100,7 +100,7 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Note: Ctrl+M is handled by the main ReadPage component to avoid duplicate calls
+      // Note: Ctrl+D is handled by the main ReadPage component to avoid duplicate calls
       // This component only handles Ctrl+N for flashcard creation
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault()
@@ -121,7 +121,7 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
         <ContextMenuContent className="w-64">
           <ContextMenuItem onClick={handleToggleRead}>
             Toggle Read
-            <ContextMenuShortcut>Ctrl+M</ContextMenuShortcut>
+            <ContextMenuShortcut>Ctrl+D</ContextMenuShortcut>
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem onClick={handleCreateFlashcard}>

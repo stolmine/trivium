@@ -279,7 +279,7 @@ export const SHORTCUT_REGISTRY: ShortcutDefinition[] = [
 
   {
     id: 'reading.markAsRead',
-    key: 'm',
+    key: 'd',
     modifiers: ['Mod'],
     description: 'Mark selection as read',
     category: 'actions',
