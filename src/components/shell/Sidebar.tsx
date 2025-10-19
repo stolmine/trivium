@@ -34,8 +34,8 @@ const getNavItems = (): NavItem[] => {
     { id: 'create', label: 'Create Cards', icon: Sparkles, path: '/create', shortcut: `${mod}+3` },
     { id: 'review', label: 'Review', icon: GraduationCap, path: '/review', shortcut: `${mod}+4` },
     { id: 'ingest', label: 'Ingest', icon: FileInput, path: '/ingest', shortcut: `${mod}+5` },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', shortcut: `${mod}+6` },
-    { id: 'stats', label: 'Statistics', icon: BarChart3, path: '/stats', shortcut: `${mod}+7` },
+    { id: 'stats', label: 'Statistics', icon: BarChart3, path: '/stats', shortcut: `${mod}+6` },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', shortcut: `${mod}+7` },
   ];
 };
 

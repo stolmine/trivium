@@ -3,6 +3,8 @@ import { EmptyStatsState } from './EmptyStatsState';
 import { StatsSummaryCard } from './StatsSummaryCard';
 import { useStatsStore } from '@/lib/stores/stats';
 import { Loader2 } from 'lucide-react';
+import { HourlyDistributionChart } from './charts/HourlyDistributionChart';
+import { AnswerDistributionChart } from './charts/AnswerDistributionChart';
 
 export function ReviewTab() {
   const { isLoading, error, reviewStats, dailyReviewStats, hourlyDistribution, loadStats, dateRange } = useStatsStore();
@@ -76,39 +78,14 @@ export function ReviewTab() {
       {hourlyDistribution.length > 0 && (
         <div className="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-4">Hourly Performance</h3>
-          <div className="space-y-2">
-            {hourlyDistribution.map((hour) => {
-              const maxReviews = Math.max(...hourlyDistribution.map(h => h.reviewCount));
-              const widthPercent = maxReviews > 0 ? (hour.reviewCount / maxReviews) * 100 : 0;
-              const avgDuration = hour.avgDurationMs ? Math.round(hour.avgDurationMs / 1000) : null;
+          <HourlyDistributionChart data={hourlyDistribution} />
+        </div>
+      )}
 
-              return (
-                <div key={hour.hour} className="space-y-1">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium text-muted-foreground w-16">
-                      {hour.hour.toString().padStart(2, '0')}:00
-                    </span>
-                    <div className="flex-1 h-8 bg-muted rounded-md overflow-hidden">
-                      <div
-                        className="h-full bg-primary transition-all duration-300"
-                        style={{ width: `${widthPercent}%` }}
-                      />
-                    </div>
-                    <span className="text-sm font-medium w-16 text-right">
-                      {hour.reviewCount}
-                    </span>
-                  </div>
-                  <div className="flex gap-4 text-xs text-muted-foreground ml-20">
-                    <span>Again: {(hour.againRate * 100).toFixed(0)}%</span>
-                    <span>Hard: {(hour.hardRate * 100).toFixed(0)}%</span>
-                    <span>Good: {(hour.goodRate * 100).toFixed(0)}%</span>
-                    <span>Easy: {(hour.easyRate * 100).toFixed(0)}%</span>
-                    {avgDuration && <span>Avg: {avgDuration}s</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {dailyReviewStats.length > 0 && (
+        <div className="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm">
+          <h3 className="text-lg font-semibold mb-4">Daily Answer Distribution</h3>
+          <AnswerDistributionChart data={dailyReviewStats} />
         </div>
       )}
 

@@ -1,32 +1,22 @@
 import { useEffect, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, BookOpen, Calendar, TrendingUp } from 'lucide-react';
 import { SkeletonCard } from '../shared/SkeletonLoader';
+import { api } from '../../lib/utils/tauri';
+import type { ReviewStatistics, ReadingStatistics } from '../../lib/types';
 
-interface WeeklyStats {
-  cardsReviewed: number;
-  timeSpentMinutes: number;
-  currentStreak: number;
-}
-
-interface ReviewHistoryEntry {
-  id: number;
-  flashcardId: number;
-  userId: number;
-  reviewedAt: string;
-  rating: number;
-  reviewDurationMs: number | null;
-  stateBefore: number;
-  stateAfter: number;
+interface DashboardMetrics {
+  readingProgress: string;
+  reviewForecast: string;
+  retentionRate: string;
 }
 
 export function StatsCard() {
-  const [stats, setStats] = useState<WeeklyStats | null>(null);
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadWeeklyStats = async () => {
+    const loadMetrics = async () => {
       try {
         setIsLoading(true);
         setError(null);
@@ -34,64 +24,68 @@ export function StatsCard() {
         const now = new Date();
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-        const reviewHistory = await invoke<ReviewHistoryEntry[]>(
-          'get_review_history_since',
-          { since: weekAgo.toISOString() }
-        );
+        const startDate = weekAgo.toISOString();
+        const endDate = now.toISOString();
 
-        const cardsReviewed = reviewHistory.length;
+        const [reviewStats, readingStats] = await Promise.all([
+          api.statistics.getReviewStatistics(startDate, endDate),
+          api.statistics.getReadingStats(startDate, endDate),
+        ]);
 
-        const totalTimeMs = reviewHistory.reduce((sum, entry) => {
-          return sum + (entry.reviewDurationMs || 0);
-        }, 0);
-        const timeSpentMinutes = Math.round(totalTimeMs / 60000);
+        const readingProgress = formatReadingProgress(readingStats);
+        const reviewForecast = formatReviewForecast(reviewStats);
+        const retentionRate = formatRetentionRate(reviewStats);
 
-        const reviewsByDay = new Map<string, boolean>();
-        reviewHistory.forEach((entry) => {
-          const date = entry.reviewedAt.split('T')[0];
-          reviewsByDay.set(date, true);
-        });
-
-        let currentStreak = 0;
-        const today = new Date();
-        for (let i = 0; i < 365; i++) {
-          const checkDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-          const dateStr = checkDate.toISOString().split('T')[0];
-          if (reviewsByDay.has(dateStr)) {
-            currentStreak++;
-          } else if (i > 0) {
-            break;
-          }
-        }
-
-        setStats({
-          cardsReviewed,
-          timeSpentMinutes,
-          currentStreak,
+        setMetrics({
+          readingProgress,
+          reviewForecast,
+          retentionRate,
         });
       } catch (err) {
-        console.error('Failed to load weekly stats:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load stats');
-        setStats({
-          cardsReviewed: 0,
-          timeSpentMinutes: 0,
-          currentStreak: 0,
+        console.error('Failed to load dashboard metrics:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load metrics');
+        setMetrics({
+          readingProgress: '0 chars',
+          reviewForecast: '0 due',
+          retentionRate: '0%',
         });
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadWeeklyStats();
+    loadMetrics();
   }, []);
 
-  const formatTime = (minutes: number): string => {
-    if (minutes < 60) {
-      return `${minutes}m`;
+  const formatReadingProgress = (stats: ReadingStatistics): string => {
+    const chars = stats.totalCharactersRead;
+    if (chars === 0) return '0 chars';
+    if (chars < 1000) return `${chars} chars`;
+    if (chars < 1000000) return `${(chars / 1000).toFixed(1)}k chars`;
+    return `${(chars / 1000000).toFixed(1)}M chars`;
+  };
+
+  const formatReviewForecast = (stats: ReviewStatistics): string => {
+    if (!stats.forecastNext7Days || stats.forecastNext7Days.length === 0) {
+      return '0 due';
     }
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+
+    const today = stats.forecastNext7Days[0];
+    const tomorrow = stats.forecastNext7Days.length > 1 ? stats.forecastNext7Days[1] : null;
+
+    if (today && today.cardsDue > 0) {
+      return `${today.cardsDue} today`;
+    }
+
+    if (tomorrow && tomorrow.cardsDue > 0) {
+      return `${tomorrow.cardsDue} tomorrow`;
+    }
+
+    return '0 due';
+  };
+
+  const formatRetentionRate = (stats: ReviewStatistics): string => {
+    return `${stats.retentionRate.toFixed(0)}%`;
   };
 
   if (isLoading) {
@@ -107,7 +101,7 @@ export function StatsCard() {
     );
   }
 
-  if (!stats) {
+  if (!metrics) {
     return (
       <div className="border rounded-lg p-8 shadow-card bg-card">
         <h2 className="text-lg font-semibold mb-4">Statistics</h2>
@@ -128,25 +122,28 @@ export function StatsCard() {
           This Week:
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Cards Reviewed</span>
-            <span className="text-lg font-semibold">{stats.cardsReviewed}</span>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex items-center justify-between flex-1">
+              <span className="text-sm text-muted-foreground">Reading Progress</span>
+              <span className="text-lg font-semibold">{metrics.readingProgress}</span>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Time Spent</span>
-            <span className="text-lg font-semibold">
-              {formatTime(stats.timeSpentMinutes)}
-            </span>
+          <div className="flex items-center gap-3">
+            <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex items-center justify-between flex-1">
+              <span className="text-sm text-muted-foreground">Review Forecast</span>
+              <span className="text-lg font-semibold">{metrics.reviewForecast}</span>
+            </div>
           </div>
 
-          <div className="pt-3 border-t">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Current Streak</span>
-              <span className="text-lg font-semibold">
-                {stats.currentStreak} day{stats.currentStreak !== 1 ? 's' : ''}
-              </span>
+          <div className="flex items-center gap-3">
+            <TrendingUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <div className="flex items-center justify-between flex-1">
+              <span className="text-sm text-muted-foreground">Retention Rate</span>
+              <span className="text-lg font-semibold">{metrics.retentionRate}</span>
             </div>
           </div>
         </div>

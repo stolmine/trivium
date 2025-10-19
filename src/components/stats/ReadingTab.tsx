@@ -3,6 +3,7 @@ import { EmptyStatsState } from './EmptyStatsState';
 import { StatsSummaryCard } from './StatsSummaryCard';
 import { useStatsStore } from '@/lib/stores/stats';
 import { Loader2 } from 'lucide-react';
+import { ReadingProgressChart } from './charts/ReadingProgressChart';
 
 function formatTime(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -89,39 +90,7 @@ export function ReadingTab() {
       {readingStats.byFolder.length > 0 && (
         <div className="rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm">
           <h3 className="text-lg font-semibold mb-4">Reading by Folder</h3>
-          <div className="space-y-4">
-            {readingStats.byFolder
-              .sort((a, b) => b.totalTimeSeconds - a.totalTimeSeconds)
-              .map((folder) => {
-                const totalFolderTime = readingStats.byFolder.reduce((sum, f) => sum + f.totalTimeSeconds, 0);
-                const widthPercent = totalFolderTime > 0 ? (folder.totalTimeSeconds / totalFolderTime) * 100 : 0;
-                const folderTime = formatTime(folder.totalTimeSeconds);
-
-                return (
-                  <div key={folder.folderId} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{folder.folderName}</span>
-                      <span className="text-sm text-muted-foreground">{folderTime}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-6 bg-muted rounded-md overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all duration-300"
-                          style={{ width: `${widthPercent}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-12 text-right">
-                        {widthPercent.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>{formatNumber(folder.charactersRead)} characters</span>
-                      <span>{folder.sessionCount} sessions</span>
-                    </div>
-                  </div>
-                );
-              })}
-          </div>
+          <ReadingProgressChart data={readingStats.byFolder} />
         </div>
       )}
 

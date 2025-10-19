@@ -91,8 +91,8 @@ pub struct DailyStudyTime {
     pub avg_time_per_card_ms: f64,
 }
 
-fn calculate_daily_streak(db: &sqlx::SqlitePool) -> Result<i64, String> {
-    let result = sqlx::query!(
+async fn calculate_daily_streak(db: &sqlx::SqlitePool) -> Result<i64, String> {
+    let row = sqlx::query!(
         r#"
         WITH RECURSIVE date_sequence AS (
             SELECT DATE('now') as check_date
@@ -118,15 +118,12 @@ fn calculate_daily_streak(db: &sqlx::SqlitePool) -> Result<i64, String> {
                     AND ds2.check_date NOT IN (SELECT review_date FROM daily_reviews)
             )
         "#
-    );
+    )
+    .fetch_one(db)
+    .await
+    .map_err(|e| format!("Failed to calculate daily streak: {}", e))?;
 
-    tauri::async_runtime::block_on(async {
-        let row = result
-            .fetch_one(db)
-            .await
-            .map_err(|e| format!("Failed to calculate daily streak: {}", e))?;
-        Ok(row.streak)
-    })
+    Ok(row.streak)
 }
 
 async fn get_forecast_7_days(db: &sqlx::SqlitePool) -> Result<Vec<ForecastDay>, String> {
@@ -205,7 +202,7 @@ pub async fn get_review_statistics(
     .await
     .map_err(|e| format!("Failed to fetch review statistics: {}", e))?;
 
-    let daily_streak = calculate_daily_streak(pool)?;
+    let daily_streak = calculate_daily_streak(pool).await?;
     let forecast = get_forecast_7_days(pool).await?;
 
     Ok(ReviewStatistics {

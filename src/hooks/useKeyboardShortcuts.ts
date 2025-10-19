@@ -172,15 +172,15 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
     {
       key: '6',
       ctrlKey: true,
-      action: handleNavigation('/settings'),
-      description: 'Go to Settings',
+      action: handleNavigation('/stats'),
+      description: 'Go to Statistics',
       category: 'navigation',
     },
     {
       key: '7',
       ctrlKey: true,
-      action: handleNavigation('/stats'),
-      description: 'Go to Statistics',
+      action: handleNavigation('/settings'),
+      description: 'Go to Settings',
       category: 'navigation',
     },
     {
