@@ -12,6 +12,7 @@ import { useLastReadStore } from '../../stores/lastRead';
 import { useReadingHistoryStore } from '../../stores/readingHistory';
 import { useReviewStore } from '../../stores/review';
 import { useNavigationHistory } from '../../stores/navigationHistory';
+import { clearProgressCache } from '../../hooks/useTextProgress';
 
 export function ResetSection() {
   const navigate = useNavigate();
@@ -37,8 +38,20 @@ export function ResetSection() {
     setIsLoading(true);
     try {
       const result = await api.settings.resetReadingProgress();
+
+      // Clear all cached progress values before refreshing UI
+      clearProgressCache();
+
       await loadLibrary();
       clearHistory();
+
+      // Refresh current reading view if one is open
+      const { currentText, getReadRanges, calculateProgress } = useReadingStore.getState();
+      if (currentText) {
+        await getReadRanges(currentText.id);
+        await calculateProgress(currentText.id);
+      }
+
       console.log(`Reset ${result.count} read ranges and library refreshed`);
       setResetDialogOpen(false);
     } catch (error) {
@@ -53,8 +66,13 @@ export function ResetSection() {
     setIsLoading(true);
     try {
       const result = await api.settings.resetAllFlashcards();
+
+      // Clear all cached progress values before refreshing UI
+      clearProgressCache();
+
       await loadLibrary();
       resetCardCreation();
+      resetSession();
       clearHistory();
       console.log(`Reset ${result.count} flashcards and library refreshed`);
       setResetDialogOpen(false);
@@ -86,6 +104,10 @@ export function ResetSection() {
     setIsLoading(true);
     try {
       const result = await api.settings.resetAllData();
+
+      // Clear all cached progress values before refreshing UI
+      clearProgressCache();
+
       await loadLibrary();
       setCurrentText(null);
       resetCardCreation();
