@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        WITH RECURSIVE date_sequence AS (\n            SELECT DATE('now') as check_date\n            UNION ALL\n            SELECT DATE(check_date, '-1 day')\n            FROM date_sequence\n            WHERE check_date >= DATE('now', '-365 days')\n        ),\n        daily_reviews AS (\n            SELECT DISTINCT DATE(reviewed_at) as review_date\n            FROM review_history\n            WHERE reviewed_at >= DATE('now', '-365 days')\n        )\n        SELECT COUNT(*) as \"streak!: i64\"\n        FROM date_sequence\n        WHERE check_date IN (SELECT review_date FROM daily_reviews)\n            AND check_date <= DATE('now')\n            AND NOT EXISTS (\n                SELECT 1\n                FROM date_sequence ds2\n                WHERE ds2.check_date > date_sequence.check_date\n                    AND ds2.check_date <= DATE('now')\n                    AND ds2.check_date NOT IN (SELECT review_date FROM daily_reviews)\n            )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "streak!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e351710c3c688c44ed518e40fb9e516639d3a1d7b5dab44d79234667d5e04fa4"
+}

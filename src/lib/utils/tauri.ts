@@ -16,7 +16,12 @@ import type {
   CreatedCard,
   HubStats,
   CreateCardRequest,
-  ResetResult
+  ResetResult,
+  ReviewStatistics,
+  HourlyReviewDistribution,
+  DailyReviewStats,
+  ReadingStatistics,
+  StudyTimeStats
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -119,6 +124,16 @@ export const api = {
     clearReadProgress: async (textId: number): Promise<void> => {
       return await invoke('clear_read_progress', { textId });
     },
+    startReadingSession: async (textId: number, sessionId: string, startPosition: number): Promise<void> => {
+      return await invoke('start_reading_session', {
+        request: { sessionId, textId, startPosition }
+      });
+    },
+    endReadingSession: async (sessionId: string, endPosition: number, durationSeconds: number): Promise<void> => {
+      return await invoke('end_reading_session', {
+        request: { sessionId, endPosition, durationSeconds }
+      });
+    },
   },
   flashcards: {
     createFromCloze: async (textId: number, selectedText: string, clozeText: string): Promise<Flashcard[]> => {
@@ -172,11 +187,19 @@ export const api = {
     getDueCards: async (limit: number): Promise<Flashcard[]> => {
       return await invoke('get_due_cards', { limit: limit });
     },
-    gradeCard: async (flashcardId: number, rating: number, filter?: ReviewFilter): Promise<void> => {
+    gradeCard: async (
+      flashcardId: number,
+      rating: number,
+      filter?: ReviewFilter,
+      reviewDurationMs?: number | null,
+      sessionId?: string | null
+    ): Promise<void> => {
       return await invoke('grade_card', {
         flashcardId: flashcardId,
         rating: rating,
-        filter: filter || null
+        filter: filter || null,
+        reviewDurationMs: reviewDurationMs !== undefined ? reviewDurationMs : null,
+        sessionId: sessionId !== undefined ? sessionId : null
       });
     },
     getStats: async (): Promise<{ due_count: number; new_count: number; learning_count: number; review_count: number }> => {
@@ -290,6 +313,23 @@ export const api = {
     },
     resetFlashcardStats: async (): Promise<{ count: number }> => {
       return await invoke('reset_flashcard_stats');
+    },
+  },
+  statistics: {
+    getReviewStatistics: async (startDate: string, endDate: string): Promise<ReviewStatistics> => {
+      return await invoke('get_review_statistics', { startDate, endDate });
+    },
+    getDifficultyByHour: async (startDate: string, endDate: string): Promise<HourlyReviewDistribution[]> => {
+      return await invoke('get_difficulty_by_hour', { startDate, endDate });
+    },
+    getDailyReviewStats: async (startDate: string, endDate: string): Promise<DailyReviewStats[]> => {
+      return await invoke('get_daily_review_stats', { startDate, endDate });
+    },
+    getReadingStats: async (startDate: string, endDate: string): Promise<ReadingStatistics> => {
+      return await invoke('get_reading_stats', { startDate, endDate });
+    },
+    getStudyTimeStats: async (startDate: string, endDate: string): Promise<StudyTimeStats> => {
+      return await invoke('get_study_time_stats', { startDate, endDate });
     },
   },
 };

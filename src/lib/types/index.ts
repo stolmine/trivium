@@ -24,3 +24,13 @@ export type {
 } from './hub';
 export type { ReturnNavigationState, IngestPageLocationState, ReadPageLocationState } from './navigation';
 export type { Setting, SettingsTab, ResetResult } from './settings';
+export type {
+  ReviewStatistics,
+  ForecastDay,
+  HourlyReviewDistribution,
+  DailyReviewStats,
+  ReadingStatistics,
+  FolderReadingStats,
+  StudyTimeStats,
+  DailyStudyTime
+} from './statistics';

@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        WITH RECURSIVE next_7_days AS (\n            SELECT DATE('now') as forecast_date, 0 as day_num\n            UNION ALL\n            SELECT DATE(forecast_date, '+1 day'), day_num + 1\n            FROM next_7_days\n            WHERE day_num < 6\n        )\n        SELECT\n            n7d.forecast_date as \"date!\",\n            COALESCE(COUNT(f.id), 0) as \"cards_due!: i64\",\n            COALESCE(SUM(CASE WHEN f.state = 0 THEN 1 ELSE 0 END), 0) as \"new_cards!: i64\",\n            COALESCE(SUM(CASE WHEN f.state = 2 THEN 1 ELSE 0 END), 0) as \"review_cards!: i64\",\n            COALESCE(SUM(CASE WHEN f.state IN (1, 3) THEN 1 ELSE 0 END), 0) as \"learning_cards!: i64\"\n        FROM next_7_days n7d\n        LEFT JOIN flashcards f ON DATE(f.due) = n7d.forecast_date\n        GROUP BY n7d.forecast_date\n        ORDER BY n7d.forecast_date\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "date!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "cards_due!: i64",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "new_cards!: i64",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "review_cards!: i64",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "learning_cards!: i64",
+        "ordinal": 4,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e56a76ad9c8f631a0f8ce423e9bf2865a1d93b5c785ece00cb0d5d1c3283981c"
+}

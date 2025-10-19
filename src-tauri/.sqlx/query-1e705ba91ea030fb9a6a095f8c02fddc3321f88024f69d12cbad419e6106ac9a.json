@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            DATE(reviewed_at) as \"date!: String\",\n            COALESCE(SUM(review_duration_ms), 0) as \"total_time_ms!: i64\",\n            COUNT(*) as \"card_count!: i64\",\n            COALESCE(AVG(CAST(review_duration_ms AS REAL)), 0.0) as \"avg_time_ms!: f64\"\n        FROM review_history\n        WHERE review_duration_ms IS NOT NULL\n            AND reviewed_at >= ?\n            AND reviewed_at <= ?\n        GROUP BY DATE(reviewed_at)\n        ORDER BY DATE(reviewed_at)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "date!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      },
+      {
+        "name": "total_time_ms!: i64",
+        "ordinal": 1,
+        "type_info": "Null"
+      },
+      {
+        "name": "card_count!: i64",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "avg_time_ms!: f64",
+        "ordinal": 3,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "1e705ba91ea030fb9a6a095f8c02fddc3321f88024f69d12cbad419e6106ac9a"
+}

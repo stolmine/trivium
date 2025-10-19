@@ -1,0 +1,56 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            CAST(strftime('%H', reviewed_at) AS INTEGER) as \"hour!: i64\",\n            COUNT(*) as \"review_count!: i64\",\n            COALESCE(\n                CAST(SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) AS REAL) /\n                NULLIF(CAST(COUNT(*) AS REAL), 0.0),\n                0.0\n            ) as \"again_rate!: f64\",\n            COALESCE(\n                CAST(SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) AS REAL) /\n                NULLIF(CAST(COUNT(*) AS REAL), 0.0),\n                0.0\n            ) as \"hard_rate!: f64\",\n            COALESCE(\n                CAST(SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) AS REAL) /\n                NULLIF(CAST(COUNT(*) AS REAL), 0.0),\n                0.0\n            ) as \"good_rate!: f64\",\n            COALESCE(\n                CAST(SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) AS REAL) /\n                NULLIF(CAST(COUNT(*) AS REAL), 0.0),\n                0.0\n            ) as \"easy_rate!: f64\",\n            AVG(CAST(review_duration_ms AS REAL)) as \"avg_duration_ms: f64\"\n        FROM review_history\n        WHERE reviewed_at >= ? AND reviewed_at <= ?\n        GROUP BY strftime('%H', reviewed_at)\n        ORDER BY strftime('%H', reviewed_at)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "hour!: i64",
+        "ordinal": 0,
+        "type_info": "Null"
+      },
+      {
+        "name": "review_count!: i64",
+        "ordinal": 1,
+        "type_info": "Null"
+      },
+      {
+        "name": "again_rate!: f64",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "hard_rate!: f64",
+        "ordinal": 3,
+        "type_info": "Null"
+      },
+      {
+        "name": "good_rate!: f64",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "easy_rate!: f64",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "avg_duration_ms: f64",
+        "ordinal": 6,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "9427a4549ac39b401d65eac1fc1abe86eb618b49d05c938a492276c57abddc94"
+}

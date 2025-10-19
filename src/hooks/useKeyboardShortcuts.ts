@@ -177,6 +177,13 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       category: 'navigation',
     },
     {
+      key: '7',
+      ctrlKey: true,
+      action: handleNavigation('/stats'),
+      description: 'Go to Statistics',
+      category: 'navigation',
+    },
+    {
       key: ',',
       ctrlKey: true,
       action: handleNavigation('/settings'),

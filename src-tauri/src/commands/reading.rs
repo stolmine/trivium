@@ -4,15 +4,35 @@ use crate::models::read_range::ReadRange;
 use crate::services::parser;
 use crate::services::range_calculator::RangeCalculator;
 use chrono::Utc;
+use serde::Deserialize;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StartSessionRequest {
+    pub session_id: String,
+    pub text_id: i64,
+    pub start_position: i64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EndSessionRequest {
+    pub session_id: String,
+    pub end_position: i64,
+    pub duration_seconds: i64,
+}
 
 #[tauri::command]
 pub async fn mark_range_as_read(
     text_id: i64,
     start_pos: i64,
     end_pos: i64,
+    session_id: Option<String>,
+    character_count: Option<i64>,
+    word_count: Option<i64>,
     db: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<(), String> {
     let db = db.lock().await;
@@ -22,14 +42,20 @@ pub async fn mark_range_as_read(
 
     sqlx::query!(
         r#"
-        INSERT INTO read_ranges (text_id, user_id, start_position, end_position, marked_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO read_ranges (
+            text_id, user_id, start_position, end_position, marked_at,
+            session_id, character_count, word_count
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         text_id,
         user_id,
         start_pos,
         end_pos,
-        now
+        now,
+        session_id,
+        character_count,
+        word_count
     )
     .execute(pool)
     .await
@@ -334,6 +360,65 @@ pub async fn clear_read_progress(
     .execute(pool)
     .await
     .map_err(|e| format!("Failed to clear read progress: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn start_reading_session(
+    request: StartSessionRequest,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let now = Utc::now();
+    let user_id = 1;
+
+    sqlx::query!(
+        r#"
+        INSERT INTO reading_sessions (
+            id, text_id, user_id, started_at, start_position
+        )
+        VALUES (?, ?, ?, ?, ?)
+        "#,
+        request.session_id,
+        request.text_id,
+        user_id,
+        now,
+        request.start_position
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to start reading session: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn end_reading_session(
+    request: EndSessionRequest,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<(), String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let now = Utc::now();
+
+    sqlx::query!(
+        r#"
+        UPDATE reading_sessions
+        SET ended_at = ?,
+            end_position = ?,
+            duration_seconds = ?
+        WHERE id = ?
+        "#,
+        now,
+        request.end_position,
+        request.duration_seconds,
+        request.session_id
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Failed to end reading session: {}", e))?;
 
     Ok(())
 }

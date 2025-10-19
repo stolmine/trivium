@@ -1,0 +1,68 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            DATE(reviewed_at) as \"date!: String\",\n            COUNT(*) as \"total_reviews!: i64\",\n            COUNT(DISTINCT flashcard_id) as \"unique_cards!: i64\",\n            COALESCE(AVG(CAST(rating AS REAL)), 0.0) as \"avg_rating!: f64\",\n            SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as \"again_count!: i64\",\n            SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as \"hard_count!: i64\",\n            SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as \"good_count!: i64\",\n            SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as \"easy_count!: i64\",\n            AVG(CAST(review_duration_ms AS REAL)) as \"avg_duration_ms: f64\"\n        FROM review_history\n        WHERE reviewed_at >= ? AND reviewed_at <= ?\n        GROUP BY DATE(reviewed_at)\n        ORDER BY DATE(reviewed_at)\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "date!: String",
+        "ordinal": 0,
+        "type_info": "Null"
+      },
+      {
+        "name": "total_reviews!: i64",
+        "ordinal": 1,
+        "type_info": "Null"
+      },
+      {
+        "name": "unique_cards!: i64",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "avg_rating!: f64",
+        "ordinal": 3,
+        "type_info": "Null"
+      },
+      {
+        "name": "again_count!: i64",
+        "ordinal": 4,
+        "type_info": "Null"
+      },
+      {
+        "name": "hard_count!: i64",
+        "ordinal": 5,
+        "type_info": "Null"
+      },
+      {
+        "name": "good_count!: i64",
+        "ordinal": 6,
+        "type_info": "Null"
+      },
+      {
+        "name": "easy_count!: i64",
+        "ordinal": 7,
+        "type_info": "Null"
+      },
+      {
+        "name": "avg_duration_ms: f64",
+        "ordinal": 8,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "f3eeb7fa988b86f8c040ab0192e39128a60121c715ba3423e26bb786a0881b0d"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE reading_sessions\n        SET ended_at = ?,\n            end_position = ?,\n            duration_seconds = ?\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "0bc0b3c717173fac697017d28a15be56abeab24eaccc1cedebc49e9cd1d8da11"
+}

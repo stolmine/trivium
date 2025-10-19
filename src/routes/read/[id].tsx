@@ -74,6 +74,7 @@ export function ReadPage() {
   } | null>(null)
   const [isUndoing, setIsUndoing] = useState(false)
   const [isRedoing, setIsRedoing] = useState(false)
+  const sessionInactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const {
     currentText,
     isLoading,
@@ -177,6 +178,55 @@ export function ReadPage() {
       setOnReadingPage(false)
     }
   }, [])
+
+  useEffect(() => {
+    if (!currentText) return
+
+    const sessionId = crypto.randomUUID()
+    const startTime = new Date()
+
+    const startPosition = scrollContainerRef.current?.scrollTop ?? 0
+    api.reading.startReadingSession(currentText.id, sessionId, startPosition)
+
+    const resetInactivityTimer = () => {
+      if (sessionInactivityTimeoutRef.current) {
+        clearTimeout(sessionInactivityTimeoutRef.current)
+      }
+
+      sessionInactivityTimeoutRef.current = setTimeout(() => {
+        const endPosition = scrollContainerRef.current?.scrollTop ?? 0
+        const durationSeconds = Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
+        api.reading.endReadingSession(sessionId, endPosition, durationSeconds)
+      }, 5 * 60 * 1000)
+    }
+
+    const handleActivity = () => resetInactivityTimer()
+    const container = scrollContainerRef.current
+
+    if (container) {
+      container.addEventListener('scroll', handleActivity)
+      container.addEventListener('mousedown', handleActivity)
+      container.addEventListener('keydown', handleActivity)
+    }
+
+    resetInactivityTimer()
+
+    return () => {
+      const endPosition = scrollContainerRef.current?.scrollTop ?? 0
+      const durationSeconds = Math.floor((new Date().getTime() - startTime.getTime()) / 1000)
+      api.reading.endReadingSession(sessionId, endPosition, durationSeconds)
+
+      if (container) {
+        container.removeEventListener('scroll', handleActivity)
+        container.removeEventListener('mousedown', handleActivity)
+        container.removeEventListener('keydown', handleActivity)
+      }
+
+      if (sessionInactivityTimeoutRef.current) {
+        clearTimeout(sessionInactivityTimeoutRef.current)
+      }
+    }
+  }, [currentText?.id])
 
   useEffect(() => {
     if (!currentText || !scrollContainerRef.current) return

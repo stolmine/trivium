@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            f.id as \"folder_id!\",\n            f.name as \"folder_name!\",\n            COALESCE(SUM(rs.duration_seconds), 0) as \"total_time!: i64\",\n            COALESCE(SUM(rr.end_position - rr.start_position), 0) as \"chars_read!: i64\",\n            COUNT(DISTINCT rs.id) as \"sessions!: i64\"\n        FROM folders f\n        LEFT JOIN texts t ON t.folder_id = f.id\n        LEFT JOIN reading_sessions rs ON rs.text_id = t.id\n            AND rs.ended_at IS NOT NULL\n            AND rs.started_at >= ?\n            AND rs.started_at <= ?\n        LEFT JOIN read_ranges rr ON rr.text_id = t.id\n            AND rr.marked_at >= ?\n            AND rr.marked_at <= ?\n        GROUP BY f.id, f.name\n        HAVING COUNT(DISTINCT rs.id) > 0\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "folder_id!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "folder_name!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "total_time!: i64",
+        "ordinal": 2,
+        "type_info": "Null"
+      },
+      {
+        "name": "chars_read!: i64",
+        "ordinal": 3,
+        "type_info": "Null"
+      },
+      {
+        "name": "sessions!: i64",
+        "ordinal": 4,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "2a542fe34ecec075129f600c78514391e9e622195e5881b6d13043788b3d71d7"
+}

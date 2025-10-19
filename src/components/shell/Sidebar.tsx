@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles, FileInput, Settings } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles, FileInput, Settings, BarChart3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -35,6 +35,7 @@ const getNavItems = (): NavItem[] => {
     { id: 'review', label: 'Review', icon: GraduationCap, path: '/review', shortcut: `${mod}+4` },
     { id: 'ingest', label: 'Ingest', icon: FileInput, path: '/ingest', shortcut: `${mod}+5` },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', shortcut: `${mod}+6` },
+    { id: 'stats', label: 'Statistics', icon: BarChart3, path: '/stats', shortcut: `${mod}+7` },
   ];
 };
 

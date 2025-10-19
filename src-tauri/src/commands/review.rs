@@ -94,6 +94,8 @@ pub async fn grade_card(
     flashcard_id: i64,
     rating: i64,
     filter: Option<StudyFilter>,
+    review_duration_ms: Option<i64>,
+    session_id: Option<String>,
     db: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<GradeResult, String> {
     if !(1..=4).contains(&rating) {
@@ -192,14 +194,17 @@ pub async fn grade_card(
         r#"
         INSERT INTO review_history (
             flashcard_id, user_id, reviewed_at, rating,
+            review_duration_ms, session_id,
             state_before, state_after
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         flashcard_id,
         user_id,
         now,
         rating,
+        review_duration_ms,
+        session_id,
         state_before,
         scheduling_info.new_state
     )

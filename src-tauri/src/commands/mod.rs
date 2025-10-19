@@ -6,3 +6,4 @@ pub mod review;
 pub mod folder;
 pub mod wikipedia;
 pub mod settings;
+pub mod statistics;

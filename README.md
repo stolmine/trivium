@@ -20,9 +20,12 @@ A powerful reading and spaced repetition application designed for deep learning 
 - **Flexible Review Sessions**: Filter by folder, text, or global scope
 
 ### Statistics & Analytics
-- **Progress Tracking**: Reading progress by folder and text
-- **Performance Metrics**: Card retention, review counts, and learning trends
-- **Session Statistics**: Track study sessions and daily limits
+- **Comprehensive Analytics Dashboard**: Anki-style statistics with 3 tabs (Ctrl/Cmd+7)
+- **Review Analytics**: Total reviews, retention rate, and current study streak
+- **7-Day Forecast**: Visual projection of upcoming due cards by type
+- **Performance Insights**: Hourly distribution and daily answer button breakdown
+- **Reading Progress**: Track time, characters, and sessions by folder
+- **Session Tracking**: Automatic review and reading session monitoring
 
 ## Technology Stack
 
@@ -31,9 +34,20 @@ A powerful reading and spaced repetition application designed for deep learning 
 - **Rich Text**: Unified/Remark for markdown processing
 - **Testing**: Vitest for automated testing
 
-## Recent Developments (Phase 15)
+## Recent Developments (Phase 20)
 
-The latest update brings unified undo/redo capabilities to the reading view:
+The latest update brings comprehensive statistics and analytics:
+
+- **Statistics Dashboard**: Anki-style analytics page with 3 tabs
+- **Review Analytics**: Overview metrics, 7-day forecast, hourly distribution
+- **Reading Progress**: Folder-level tracking with time and character counts
+- **Session Tracking**: Automatic review and reading session monitoring
+- **Performance Insights**: Identify best study times and answer patterns
+- **Dark Mode Support**: All visualizations support light/dark themes
+
+### Previous Update (Phase 15)
+
+Unified undo/redo capabilities in the reading view:
 
 - **Unified History Stack**: Single undo/redo system for text edits, mark operations, and unmark operations
 - **Page Isolation**: Undo/redo only active on reading page, preventing unintended actions

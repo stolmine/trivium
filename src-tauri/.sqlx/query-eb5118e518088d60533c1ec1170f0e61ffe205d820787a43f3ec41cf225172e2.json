@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO review_history (\n            flashcard_id, user_id, reviewed_at, rating,\n            review_duration_ms, session_id,\n            state_before, state_after\n        )\n        VALUES (?, ?, ?, ?, ?, ?, ?, ?)\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": []
+  },
+  "hash": "eb5118e518088d60533c1ec1170f0e61ffe205d820787a43f3ec41cf225172e2"
+}

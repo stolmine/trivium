@@ -61,6 +61,8 @@ pub fn run() {
             commands::reading::get_previous_paragraph,
             commands::reading::get_most_recently_read_text,
             commands::reading::clear_read_progress,
+            commands::reading::start_reading_session,
+            commands::reading::end_reading_session,
             commands::flashcards::create_flashcard_from_cloze,
             commands::flashcards::get_flashcards_by_text,
             commands::flashcards::delete_flashcard,
@@ -98,7 +100,12 @@ pub fn run() {
             commands::settings::reset_all_data,
             commands::settings::reset_reading_progress,
             commands::settings::reset_all_flashcards,
-            commands::settings::reset_flashcard_stats
+            commands::settings::reset_flashcard_stats,
+            commands::statistics::get_review_statistics,
+            commands::statistics::get_difficulty_by_hour,
+            commands::statistics::get_daily_review_stats,
+            commands::statistics::get_reading_stats,
+            commands::statistics::get_study_time_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

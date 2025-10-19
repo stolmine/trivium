@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT\n            COALESCE(SUM(duration_seconds), 0) as \"total_time!: i64\",\n            COUNT(*) as \"session_count!: i64\",\n            COUNT(DISTINCT text_id) as \"texts_read!: i64\",\n            COALESCE(AVG(CAST(duration_seconds AS REAL)), 0.0) as \"avg_duration!: f64\"\n        FROM reading_sessions\n        WHERE ended_at IS NOT NULL\n            AND started_at >= ?\n            AND started_at <= ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "total_time!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "session_count!: i64",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "texts_read!: i64",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "avg_duration!: f64",
+        "ordinal": 3,
+        "type_info": "Float"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5008b6079e9ddcf49ec8ea50cf34fa3a3273e7d20fde6be011f5458447facadb"
+}

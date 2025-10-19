@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-19 (Phase 19: Settings Menu Phase 4 Complete - comprehensive dark mode styling across 22 components)
+Last Updated: 2025-10-19 (Phase 20: Statistics & Analytics System Complete - review/reading/study time tracking with 3 tabs)
 
 ---
 
@@ -78,6 +78,10 @@ Last Updated: 2025-10-19 (Phase 19: Settings Menu Phase 4 Complete - comprehensi
 
 ### `/Users/why/repos/trivium/PHASE_19_SETTINGS_MENU.md`
 **Description**: Complete implementation documentation for Phase 19 Settings Menu (MVP Complete + Phase 4 Theme + Comprehensive Dark Mode). **Status**: Phases 1-4 fully implemented with complete dark mode coverage. **Backend**: Database migration adding settings table (key-value store), settings.rs commands module with commands for get_settings, update_setting, get_database_size, export_database, import_database, and scoped reset operations. **Frontend**: Settings page with tab-based sections (Defaults, Database, Reset, Theme), settings store with localStorage persistence, Switch component integration, human-readable file size formatting, scope selector for resets (Library/Folder/Text). **Features**: Toggle default links visibility (Ctrl+L, functionality needs verification), view database size in human-readable format, export database to backup file, **import database from backup file** (restore functionality), **scoped reset operations** (reset reading progress, reset flashcards, reset all data - all with Library/Folder/Text scope support), **complete theme system** (Light/Dark/Adaptive modes, system theme detection, auto-switching, localStorage persistence, 300ms transitions, comprehensive dark mode styling across 22 components), keyboard shortcut Ctrl+6 / Cmd+6 for settings navigation. **Dark Mode Coverage**: All modals/dialogs (6 files), flashcard sidebar, marked text highlighting with improved contrast (gray-700/gray-100), context menus, created cards list, plus original 13 components. **Critical CSS Bugs Fixed**: (1) Incorrect `@variant` syntax - changed from `@variant dark (.dark &);` to `@variant dark (&:where(.dark, .dark *));`, (2) CSS variable cascade order - reordered `:root` before `.dark` in index.css, (3) Missing dark mode utilities - added `bg-background`, `text-foreground`, `border-border` throughout app. **Post-Phase Bug Fixes**: UI refresh after reset operations (cache clearing race condition fix). **Files**: 17 created (1 migration, 1 backend module, 3 SQLx queries, 8 frontend components, 3 types/utils, 2 docs), 30 modified (8 original + 13 initial dark mode + 9 comprehensive dark mode). **Performance**: Sub-100ms settings queries, instant localStorage sync, smooth theme transitions. Implementation time: ~8 hours
+**Last Updated**: 2025-10-19
+
+### `/Users/why/repos/trivium/PHASE_20_STATISTICS.md`
+**Description**: Complete implementation documentation for Phase 20 Statistics & Analytics System. **Overview**: Comprehensive statistics dashboard modeled after Anki, providing review analytics, reading progress, and study time tracking. **Backend**: 3 database migrations (activate reading_sessions with views, review stats indexes with hourly/daily/forecast views, session tracking with review_sessions table), statistics.rs commands module with 5 commands (get_review_statistics, get_7day_forecast, get_daily_review_breakdown, get_hourly_distribution, get_reading_stats_by_folder), session_id tracking added to review_history and read_ranges. **Frontend**: Statistics page at /stats with Ctrl/Cmd+7 shortcut, 3 tabs (Overview, Review Performance, Reading Progress), stats store with date range filtering, HTML/CSS visualizations (recharts optional), review timing instrumentation (duration tracking from answer reveal to grade), reading session lifecycle management (start on mount, end on unmount/5min inactivity). **Features**: 7-day review forecast showing new/learning/review cards, daily review breakdown with answer button distribution, hourly performance distribution heatmap, reading progress by folder with character/word counts, study time tracking, current streak calculation. **Architecture**: Existing tables leveraged (review_history, flashcards, read_ranges), new review_sessions table for aggregation, database views for efficient queries, sub-50ms query performance. **Files**: 3 migrations, 1 backend commands module (14 SQLx queries), 7 frontend components (3 tabs, 4 charts), 2 stores (stats + review timing), 1 types file. Implementation time: ~6 hours
 **Last Updated**: 2025-10-19
 
 ### `/Users/why/repos/trivium/SETTINGS_QUICK_REFERENCE.md`
@@ -334,12 +338,12 @@ Last Updated: 2025-10-19 (Phase 19: Settings Menu Phase 4 Complete - comprehensi
 
 ## Statistics
 
-**Total Documentation Files**: 57 markdown files
-**Total Lines of Documentation**: ~52,000+ lines
+**Total Documentation Files**: 58 markdown files
+**Total Lines of Documentation**: ~52,800+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 10 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + settings quick reference)
+- Project Planning: 11 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + Phase 20 statistics + settings quick reference)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
 - Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
 - User Reference: 1 file

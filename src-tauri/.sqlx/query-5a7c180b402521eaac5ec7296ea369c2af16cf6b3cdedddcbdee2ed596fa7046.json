@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT COALESCE(SUM(end_position - start_position), 0) as \"total_chars!: i64\"\n        FROM read_ranges\n        WHERE marked_at >= ? AND marked_at <= ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "total_chars!: i64",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5a7c180b402521eaac5ec7296ea369c2af16cf6b3cdedddcbdee2ed596fa7046"
+}

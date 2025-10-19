@@ -8,6 +8,8 @@ export interface ReviewState {
   currentCard: Flashcard | null;
   showAnswer: boolean;
   currentFilter: ReviewFilter | null;
+  sessionId: string | null;
+  cardStartTime: number | null;
   sessionStats: {
     totalReviews: number;
     uniqueCards: number;
@@ -33,6 +35,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   currentCard: null,
   showAnswer: false,
   currentFilter: null,
+  sessionId: null,
+  cardStartTime: null,
   isLoading: false,
   error: null,
   sessionStats: {
@@ -56,6 +60,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         currentIndex: 0,
         currentCard: cards[0] || null,
         currentFilter: filter || null,
+        sessionId: crypto.randomUUID(),
+        cardStartTime: null,
         isLoading: false,
         sessionStats: {
           totalReviews: 0,
@@ -77,12 +83,20 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   gradeCard: async (rating: ReviewQuality) => {
-    const { currentCard, sessionStats, queue, currentFilter } = get();
+    const { currentCard, sessionStats, queue, currentFilter, sessionId, cardStartTime } = get();
     if (!currentCard) return;
+
+    const reviewDurationMs = cardStartTime ? Date.now() - cardStartTime : null;
 
     set({ isLoading: true });
     try {
-      await api.review.gradeCard(currentCard.id, rating + 1, currentFilter || undefined);
+      await api.review.gradeCard(
+        currentCard.id,
+        rating + 1,
+        currentFilter || undefined,
+        reviewDurationMs,
+        sessionId
+      );
 
       const statKey = ['againCount', 'hardCount', 'goodCount', 'easyCount'][rating] as keyof typeof sessionStats;
       set({
@@ -93,6 +107,7 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
           uniqueCards: rating !== 0 ? sessionStats.uniqueCards + 1 : sessionStats.uniqueCards,
           [statKey]: sessionStats[statKey as 'againCount' | 'hardCount' | 'goodCount' | 'easyCount'] + 1,
         },
+        cardStartTime: null,
       });
 
       // If rating is "Again" (0), re-queue the card
@@ -113,7 +128,12 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   toggleAnswer: () => {
-    set({ showAnswer: !get().showAnswer });
+    const { showAnswer } = get();
+    if (!showAnswer) {
+      set({ showAnswer: true, cardStartTime: Date.now() });
+    } else {
+      set({ showAnswer: false });
+    }
   },
 
   nextCard: () => {
@@ -143,6 +163,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       currentCard: null,
       showAnswer: false,
       currentFilter: null,
+      sessionId: null,
+      cardStartTime: null,
       isLoading: false,
       error: null,
       sessionStats: {
@@ -164,6 +186,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       currentCard: null,
       showAnswer: false,
       currentFilter: null,
+      sessionId: null,
+      cardStartTime: null,
       isLoading: false,
       error: null,
       sessionStats: {

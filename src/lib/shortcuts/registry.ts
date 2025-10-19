@@ -52,10 +52,10 @@ export const SHORTCUT_REGISTRY: ShortcutDefinition[] = [
   },
 
   {
-    id: 'global.goToReview',
+    id: 'global.goToLibrary',
     key: '2',
     modifiers: ['Mod'],
-    description: 'Go to Review',
+    description: 'Go to Library',
     category: 'navigation',
     scope: 'global',
   },
@@ -70,19 +70,46 @@ export const SHORTCUT_REGISTRY: ShortcutDefinition[] = [
   },
 
   {
-    id: 'global.goToLibrary',
+    id: 'global.goToReview',
     key: '4',
     modifiers: ['Mod'],
-    description: 'Go to Library',
+    description: 'Go to Review',
     category: 'navigation',
     scope: 'global',
   },
 
   {
     id: 'global.openIngest',
+    key: '5',
+    modifiers: ['Mod'],
+    description: 'Go to Ingest',
+    category: 'navigation',
+    scope: 'global',
+  },
+
+  {
+    id: 'global.goToSettings',
+    key: '6',
+    modifiers: ['Mod'],
+    description: 'Go to Settings',
+    category: 'navigation',
+    scope: 'global',
+  },
+
+  {
+    id: 'global.goToStats',
+    key: '7',
+    modifiers: ['Mod'],
+    description: 'Go to Statistics',
+    category: 'navigation',
+    scope: 'global',
+  },
+
+  {
+    id: 'global.openNewIngest',
     key: 'n',
     modifiers: ['Mod'],
-    description: 'Open ingest view',
+    description: 'Open new ingest',
     category: 'actions',
     scope: 'global',
   },
