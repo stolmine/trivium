@@ -539,9 +539,23 @@ export function ReadPage() {
         console.log('[ReadPage] Unmarking range:', selectionInfo.start, '->', selectionInfo.end);
         await unmarkRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
       } else {
-        // Mark as read
+        // Mark as read for progress tracking
         console.log('[ReadPage] Marking range:', selectionInfo.start, '->', selectionInfo.end);
         await markRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
+
+        // Also create a mark for the Create Cards hub with position information
+        try {
+          await api.flashcards.createMark(
+            currentText.id,
+            selectionInfo.text,
+            selectionInfo.start,
+            selectionInfo.end
+          )
+          console.log('[ReadPage] Created mark for Create Cards hub');
+        } catch (error) {
+          console.error('[ReadPage] Failed to create mark:', error)
+          // Don't block the read marking if mark creation fails
+        }
       }
 
       console.log('[ReadPage] After marking, new readRanges:', readRanges);
@@ -1170,7 +1184,6 @@ export function ReadPage() {
                           linksEnabled={linksEnabled}
                           searchMatches={matches}
                           activeSearchIndex={currentIndex}
-                          onNavigateToIngest={handleNavigateToIngest}
                         />
                       </div>
                     )}

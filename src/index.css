@@ -254,6 +254,7 @@
 /* Separate class definitions that need pseudo-selectors */
 .reading-content p {
   margin-bottom: 1rem;
+  display: block;  /* Ensure proper block boundaries for triple-click selection */
 }
 
 .hover-lift:hover {
@@ -339,16 +340,12 @@
   color: hsl(217, 91%, 60%) !important;
 }
 
-/* Read range styling - semantic mark elements for better text selection */
+/* Read range styling - black background with white text */
 mark.read-range {
   background-color: black;
   color: white;
   border-radius: 2px;
-}
-
-.dark mark.read-range {
-  background-color: rgb(30, 30, 30);
-  color: white;
+  padding: 0 2px;
 }
 
 /* Search match highlighting - overrides read-text styling */
@@ -388,23 +385,23 @@ mark.read-range {
   color: inherit;
 }
 
-/* Selection on read ranges (black background) - needs high contrast */
+/* Selection on read ranges (yellow background) - needs high contrast */
 mark.read-range::selection {
-  background-color: rgba(96, 165, 250, 0.7);
-  color: white;
+  background-color: rgba(66, 153, 225, 0.5);
+  color: black;
 }
 
 mark.read-range::-moz-selection {
-  background-color: rgba(96, 165, 250, 0.7);
-  color: white;
+  background-color: rgba(66, 153, 225, 0.5);
+  color: black;
 }
 
 .dark mark.read-range::selection {
   background-color: rgba(147, 197, 253, 0.6);
-  color: white;
+  color: #fef3c7;
 }
 
 .dark mark.read-range::-moz-selection {
   background-color: rgba(147, 197, 253, 0.6);
-  color: white;
+  color: #fef3c7;
 }

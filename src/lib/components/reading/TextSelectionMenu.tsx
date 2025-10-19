@@ -46,15 +46,37 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
       return
     }
 
-    if (isRangeRead(startPosition, endPosition)) {
-      unmarkRangeAsRead(currentText.id, startPosition, endPosition)
+    // Get the actual DOM text to verify position space
+    const domText = articleElement?.textContent || ''
+
+    console.log('[TextSelectionMenu] DIAGNOSTIC - Position Space Verification:', {
+      selection: {
+        start: startPosition,
+        end: endPosition,
+        text: selectedText.substring(0, 50) + '...',
+        length: selectedText.length
+      },
+      domExtract: {
+        text: domText.substring(startPosition, endPosition).substring(0, 50) + '...',
+        match: domText.substring(startPosition, endPosition) === selectedText
+      },
+      domTextLength: domText.length
+    })
+
+    // With the new direct slicing approach, positions are already in the correct space
+    // No conversion or validation needed - use positions as-is
+    const finalRenderedStart = startPosition
+    const finalRenderedEnd = endPosition
+
+    if (isRangeRead(finalRenderedStart, finalRenderedEnd)) {
+      unmarkRangeAsRead(currentText.id, finalRenderedStart, finalRenderedEnd)
     } else {
       // Mark as read for progress tracking
-      markRangeAsRead(currentText.id, startPosition, endPosition)
+      markRangeAsRead(currentText.id, finalRenderedStart, finalRenderedEnd)
 
       // Also create a mark for the Create Cards hub with position information
       try {
-        await api.flashcards.createMark(currentText.id, selectedText, startPosition, endPosition)
+        await api.flashcards.createMark(currentText.id, selectedText, finalRenderedStart, finalRenderedEnd)
       } catch (error) {
         console.error('Failed to create mark:', error)
         // Don't block the read marking if mark creation fails
@@ -78,10 +100,8 @@ export function TextSelectionMenu({ children, textId }: TextSelectionMenuProps) 
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'm') {
-        e.preventDefault()
-        handleToggleRead()
-      }
+      // Note: Ctrl+M is handled by the main ReadPage component to avoid duplicate calls
+      // This component only handles Ctrl+N for flashcard creation
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault()
         handleCreateFlashcard()

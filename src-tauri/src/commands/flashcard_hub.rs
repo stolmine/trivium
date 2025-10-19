@@ -55,7 +55,60 @@ pub struct CreatedCard {
     pub text_title: String,
 }
 
-/// Helper to extract context around marked text in content
+/// Helper to extract context around marked text using stored positions in DOM space
+///
+/// Positions are stored in DOM textContent space (rendered HTML with no markdown).
+/// This function:
+/// 1. Processes raw content to match how frontend renders it (strip exclude tags, strip markdown)
+/// 2. Uses the DOM positions to extract the marked text and context
+/// 3. Returns context strings and positions
+fn extract_context_from_positions(content: &str, start_pos: i64, end_pos: i64, context_chars: usize) -> (String, String, i64, i64) {
+    // Convert content to DOM space (strip [[exclude]] tags and markdown links)
+    // This matches how the frontend processes content for rendering
+    let dom_content = process_content_to_dom_space(content);
+
+    let start = start_pos as usize;
+    let end = end_pos as usize;
+
+    // Ensure positions are within bounds
+    if start >= dom_content.len() || end > dom_content.len() || start >= end {
+        return (String::new(), String::new(), start_pos, end_pos);
+    }
+
+    // Extract before context (up to context_chars before)
+    let before_start = start.saturating_sub(context_chars);
+    let before_context = dom_content[before_start..start].to_string();
+
+    // Extract after context (up to context_chars after)
+    let after_end = std::cmp::min(end + context_chars, dom_content.len());
+    let after_context = dom_content[end..after_end].to_string();
+
+    (before_context, after_context, start_pos, end_pos)
+}
+
+/// Process content to DOM space by stripping [[exclude]] tags and markdown links
+/// This matches how the frontend renders content
+fn process_content_to_dom_space(content: &str) -> String {
+    use regex::Regex;
+
+    // First, strip [[exclude]] tags (keep the content inside)
+    // Use (?s) for dotall mode to match across newlines
+    let exclude_regex = Regex::new(r"(?s)\[\[exclude\]\](.*?)\[\[/exclude\]\]").unwrap();
+    let mut cleaned = exclude_regex.replace_all(content, "$1").to_string();
+
+    // Then strip markdown links: [text](url) -> text
+    let link_regex = Regex::new(r"\[([^\]]*)\]\([^\)]+\)").unwrap();
+    cleaned = link_regex.replace_all(&cleaned, "$1").to_string();
+
+    // Strip mediawiki-style headers: == Header == -> Header
+    let header_regex = Regex::new(r"={2,}\s*(.+?)\s*={2,}").unwrap();
+    cleaned = header_regex.replace_all(&cleaned, "$1").to_string();
+
+    cleaned
+}
+
+/// Helper to extract context around marked text in content using string search
+/// This is a fallback for old marks that don't have stored positions
 fn extract_context(content: &str, marked_text: &str, context_chars: usize) -> (String, String, i64, i64) {
     // Find the position of the marked text in content
     if let Some(pos) = content.find(marked_text) {
@@ -105,6 +158,8 @@ pub async fn get_hub_marks(
                     t.title,
                     t.content,
                     cn.original_text,
+                    cn.start_position,
+                    cn.end_position,
                     cn.created_at,
                     (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as card_count
                 FROM cloze_notes cn
@@ -122,8 +177,16 @@ pub async fn get_hub_marks(
 
             rows.into_iter()
                 .map(|row| {
-                    let (before_context, after_context, start_pos, end_pos) =
-                        extract_context(&row.content, &row.original_text, 200);
+                    // Use stored positions if available, otherwise fallback to string search
+                    let (before_context, after_context, start_pos, end_pos) = match (row.start_position, row.end_position) {
+                        (Some(start), Some(end)) => {
+                            extract_context_from_positions(&row.content, start, end, 200)
+                        }
+                        _ => {
+                            // Fallback to string search for old marks without positions
+                            extract_context(&row.content, &row.original_text, 200)
+                        }
+                    };
 
                     MarkWithContext {
                         id: row.id.unwrap_or(0),
@@ -153,6 +216,8 @@ pub async fn get_hub_marks(
                     t.title,
                     t.content,
                     cn.original_text,
+                    cn.start_position,
+                    cn.end_position,
                     cn.created_at,
                     (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as card_count
                 FROM cloze_notes cn
@@ -180,8 +245,16 @@ pub async fn get_hub_marks(
 
             rows.into_iter()
                 .map(|row| {
-                    let (before_context, after_context, start_pos, end_pos) =
-                        extract_context(&row.content, &row.original_text, 200);
+                    // Use stored positions if available, otherwise fallback to string search
+                    let (before_context, after_context, start_pos, end_pos) = match (row.start_position, row.end_position) {
+                        (Some(start), Some(end)) => {
+                            extract_context_from_positions(&row.content, start, end, 200)
+                        }
+                        _ => {
+                            // Fallback to string search for old marks without positions
+                            extract_context(&row.content, &row.original_text, 200)
+                        }
+                    };
 
                     MarkWithContext {
                         id: row.id.unwrap_or(0),
@@ -213,6 +286,8 @@ pub async fn get_hub_marks(
                     t.title,
                     t.content,
                     cn.original_text,
+                    cn.start_position,
+                    cn.end_position,
                     cn.created_at,
                     (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as "card_count!: i64"
                 FROM cloze_notes cn
@@ -232,8 +307,16 @@ pub async fn get_hub_marks(
 
             rows.into_iter()
                 .map(|row| {
-                    let (before_context, after_context, start_pos, end_pos) =
-                        extract_context(&row.content, &row.original_text, 200);
+                    // Use stored positions if available, otherwise fallback to string search
+                    let (before_context, after_context, start_pos, end_pos) = match (row.start_position, row.end_position) {
+                        (Some(start), Some(end)) => {
+                            extract_context_from_positions(&row.content, start, end, 200)
+                        }
+                        _ => {
+                            // Fallback to string search for old marks without positions
+                            extract_context(&row.content, &row.original_text, 200)
+                        }
+                    };
 
                     MarkWithContext {
                         id: row.id.unwrap_or(0),
