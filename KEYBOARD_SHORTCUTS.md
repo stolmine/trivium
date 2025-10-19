@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-10-19 (Phase 19: Settings Menu)
+Last Updated: 2025-10-19 (Phase 19: Mark/Unmark Shortcut Change)
 
 ---
 
@@ -62,7 +62,7 @@ These shortcuts control the UI appearance and help system.
 
 | Action | Windows/Linux | macOS | Description |
 |--------|---------------|-------|-------------|
-| Mark/Unmark as Read | `Ctrl + M` | `⌘ + M` | Toggle read status for selected text |
+| Mark/Unmark as Read | `Ctrl + D` | `⌘ + D` | Toggle read status for selected text |
 
 ### History & Navigation
 
@@ -279,6 +279,11 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-10-19 (Phase 19 - Mark/Unmark Shortcut Change)
+- Changed Mark/Unmark text shortcut from Ctrl+M / Cmd+M to Ctrl+D / Cmd+D
+- This change avoids conflict with macOS window minimize (Cmd+M)
+- Updated Reading View documentation accordingly
 
 ### 2025-10-19 (Phase 19 - Settings Menu Enhancement)
 - Added macOS standard settings shortcut (Ctrl+, / Cmd+,)

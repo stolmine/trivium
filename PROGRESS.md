@@ -2,8 +2,54 @@
 
 ## Current Status: Phase 20 Complete ✅ - Statistics & Analytics System (With Known Issues)
 
-**Branch**: `18_stats`
-**Last Updated**: 2025-10-19 (Phase 20: Statistics & Analytics - review stats working, reading stats under investigation)
+**Branch**: `19_moreTweaks`
+**Last Updated**: 2025-10-19
+
+---
+
+## Post-Phase 20 Improvements
+
+### Recent Updates (Branch: 19_moreTweaks)
+
+#### Commit b73c269: Keyboard Shortcut Change - Mark/Unmark
+**Date**: 2025-10-19
+**Change**: Updated mark/unmark keyboard shortcut from Ctrl+M to Ctrl+D
+
+**Reason**: Avoid conflict with macOS window minimize shortcut (Cmd+M becomes Ctrl+M in cross-platform context)
+
+**New Shortcut**: Ctrl+D (D for "Done")
+
+**Files Changed**:
+- `src/components/TextSelectionMenu.tsx` - Updated keyboard handler
+- `src/lib/shortcuts.ts` - Updated shortcuts registry
+- `src-tauri/src/commands/read.rs` - Backend handler unchanged (works with either)
+
+**Impact**: Users on macOS will no longer experience conflicts between marking text as read and minimizing windows.
+
+---
+
+#### Commit 13dd384: Collapsible Sidebar Navigation
+**Date**: 2025-10-19
+**Changes**:
+1. Fixed database migration issues for fresh installations
+2. Implemented collapsible upper navigation menu in sidebar
+3. Dashboard always remains visible when navigation is collapsed
+4. Added "Show More/Less" toggle button
+5. Navigation state persists in localStorage
+6. Library tree automatically expands to fill available space when navigation collapsed
+
+**Technical Details**:
+- Migration fixes ensure schema compatibility for new users
+- Collapse state stored in localStorage as `sidebarNavExpanded`
+- CSS grid layout adjusts dynamically based on collapse state
+- Dashboard tile always visible for quick access
+- Library tree uses `flex-1` to consume remaining space
+
+**User Benefits**:
+- More screen space for library tree when navigation hidden
+- Persistent preference across app restarts
+- Dashboard always accessible
+- Cleaner interface for users who primarily use keyboard shortcuts
 
 ---
 
@@ -113,7 +159,7 @@
 15. **Track Progress**: See reading progress on texts (e.g., "45%") and folders (aggregate)
 16. **Read Content**: Open and read full text articles with visual progress tracking
 17. **Search in Text**: Find text within documents (Cmd/Ctrl+F), case-sensitive, whole-word options
-18. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+M)
+18. **Mark/Unmark as Read**: Select text and toggle read status (right-click or Ctrl+D)
 19. **Visual Feedback**: Read text appears as white on black (inverse styling)
 20. **Create Flashcards**: Select text and create cloze deletions (Ctrl+Shift+C)
 21. **Auto-Sequential Clozes**: System detects existing cloze numbers and auto-increments
@@ -210,6 +256,7 @@
 112. **Review Timing**: Duration tracking from answer reveal to grade for performance insights
 113. **Study Streak Calculation**: Consecutive days with review activity highlighted
 114. **Dark Mode Statistics**: All charts and visualizations support dark theme
+115. **Collapsible Sidebar Navigation**: Toggle upper navigation menu visibility with Show More/Less button, persistent state in localStorage, library tree auto-expands to fill space
 
 ### Technical Stack Working:
 - ✅ Tauri 2.0 with Rust backend
