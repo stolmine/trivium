@@ -1,4 +1,17 @@
 -- Activate reading sessions tracking
+-- First ensure the reading_sessions table exists
+CREATE TABLE IF NOT EXISTS reading_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    text_id INTEGER NOT NULL,
+    user_id INTEGER DEFAULT 1,
+    started_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ended_at DATETIME,
+    duration_seconds INTEGER,
+    start_position INTEGER NOT NULL,
+    end_position INTEGER,
+    FOREIGN KEY (text_id) REFERENCES texts(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_reading_sessions_ended_at
 ON reading_sessions(ended_at);
 

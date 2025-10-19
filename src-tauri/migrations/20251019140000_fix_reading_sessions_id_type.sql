@@ -1,6 +1,10 @@
 -- Fix reading_sessions.id to be TEXT (UUID) instead of INTEGER
 -- This aligns with the implementation in reading.rs which uses UUID strings
 
+-- First, drop the views that depend on reading_sessions
+DROP VIEW IF EXISTS reading_stats_daily;
+DROP VIEW IF EXISTS reading_stats_by_folder;
+
 -- Create new table with correct schema
 CREATE TABLE reading_sessions_new (
     id TEXT PRIMARY KEY,                     -- Changed from INTEGER to TEXT for UUID
@@ -47,10 +51,7 @@ ALTER TABLE reading_sessions_new RENAME TO reading_sessions;
 CREATE INDEX idx_reading_sessions_ended_at ON reading_sessions(ended_at);
 CREATE INDEX idx_reading_sessions_user_text ON reading_sessions(user_id, text_id);
 
--- Recreate the views that depend on reading_sessions
-DROP VIEW IF EXISTS reading_stats_daily;
-DROP VIEW IF EXISTS reading_stats_by_folder;
-
+-- Recreate the views
 CREATE VIEW reading_stats_daily AS
 SELECT
     user_id,

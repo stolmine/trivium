@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles, FileInput, Settings, BarChart3 } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles, FileInput, Settings, BarChart3, ChevronUp, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -73,11 +73,21 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   const [newFolderName, setNewFolderName] = useState('');
   const [allFoldersExpanded, setAllFoldersExpanded] = useState(false);
   const [folderError, setFolderError] = useState<string | null>(null);
+  const [navCollapsed, setNavCollapsed] = useState(() => {
+    const saved = localStorage.getItem('trivium-nav-collapsed');
+    return saved ? JSON.parse(saved) : false;
+  });
 
   const width = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
   const transitionStyle = shouldReduceMotion() ? {} : getTransitionStyle('width', 300);
   const mod = getModifierKey();
   const navItems = getNavItems();
+
+  const toggleNavCollapsed = () => {
+    const newValue = !navCollapsed;
+    setNavCollapsed(newValue);
+    localStorage.setItem('trivium-nav-collapsed', JSON.stringify(newValue));
+  };
 
   useEffect(() => {
     if (!showCreateFolderDialog) return;
@@ -218,34 +228,64 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
       </div>
 
       <nav className="flex-1 flex flex-col overflow-hidden" role="navigation" aria-label="Main navigation">
-        <div className="py-4 flex-shrink-0">
-          <ul className="space-y-1 px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
+        <div className="flex-shrink-0">
+          <div className="py-4">
+            <ul className="space-y-1 px-2">
+              {navItems.map((item, index) => {
+                const Icon = item.icon;
+                const active = isActive(item.path);
+                const isDashboard = index === 0;
+                const shouldShow = !navCollapsed || isDashboard || sidebarCollapsed;
 
-              return (
-                <li key={item.id}>
-                  <button
-                    onClick={() => navigate(item.path)}
-                    className={cn(
-                      'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-                      active
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                    )}
-                    aria-label={item.label}
-                    aria-current={active ? 'page' : undefined}
-                    title={sidebarCollapsed ? item.label : (item.shortcut ? `${item.label} (${item.shortcut})` : item.label)}
-                  >
-                    <Icon className="h-5 w-5 flex-shrink-0" />
-                    {!sidebarCollapsed && <span>{item.label}</span>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                if (!shouldShow) return null;
+
+                return (
+                  <li key={item.id}>
+                    <button
+                      onClick={() => navigate(item.path)}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+                        active
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                          : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                      )}
+                      aria-label={item.label}
+                      aria-current={active ? 'page' : undefined}
+                      title={sidebarCollapsed ? item.label : (item.shortcut ? `${item.label} (${item.shortcut})` : item.label)}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      {!sidebarCollapsed && <span>{item.label}</span>}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          {!sidebarCollapsed && (
+            <div className="px-2 pb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleNavCollapsed}
+                className="w-full h-8 flex items-center justify-center gap-2 text-xs text-muted-foreground hover:text-foreground"
+                aria-label={navCollapsed ? "Expand navigation" : "Collapse navigation"}
+                title={navCollapsed ? "Show all navigation links" : "Show only Dashboard"}
+              >
+                {navCollapsed ? (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    <span>Show More</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    <span>Show Less</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
 
         {!sidebarCollapsed && (
