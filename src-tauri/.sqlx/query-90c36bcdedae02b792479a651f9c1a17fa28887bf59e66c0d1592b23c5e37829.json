@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            original_text,\n            cloze_text,\n            cloze_index as \"cloze_index!\",\n            display_index as \"display_index!\",\n            cloze_number as \"cloze_number!\",\n            created_at as \"created_at: _\",\n            updated_at as \"updated_at: _\",\n            cloze_note_id,\n            due as \"due: _\",\n            stability as \"stability!\",\n            difficulty as \"difficulty!\",\n            elapsed_days as \"elapsed_days!\",\n            scheduled_days as \"scheduled_days!\",\n            reps as \"reps!\",\n            lapses as \"lapses!\",\n            state as \"state!\",\n            last_review as \"last_review: _\"\n        FROM flashcards\n        WHERE id = ?\n        ",
+  "query": "\n        SELECT\n            flashcards.id as \"id!\",\n            flashcards.text_id as \"text_id!\",\n            flashcards.user_id as \"user_id!\",\n            flashcards.original_text,\n            flashcards.cloze_text,\n            flashcards.cloze_index as \"cloze_index!\",\n            flashcards.display_index as \"display_index!\",\n            flashcards.cloze_number as \"cloze_number!\",\n            flashcards.created_at as \"created_at: _\",\n            flashcards.updated_at as \"updated_at: _\",\n            flashcards.cloze_note_id,\n            flashcards.due as \"due: _\",\n            flashcards.stability as \"stability!\",\n            flashcards.difficulty as \"difficulty!\",\n            flashcards.elapsed_days as \"elapsed_days!\",\n            flashcards.scheduled_days as \"scheduled_days!\",\n            flashcards.reps as \"reps!\",\n            flashcards.lapses as \"lapses!\",\n            flashcards.state as \"state!\",\n            flashcards.last_review as \"last_review: _\",\n            texts.title as text_title\n        FROM flashcards\n        INNER JOIN texts ON flashcards.text_id = texts.id\n        WHERE flashcards.text_id = ?\n        ORDER BY flashcards.display_index ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -102,13 +102,18 @@
         "name": "last_review: _",
         "ordinal": 19,
         "type_info": "Datetime"
+      },
+      {
+        "name": "text_title",
+        "ordinal": 20,
+        "type_info": "Text"
       }
     ],
     "parameters": {
       "Right": 1
     },
     "nullable": [
-      false,
+      true,
       false,
       true,
       false,
@@ -127,8 +132,9 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "9a79154e166c1da4875e6ca4e26914f97607cf056a01062d53fb089937e56f7a"
+  "hash": "90c36bcdedae02b792479a651f9c1a17fa28887bf59e66c0d1592b23c5e37829"
 }

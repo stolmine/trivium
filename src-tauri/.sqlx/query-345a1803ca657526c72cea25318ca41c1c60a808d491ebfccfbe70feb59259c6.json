@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            original_text,\n            cloze_text,\n            cloze_index as \"cloze_index!\",\n            display_index as \"display_index!\",\n            cloze_number as \"cloze_number!\",\n            created_at as \"created_at: _\",\n            updated_at as \"updated_at: _\",\n            cloze_note_id,\n            due as \"due: _\",\n            stability as \"stability!\",\n            difficulty as \"difficulty!\",\n            elapsed_days as \"elapsed_days!\",\n            scheduled_days as \"scheduled_days!\",\n            reps as \"reps!\",\n            lapses as \"lapses!\",\n            state as \"state!\",\n            last_review as \"last_review: _\"\n        FROM flashcards\n        WHERE text_id = ?\n        ORDER BY display_index ASC\n        ",
+  "query": "\n                WITH RECURSIVE folder_tree AS (\n                    SELECT id FROM folders WHERE id = ?\n                    UNION ALL\n                    SELECT f.id FROM folders f\n                    INNER JOIN folder_tree ft ON f.parent_id = ft.id\n                )\n                SELECT\n                    flashcards.id as \"id!\",\n                    flashcards.text_id as \"text_id!\",\n                    flashcards.user_id as \"user_id!\",\n                    flashcards.original_text,\n                    flashcards.cloze_text,\n                    flashcards.cloze_index as \"cloze_index!\",\n                    flashcards.display_index as \"display_index!\",\n                    flashcards.cloze_number as \"cloze_number!\",\n                    flashcards.created_at as \"created_at: _\",\n                    flashcards.updated_at as \"updated_at: _\",\n                    flashcards.cloze_note_id,\n                    flashcards.due as \"due: _\",\n                    flashcards.stability as \"stability!\",\n                    flashcards.difficulty as \"difficulty!\",\n                    flashcards.elapsed_days as \"elapsed_days!\",\n                    flashcards.scheduled_days as \"scheduled_days!\",\n                    flashcards.reps as \"reps!\",\n                    flashcards.lapses as \"lapses!\",\n                    flashcards.state as \"state!\",\n                    flashcards.last_review as \"last_review: _\",\n                    texts.title as text_title\n                FROM flashcards\n                INNER JOIN texts ON flashcards.text_id = texts.id\n                WHERE texts.folder_id IN (SELECT id FROM folder_tree)\n                AND datetime(flashcards.due) <= datetime(?)\n                AND flashcards.state = 0\n                ORDER BY datetime(flashcards.due) ASC\n                LIMIT ?\n                ",
   "describe": {
     "columns": [
       {
@@ -102,10 +102,15 @@
         "name": "last_review: _",
         "ordinal": 19,
         "type_info": "Datetime"
+      },
+      {
+        "name": "text_title",
+        "ordinal": 20,
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 3
     },
     "nullable": [
       true,
@@ -127,8 +132,9 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "e21d5d6475d076efc589be1901698a19247ebc55477f1edf6e790d43ace40fed"
+  "hash": "345a1803ca657526c72cea25318ca41c1c60a808d491ebfccfbe70feb59259c6"
 }

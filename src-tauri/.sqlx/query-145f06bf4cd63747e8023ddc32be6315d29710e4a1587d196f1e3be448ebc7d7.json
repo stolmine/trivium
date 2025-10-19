@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            original_text,\n            cloze_text,\n            cloze_index as \"cloze_index!\",\n            display_index as \"display_index!\",\n            cloze_number as \"cloze_number!\",\n            created_at as \"created_at: _\",\n            updated_at as \"updated_at: _\",\n            cloze_note_id,\n            due as \"due: _\",\n            stability as \"stability!\",\n            difficulty as \"difficulty!\",\n            elapsed_days as \"elapsed_days!\",\n            scheduled_days as \"scheduled_days!\",\n            reps as \"reps!\",\n            lapses as \"lapses!\",\n            state as \"state!\",\n            last_review as \"last_review: _\"\n        FROM flashcards\n        WHERE datetime(due) <= datetime(?)\n        ORDER BY datetime(due) ASC\n        LIMIT ?\n        ",
+  "query": "\n        SELECT\n            flashcards.id as \"id!\",\n            flashcards.text_id as \"text_id!\",\n            flashcards.user_id as \"user_id!\",\n            flashcards.original_text,\n            flashcards.cloze_text,\n            flashcards.cloze_index as \"cloze_index!\",\n            flashcards.display_index as \"display_index!\",\n            flashcards.cloze_number as \"cloze_number!\",\n            flashcards.created_at as \"created_at: _\",\n            flashcards.updated_at as \"updated_at: _\",\n            flashcards.cloze_note_id,\n            flashcards.due as \"due: _\",\n            flashcards.stability as \"stability!\",\n            flashcards.difficulty as \"difficulty!\",\n            flashcards.elapsed_days as \"elapsed_days!\",\n            flashcards.scheduled_days as \"scheduled_days!\",\n            flashcards.reps as \"reps!\",\n            flashcards.lapses as \"lapses!\",\n            flashcards.state as \"state!\",\n            flashcards.last_review as \"last_review: _\",\n            texts.title as text_title\n        FROM flashcards\n        INNER JOIN texts ON flashcards.text_id = texts.id\n        WHERE flashcards.id = ?\n        ",
   "describe": {
     "columns": [
       {
@@ -102,10 +102,15 @@
         "name": "last_review: _",
         "ordinal": 19,
         "type_info": "Datetime"
+      },
+      {
+        "name": "text_title",
+        "ordinal": 20,
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 2
+      "Right": 1
     },
     "nullable": [
       false,
@@ -127,8 +132,9 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "782666943f841605269a908e4a2ce3b4a822d9a121ddf397213dff22cb562e98"
+  "hash": "145f06bf4cd63747e8023ddc32be6315d29710e4a1587d196f1e3be448ebc7d7"
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                SELECT\n                    id as \"id!\",\n                    text_id as \"text_id!\",\n                    user_id as \"user_id!\",\n                    original_text,\n                    cloze_text,\n                    cloze_index as \"cloze_index!\",\n                    display_index as \"display_index!\",\n                    cloze_number as \"cloze_number!\",\n                    created_at as \"created_at: _\",\n                    updated_at as \"updated_at: _\",\n                    cloze_note_id,\n                    due as \"due: _\",\n                    stability as \"stability!\",\n                    difficulty as \"difficulty!\",\n                    elapsed_days as \"elapsed_days!\",\n                    scheduled_days as \"scheduled_days!\",\n                    reps as \"reps!\",\n                    lapses as \"lapses!\",\n                    state as \"state!\",\n                    last_review as \"last_review: _\"\n                FROM flashcards\n                WHERE datetime(due) <= datetime(?) AND state = 0\n                ORDER BY datetime(due) ASC\n                LIMIT ?\n                ",
+  "query": "\n                SELECT\n                    flashcards.id as \"id!\",\n                    flashcards.text_id as \"text_id!\",\n                    flashcards.user_id as \"user_id!\",\n                    flashcards.original_text,\n                    flashcards.cloze_text,\n                    flashcards.cloze_index as \"cloze_index!\",\n                    flashcards.display_index as \"display_index!\",\n                    flashcards.cloze_number as \"cloze_number!\",\n                    flashcards.created_at as \"created_at: _\",\n                    flashcards.updated_at as \"updated_at: _\",\n                    flashcards.cloze_note_id,\n                    flashcards.due as \"due: _\",\n                    flashcards.stability as \"stability!\",\n                    flashcards.difficulty as \"difficulty!\",\n                    flashcards.elapsed_days as \"elapsed_days!\",\n                    flashcards.scheduled_days as \"scheduled_days!\",\n                    flashcards.reps as \"reps!\",\n                    flashcards.lapses as \"lapses!\",\n                    flashcards.state as \"state!\",\n                    flashcards.last_review as \"last_review: _\",\n                    texts.title as text_title\n                FROM flashcards\n                INNER JOIN texts ON flashcards.text_id = texts.id\n                WHERE flashcards.text_id = ? AND datetime(flashcards.due) <= datetime(?) AND flashcards.state = 0\n                ORDER BY datetime(flashcards.due) ASC\n                LIMIT ?\n                ",
   "describe": {
     "columns": [
       {
@@ -102,10 +102,15 @@
         "name": "last_review: _",
         "ordinal": 19,
         "type_info": "Datetime"
+      },
+      {
+        "name": "text_title",
+        "ordinal": 20,
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 2
+      "Right": 3
     },
     "nullable": [
       true,
@@ -127,8 +132,9 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "e6206ab7047dd5da3ceafc6c6f74b91d7ac37b5193c4231ad0d7137dedc63eb7"
+  "hash": "0528f97e9472412f66fce4daa9173a4992ab6ac7340e9e71d21112528a86e7a4"
 }

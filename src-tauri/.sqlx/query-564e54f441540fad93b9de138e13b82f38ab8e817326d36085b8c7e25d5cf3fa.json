@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                WITH RECURSIVE folder_tree AS (\n                    SELECT id FROM folders WHERE id = ?\n                    UNION ALL\n                    SELECT f.id FROM folders f\n                    INNER JOIN folder_tree ft ON f.parent_id = ft.id\n                )\n                SELECT\n                    flashcards.id as \"id!\",\n                    flashcards.text_id as \"text_id!\",\n                    flashcards.user_id as \"user_id!\",\n                    flashcards.original_text,\n                    flashcards.cloze_text,\n                    flashcards.cloze_index as \"cloze_index!\",\n                    flashcards.display_index as \"display_index!\",\n                    flashcards.cloze_number as \"cloze_number!\",\n                    flashcards.created_at as \"created_at: _\",\n                    flashcards.updated_at as \"updated_at: _\",\n                    flashcards.cloze_note_id,\n                    flashcards.due as \"due: _\",\n                    flashcards.stability as \"stability!\",\n                    flashcards.difficulty as \"difficulty!\",\n                    flashcards.elapsed_days as \"elapsed_days!\",\n                    flashcards.scheduled_days as \"scheduled_days!\",\n                    flashcards.reps as \"reps!\",\n                    flashcards.lapses as \"lapses!\",\n                    flashcards.state as \"state!\",\n                    flashcards.last_review as \"last_review: _\"\n                FROM flashcards\n                INNER JOIN texts ON flashcards.text_id = texts.id\n                WHERE texts.folder_id IN (SELECT id FROM folder_tree)\n                AND datetime(flashcards.due) <= datetime(?)\n                AND flashcards.state = 0\n                ORDER BY datetime(flashcards.due) ASC\n                LIMIT ?\n                ",
+  "query": "\n                SELECT\n                    flashcards.id as \"id!\",\n                    flashcards.text_id as \"text_id!\",\n                    flashcards.user_id as \"user_id!\",\n                    flashcards.original_text,\n                    flashcards.cloze_text,\n                    flashcards.cloze_index as \"cloze_index!\",\n                    flashcards.display_index as \"display_index!\",\n                    flashcards.cloze_number as \"cloze_number!\",\n                    flashcards.created_at as \"created_at: _\",\n                    flashcards.updated_at as \"updated_at: _\",\n                    flashcards.cloze_note_id,\n                    flashcards.due as \"due: _\",\n                    flashcards.stability as \"stability!\",\n                    flashcards.difficulty as \"difficulty!\",\n                    flashcards.elapsed_days as \"elapsed_days!\",\n                    flashcards.scheduled_days as \"scheduled_days!\",\n                    flashcards.reps as \"reps!\",\n                    flashcards.lapses as \"lapses!\",\n                    flashcards.state as \"state!\",\n                    flashcards.last_review as \"last_review: _\",\n                    texts.title as text_title\n                FROM flashcards\n                INNER JOIN texts ON flashcards.text_id = texts.id\n                WHERE datetime(flashcards.due) <= datetime(?) AND flashcards.state != 0\n                ORDER BY datetime(flashcards.due) ASC\n                LIMIT ?\n                ",
   "describe": {
     "columns": [
       {
@@ -102,33 +102,39 @@
         "name": "last_review: _",
         "ordinal": 19,
         "type_info": "Datetime"
+      },
+      {
+        "name": "text_title",
+        "ordinal": 20,
+        "type_info": "Text"
       }
     ],
     "parameters": {
-      "Right": 3
+      "Right": 2
     },
     "nullable": [
-      true,
-      false,
-      true,
-      false,
-      false,
-      false,
-      true,
-      true,
       false,
       false,
       true,
       false,
       false,
       false,
+      true,
+      true,
+      false,
+      false,
+      true,
       false,
       false,
       false,
       false,
       false,
-      true
+      false,
+      false,
+      false,
+      true,
+      false
     ]
   },
-  "hash": "9889c3abbc2d75506cf411fc751abe723cd5d1de5afa003aef2467d96142845f"
+  "hash": "564e54f441540fad93b9de138e13b82f38ab8e817326d36085b8c7e25d5cf3fa"
 }
