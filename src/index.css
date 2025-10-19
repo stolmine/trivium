@@ -324,6 +324,12 @@
   text-decoration-thickness: 2px;
 }
 
+.clickable-link:focus {
+  outline: 2px solid hsl(217, 91%, 60%);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
 .clickable-link:active {
   color: hsl(217, 91%, 40%) !important;
 }
@@ -334,6 +340,10 @@
 
 .dark .clickable-link:hover {
   color: hsl(217, 91%, 80%) !important;
+}
+
+.dark .clickable-link:focus {
+  outline-color: hsl(217, 91%, 70%);
 }
 
 .dark .clickable-link:active {

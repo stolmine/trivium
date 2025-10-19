@@ -1193,6 +1193,7 @@ export function ReadPage() {
                           linksEnabled={linksEnabled}
                           searchMatches={matches}
                           activeSearchIndex={currentIndex}
+                          onNavigateToIngest={handleNavigateToIngest}
                         />
                       </div>
                     )}
