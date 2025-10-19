@@ -7,13 +7,13 @@ import { RecentActivity } from '../../components/dashboard/RecentActivity';
 
 export function DashboardPage() {
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ContinueReadingCard />

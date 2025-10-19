@@ -87,7 +87,7 @@ export function ReviewSessionPage() {
 
   if (isLoading && !currentCard) {
     return (
-      <div className="flex items-center justify-center h-full py-12">
+      <div className="flex items-center justify-center h-full py-12 bg-background">
         <div className="text-muted-foreground" role="status" aria-live="polite">Loading cards...</div>
       </div>
     )
@@ -95,7 +95,7 @@ export function ReviewSessionPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+      <div className="flex flex-col items-center justify-center h-full gap-4 p-8 bg-background">
         <div className="text-destructive text-lg" role="alert" aria-live="assertive">{error}</div>
         <Button variant="outline" onClick={() => navigate('/')}>
           <ChevronLeft className="h-4 w-4 mr-2" />
@@ -113,7 +113,7 @@ export function ReviewSessionPage() {
 
   return (
     <div className="flex flex-col h-full bg-background">
-      <header className="border-b bg-card" role="banner">
+      <header className="border-b border-border bg-card" role="banner">
         <div className="container mx-auto px-6 py-4 max-w-4xl">
           <div className="flex items-center justify-between mb-3">
             <Button variant="ghost" size="sm" onClick={() => navigate('/review')}>

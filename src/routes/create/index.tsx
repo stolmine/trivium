@@ -94,14 +94,14 @@ export function CreateCardsPage() {
   // Empty state: no marks
   if (marks.length === 0 && !isLoading && !error) {
     return (
-      <div className="flex flex-col h-full overflow-hidden">
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+      <div className="flex flex-col h-full overflow-hidden bg-background">
+        <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
           <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Create Flashcards</h1>
+            <h1 className="text-3xl font-bold text-foreground">Create Flashcards</h1>
             <BackToReadingButton />
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-background">
           <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             {/* Scope Selector */}
             <ScopeSelector />
@@ -130,14 +130,14 @@ export function CreateCardsPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col h-full overflow-hidden">
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+      <div className="flex flex-col h-full overflow-hidden bg-background">
+        <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
           <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Create Flashcards</h1>
+            <h1 className="text-3xl font-bold text-foreground">Create Flashcards</h1>
             <BackToReadingButton />
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-background">
           <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             <div className="flex flex-col items-center justify-center py-16 space-y-6">
               <AlertTriangle className="h-16 w-16 text-destructive" />
@@ -166,14 +166,14 @@ export function CreateCardsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full overflow-hidden">
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+      <div className="flex flex-col h-full overflow-hidden bg-background">
+        <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
           <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Create Flashcards</h1>
+            <h1 className="text-3xl font-bold text-foreground">Create Flashcards</h1>
             <BackToReadingButton />
           </div>
         </header>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-background">
           <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             <div className="space-y-6">
               {/* Scope selector skeleton */}
@@ -217,14 +217,14 @@ export function CreateCardsPage() {
 
   // Main content with marks
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Create Flashcards</h1>
+          <h1 className="text-3xl font-bold text-foreground">Create Flashcards</h1>
           <BackToReadingButton />
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
           <div className="space-y-6">
             {/* Scope Selector */}
@@ -245,7 +245,7 @@ export function CreateCardsPage() {
 
             {/* Card Creator */}
             {currentMark && (
-              <div className="p-6 border rounded-lg">
+              <div className="p-6 border border-border rounded-lg bg-card">
                 <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground mb-4">
                   Create Flashcard
                 </h2>
@@ -277,11 +277,11 @@ export function CreateCardsPage() {
           onClick={() => setShowHelp(false)}
         >
           <div
-            className="bg-background border rounded-lg shadow-lg max-w-2xl w-full p-6"
+            className="bg-card border border-border rounded-lg shadow-lg max-w-2xl w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold">Keyboard Shortcuts</h2>
+              <h2 className="text-xl font-semibold text-foreground">Keyboard Shortcuts</h2>
               <Button
                 variant="ghost"
                 size="sm"

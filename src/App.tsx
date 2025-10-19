@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, useLocation } from 'react-router-d
 import { AppShell } from './components/shell/AppShell'
 import { SkeletonDashboard, SkeletonReadingView, SkeletonReviewCard } from './components/shared/SkeletonLoader'
 import { useNavigationHistory } from './lib/stores/navigationHistory'
+import { useSettingsStore } from './lib/stores/settings'
 
 const DashboardPage = lazy(() => import('./routes/dashboard').then(module => ({ default: module.DashboardPage })))
 const LibraryPage = lazy(() => import('./routes/library').then(module => ({ default: module.LibraryPage })))
@@ -120,6 +121,21 @@ const router = createBrowserRouter([
 ])
 
 function App() {
+  const initTheme = useSettingsStore((state) => state.initTheme)
+
+  useEffect(() => {
+    console.log('[App.tsx] useEffect running - initializing theme');
+    console.log('[App.tsx] DOM ready state:', document.readyState);
+    console.log('[App.tsx] HTML element exists:', !!document.documentElement);
+
+    // Initialize theme on app load
+    const cleanup = initTheme()
+    console.log('[App.tsx] Theme initialization complete');
+
+    // Cleanup event listeners on unmount
+    return cleanup
+  }, [initTheme])
+
   return <RouterProvider router={router} />
 }
 

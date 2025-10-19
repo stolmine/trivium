@@ -881,7 +881,7 @@ export function ReadPage() {
   // Handle loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full py-12">
+      <div className="flex items-center justify-center h-full py-12 bg-background">
         <div className="text-muted-foreground">Loading text...</div>
       </div>
     )
@@ -890,7 +890,7 @@ export function ReadPage() {
   // Handle error state
   if (error) {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-4xl bg-background min-h-screen">
         <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-4">
           {error}
         </div>
@@ -904,7 +904,7 @@ export function ReadPage() {
   // Handle not found state
   if (!currentText) {
     return (
-      <div className="container mx-auto p-6 max-w-4xl">
+      <div className="container mx-auto p-6 max-w-4xl bg-background min-h-screen">
         <div className="text-center py-12 text-muted-foreground">Text not found</div>
         <Button variant="outline" onClick={() => navigate('/')}>
           Back to Dashboard
@@ -915,9 +915,9 @@ export function ReadPage() {
 
   // Render main content
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex h-full overflow-hidden bg-background">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="sticky top-0 z-10 h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="sticky top-0 z-10 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-8 h-full max-w-4xl">
             <div className="reading-content mx-auto h-full">
               <div className="flex items-center justify-between h-full">

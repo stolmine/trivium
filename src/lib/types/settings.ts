@@ -3,7 +3,7 @@ export interface Setting {
   value: string;
 }
 
-export type SettingsTab = 'defaults' | 'database' | 'reset';
+export type SettingsTab = 'defaults' | 'theme' | 'database' | 'reset';
 
 export interface ResetResult {
   readRangesCount?: number;

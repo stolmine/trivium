@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-19 (Phase 19: Settings Menu extensions - import, reset, UI refresh)
+Last Updated: 2025-10-19 (Phase 19: Settings Menu MVP Complete - import, scoped resets, UI refresh)
 
 ---
 
@@ -77,8 +77,8 @@ Last Updated: 2025-10-19 (Phase 19: Settings Menu extensions - import, reset, UI
 **Last Updated**: 2025-10-18
 
 ### `/Users/why/repos/trivium/PHASE_19_SETTINGS_MENU.md`
-**Description**: Complete implementation documentation for Phase 19 Settings Menu MVP. **Overview**: New settings page with tab navigation for configurable application preferences. **Backend**: Database migration adding settings table (key-value store), settings.rs commands module with 4 commands (get_settings, update_setting, get_database_size, export_database), file dialog integration for database export. **Frontend**: Settings page with tab-based sections (Defaults, Database), settings store with localStorage persistence, Switch component integration, human-readable file size formatting. **Features**: Toggle default links visibility in reading view (Ctrl+L), view database size in human-readable format, export database to backup file with file picker, keyboard shortcut Ctrl+6 / Cmd+6 for settings navigation. **Files**: 15 created (1 migration, 1 backend module, 3 SQLx queries, 6 frontend components, 3 types/utils, 2 docs), 8 modified. **Performance**: Sub-100ms settings queries, instant localStorage sync. Implementation time: ~5 hours
-**Last Updated**: 2025-10-18
+**Description**: Complete implementation documentation for Phase 19 Settings Menu (MVP Complete). **Status**: Phases 1-3 fully implemented. **Backend**: Database migration adding settings table (key-value store), settings.rs commands module with commands for get_settings, update_setting, get_database_size, export_database, import_database, and scoped reset operations. **Frontend**: Settings page with tab-based sections (Defaults, Database, Reset), settings store with localStorage persistence, Switch component integration, human-readable file size formatting, scope selector for resets (Library/Folder/Text). **Features**: Toggle default links visibility (Ctrl+L, functionality needs verification), view database size in human-readable format, export database to backup file, **import database from backup file** (restore functionality), **scoped reset operations** (reset reading progress, reset flashcards, reset all data - all with Library/Folder/Text scope support), keyboard shortcut Ctrl+6 / Cmd+6 for settings navigation. **Post-Phase Bug Fixes**: UI refresh after reset operations (cache clearing race condition fix). **Files**: 15 created (1 migration, 1 backend module, 3 SQLx queries, 6 frontend components, 3 types/utils, 2 docs), 8 modified. **Performance**: Sub-100ms settings queries, instant localStorage sync. Implementation time: ~5 hours
+**Last Updated**: 2025-10-19
 
 ### `/Users/why/repos/trivium/SETTINGS_QUICK_REFERENCE.md`
 **Description**: Quick reference guide for Settings Menu providing condensed overview for developers. Includes settings structure (key-value pairs), available settings list (show_links_by_default), keyboard shortcuts (Ctrl+6 navigation, Ctrl+L toggle), backend commands reference, frontend components overview, and common usage patterns. Designed as companion to full Phase 19 documentation for rapid lookups during development

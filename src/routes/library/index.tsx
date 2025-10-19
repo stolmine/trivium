@@ -87,11 +87,11 @@ export function LibraryPage() {
   const sortedTexts = useMemo(() => sortTexts(texts, sortBy), [texts, sortBy])
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">Library</h1>
+            <h1 className="text-3xl font-bold text-foreground">Library</h1>
             <BackToReadingButton />
           </div>
           <div className="flex gap-3 items-center">
@@ -143,7 +143,7 @@ export function LibraryPage() {
           </div>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
         {error && (
           <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-4">
@@ -166,10 +166,10 @@ export function LibraryPage() {
             {sortedTexts.map((text) => (
               <TextContextMenu key={text.id} textId={text.id} textTitle={text.title}>
                 <div
-                  className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition"
+                  className="border border-border rounded-lg p-4 bg-card hover:bg-accent cursor-pointer transition"
                   onClick={() => handleTextClick(text.id)}
                 >
-                  <h2 className="text-xl font-semibold mb-2">{text.title}</h2>
+                  <h2 className="text-xl font-semibold mb-2 text-card-foreground">{text.title}</h2>
                   {text.author && (
                     <p className="text-sm text-muted-foreground mb-1">by {text.author}</p>
                   )}

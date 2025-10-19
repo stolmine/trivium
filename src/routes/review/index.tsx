@@ -76,14 +76,14 @@ export function ReviewHubPage() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
+    <div className="flex flex-col h-full overflow-hidden bg-background">
+      <header className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Review</h1>
+          <h1 className="text-3xl font-bold text-foreground">Review</h1>
           <BackToReadingButton />
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="flex flex-col items-center px-8 pb-8 pt-6">
         <div className="w-full max-w-2xl space-y-8">
 
@@ -94,7 +94,7 @@ export function ReviewHubPage() {
 
           <RadioGroup value={config.filterType} onValueChange={(value) => setFilterType(value as 'all' | 'folder' | 'text')}>
             <div className="space-y-3">
-              <div className="flex items-center space-x-2 p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 p-4 border border-border rounded-lg bg-card">
                 <RadioGroupItem value="all" id="all" />
                 <Label htmlFor="all" className="flex-1 cursor-pointer">
                   <div className="font-medium">All Cards</div>
@@ -104,7 +104,7 @@ export function ReviewHubPage() {
                 </Label>
               </div>
 
-              <div className="flex items-center space-x-2 p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 p-4 border border-border rounded-lg bg-card">
                 <RadioGroupItem value="folder" id="folder" />
                 <Label htmlFor="folder" className="flex-1 cursor-pointer">
                   <div className="font-medium">Specific Folder</div>
@@ -125,7 +125,7 @@ export function ReviewHubPage() {
                 </Label>
               </div>
 
-              <div className="flex items-center space-x-2 p-4 border rounded-lg">
+              <div className="flex items-center space-x-2 p-4 border border-border rounded-lg bg-card">
                 <RadioGroupItem value="text" id="text" />
                 <Label htmlFor="text" className="flex-1 cursor-pointer">
                   <div className="font-medium">Specific Text</div>
@@ -166,7 +166,7 @@ export function ReviewHubPage() {
             Session Settings
           </h2>
 
-          <div className="p-4 border rounded-lg space-y-4">
+          <div className="p-4 border border-border rounded-lg bg-card space-y-4">
             <div>
               <Label>Cards per session: {config.sessionLimit}</Label>
               <Slider
