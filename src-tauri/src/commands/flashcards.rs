@@ -130,28 +130,30 @@ pub async fn create_flashcard_from_cloze(
             Flashcard,
             r#"
             SELECT
-                id as "id!",
-                text_id as "text_id!",
-                user_id as "user_id!",
-                original_text,
-                cloze_text,
-                cloze_index as "cloze_index!",
-                display_index as "display_index!",
-                cloze_number as "cloze_number!",
-                created_at as "created_at: _",
-                updated_at as "updated_at: _",
-                cloze_note_id,
-                due as "due: _",
-                stability as "stability!",
-                difficulty as "difficulty!",
-                elapsed_days as "elapsed_days!",
-                scheduled_days as "scheduled_days!",
-                reps as "reps!",
-                lapses as "lapses!",
-                state as "state!",
-                last_review as "last_review: _"
+                flashcards.id as "id!",
+                flashcards.text_id as "text_id!",
+                flashcards.user_id as "user_id!",
+                flashcards.original_text,
+                flashcards.cloze_text,
+                flashcards.cloze_index as "cloze_index!",
+                flashcards.display_index as "display_index!",
+                flashcards.cloze_number as "cloze_number!",
+                flashcards.created_at as "created_at: _",
+                flashcards.updated_at as "updated_at: _",
+                flashcards.cloze_note_id,
+                flashcards.due as "due: _",
+                flashcards.stability as "stability!",
+                flashcards.difficulty as "difficulty!",
+                flashcards.elapsed_days as "elapsed_days!",
+                flashcards.scheduled_days as "scheduled_days!",
+                flashcards.reps as "reps!",
+                flashcards.lapses as "lapses!",
+                flashcards.state as "state!",
+                flashcards.last_review as "last_review: _",
+                texts.title as text_title
             FROM flashcards
-            WHERE id = ?
+            INNER JOIN texts ON flashcards.text_id = texts.id
+            WHERE flashcards.id = ?
             "#,
             flashcard_id
         )
@@ -178,29 +180,31 @@ pub async fn get_flashcards_by_text(
         Flashcard,
         r#"
         SELECT
-            id as "id!",
-            text_id as "text_id!",
-            user_id as "user_id!",
-            original_text,
-            cloze_text,
-            cloze_index as "cloze_index!",
-            display_index as "display_index!",
-            cloze_number as "cloze_number!",
-            created_at as "created_at: _",
-            updated_at as "updated_at: _",
-            cloze_note_id,
-            due as "due: _",
-            stability as "stability!",
-            difficulty as "difficulty!",
-            elapsed_days as "elapsed_days!",
-            scheduled_days as "scheduled_days!",
-            reps as "reps!",
-            lapses as "lapses!",
-            state as "state!",
-            last_review as "last_review: _"
+            flashcards.id as "id!",
+            flashcards.text_id as "text_id!",
+            flashcards.user_id as "user_id!",
+            flashcards.original_text,
+            flashcards.cloze_text,
+            flashcards.cloze_index as "cloze_index!",
+            flashcards.display_index as "display_index!",
+            flashcards.cloze_number as "cloze_number!",
+            flashcards.created_at as "created_at: _",
+            flashcards.updated_at as "updated_at: _",
+            flashcards.cloze_note_id,
+            flashcards.due as "due: _",
+            flashcards.stability as "stability!",
+            flashcards.difficulty as "difficulty!",
+            flashcards.elapsed_days as "elapsed_days!",
+            flashcards.scheduled_days as "scheduled_days!",
+            flashcards.reps as "reps!",
+            flashcards.lapses as "lapses!",
+            flashcards.state as "state!",
+            flashcards.last_review as "last_review: _",
+            texts.title as text_title
         FROM flashcards
-        WHERE text_id = ?
-        ORDER BY display_index ASC
+        INNER JOIN texts ON flashcards.text_id = texts.id
+        WHERE flashcards.text_id = ?
+        ORDER BY flashcards.display_index ASC
         "#,
         text_id
     )

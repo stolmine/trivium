@@ -25,4 +25,6 @@ pub struct Flashcard {
     pub lapses: i64,
     pub state: i64,
     pub last_review: Option<DateTime<Utc>>,
+    #[sqlx(default)]
+    pub text_title: Option<String>,
 }

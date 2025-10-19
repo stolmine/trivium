@@ -32,6 +32,11 @@ export function ReviewCard({ card, showAnswer, onToggleAnswer }: ReviewCardProps
 
   return (
     <div className="max-w-2xl w-full">
+      {card.textTitle && (
+        <div className="text-xs text-muted-foreground mb-4 font-medium">
+          {card.textTitle}
+        </div>
+      )}
       <div
         className="text-xl mb-8 leading-relaxed"
         dangerouslySetInnerHTML={{ __html: renderClozeHtml(card.clozeText, card.clozeNumber, showAnswer) }}

@@ -19,6 +19,7 @@ export interface Flashcard {
   lapses: number;
   state: number;
   lastReview: string | null;
+  textTitle?: string;
 }
 
 export interface ClozeNote {
