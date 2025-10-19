@@ -772,21 +772,25 @@ Then iterate with:
 - `src/lib/utils/theme.ts` - Theme detection and application utilities
 - `src/lib/components/settings/ThemeSection.tsx` - Theme settings UI component
 
-#### Files Modified (13 components)
-- Updated settings store with theme state (`theme`, `setTheme`)
-- Added dark mode utilities (`bg-background`, `text-foreground`, `border-border`) to:
-  - Dashboard components
-  - Settings sections
-  - Reading view components
-  - Library components
-  - Review components
-  - Ingest components
+#### Files Modified for Dark Mode (22 total)
+- **Initial Implementation (13 components)**: Updated settings store with theme state (`theme`, `setTheme`), added dark mode utilities (`bg-background`, `text-foreground`, `border-border`) to dashboard, settings, reading, library, review, and ingest components
+- **Comprehensive Dark Mode Extension (9 additional files)**:
+  - **All Modals and Dialogs (6 files)**: FolderCreateDialog, FolderRenameDialog, CreateCardDialog, EditCardDialog, MarkDeletionWarning, ResetConfirmation
+  - **Flashcard Sidebar (1 file)**: FlashcardSidebar - complete dark mode with button states
+  - **Marked Text Highlighting (1 file)**: Replaced custom CSS class with Tailwind utilities, increased dark mode contrast (gray-700 bg, gray-100 text)
+  - **Context Menus (1 file)**: FolderContextMenu
+  - **Created Cards List**: Integrated with card creation UI
 
 #### Technical Implementation
 - CSS Variables: Leveraged existing Tailwind CSS v4 `@theme` directive with semantic color tokens
 - LocalStorage: Theme preference persisted in settings store
 - System Listener: `matchMedia` listener for system theme changes
 - HTML Class Toggle: `.dark` class applied to `<html>` element for theme switching
+
+#### Key Improvements
+- **Marked Text Contrast**: Improved dark mode readability with higher contrast (gray-700 background, gray-100 text vs previous gray-800/gray-300)
+- **Consistent Modal Styling**: All 6 dialog components now use theme-aware colors matching main app design
+- **Complete Coverage**: Dark mode now extends to every user-facing component including previously missed modals and sidebars
 
 ---
 
@@ -880,4 +884,4 @@ Then iterate with:
 ---
 
 **Last Updated**: 2025-10-19
-**Phase Status**: MVP Complete (Phases 1-4 Implemented)
+**Phase Status**: MVP Complete (Phases 1-4 Implemented + Comprehensive Dark Mode Styling)
