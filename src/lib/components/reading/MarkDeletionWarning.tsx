@@ -54,7 +54,7 @@ export function MarkDeletionWarning({
               className="p-3 bg-muted rounded-md border-l-4 border-destructive/50"
             >
               <div className="flex items-center justify-between mb-1">
-                <div className="font-medium text-sm">Mark {idx + 1}</div>
+                <div className="font-medium text-sm text-foreground">Mark {idx + 1}</div>
                 <div className="text-xs text-muted-foreground font-mono">
                   {mark.startPosition}-{mark.endPosition}
                   {mark.status === 'converted' && (
@@ -70,10 +70,10 @@ export function MarkDeletionWarning({
           {readRanges.map((range, idx) => (
             <div
               key={`range-${range.id}`}
-              className="p-3 bg-muted rounded-md border-l-4 border-gray-400"
+              className="p-3 bg-muted rounded-md border-l-4 border-border"
             >
               <div className="flex items-center justify-between mb-1">
-                <div className="font-medium text-sm">Read Range {idx + 1}</div>
+                <div className="font-medium text-sm text-foreground">Read Range {idx + 1}</div>
                 <div className="text-xs text-muted-foreground font-mono">
                   {range.startPosition}-{range.endPosition}
                 </div>

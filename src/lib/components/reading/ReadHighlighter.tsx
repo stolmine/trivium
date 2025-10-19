@@ -450,30 +450,31 @@ const ReadHighlighterComponent = ({
       onClick={handleClick}
     >
       {renderableSegments.map((segment) => {
-        let className = ''
+        const classNames: string[] = []
         let style: React.CSSProperties = {}
 
         // Apply base styling (read/excluded/header)
         if (segment.isExcluded) {
-          className = 'excluded-text'
+          classNames.push('excluded-text')
         } else if (segment.isRead && segment.isHeader) {
-          className = 'read-header'
+          classNames.push('read-header')
         } else if (segment.isRead) {
-          style = { backgroundColor: 'black', color: 'white' }
+          // Use Tailwind utilities for dark mode support
+          classNames.push('bg-black', 'text-white', 'dark:bg-gray-700', 'dark:text-gray-100', 'inline')
         }
 
         // Apply search highlighting - overrides base styling for matched text only
         if (segment.isActiveSearchMatch) {
-          style = { ...style, backgroundColor: '#fed7aa', color: 'black' }
+          style = { backgroundColor: '#fed7aa', color: 'black' }
         } else if (segment.isSearchMatch) {
-          style = { ...style, backgroundColor: '#fef08a', color: 'black' }
+          style = { backgroundColor: '#fef08a', color: 'black' }
         }
 
         return (
           <span
             key={segment.key}
-            className={className}
-            style={style}
+            className={classNames.join(' ')}
+            style={Object.keys(style).length > 0 ? style : undefined}
             data-search-index={segment.isActiveSearchMatch ? activeSearchIndex : undefined}
             dangerouslySetInnerHTML={{ __html: renderTextWithLinks(segment.text, linksEnabled) }}
           />

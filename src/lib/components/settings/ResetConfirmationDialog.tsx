@@ -121,7 +121,7 @@ export function ResetConfirmationDialog({
         {step === 'warning' && (
           <div className="py-4 space-y-4">
             {resetType === 'all' && (
-              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+              <div className="p-4 bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 dark:border-destructive/30 rounded-md">
                 <p className="text-sm font-medium text-destructive mb-2">
                   Before proceeding, please export your database!
                 </p>

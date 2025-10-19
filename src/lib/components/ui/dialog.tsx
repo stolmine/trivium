@@ -28,8 +28,8 @@ const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) => {
   const dialogContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
       <div
-        className="fixed inset-0 bg-black opacity-50 pointer-events-auto"
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1 }}
+        className="fixed inset-0 bg-black/80 pointer-events-auto"
+        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}
         onClick={() => onOpenChange?.(false)}
       />
       <div className="relative z-[10000] pointer-events-auto" style={{ position: 'relative', zIndex: 10 }}>
@@ -58,11 +58,10 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
       <div
         ref={ref}
         className={cn(
-          "bg-white w-full max-w-lg rounded-lg border p-6 shadow-lg",
+          "bg-background text-foreground w-full max-w-lg rounded-lg border border-border p-6 shadow-lg",
           className
         )}
         style={{
-          backgroundColor: 'white',
           padding: '24px',
           borderRadius: '8px',
           boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
@@ -108,7 +107,7 @@ const DialogTitle: React.FC<DialogTitleProps> = ({
 }) => {
   return (
     <h2
-      className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+      className={cn("text-lg font-semibold leading-none tracking-tight text-foreground", className)}
       {...props}
     >
       {children}

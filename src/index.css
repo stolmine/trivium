@@ -285,9 +285,9 @@
 }
 
 .excluded-text {
-  background-color: var(--muted);
-  color: var(--muted-foreground);
-  border-left: 3px solid var(--border);
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+  border-left: 3px solid hsl(var(--border));
   padding-left: 0.5rem;
   padding-right: 0.25rem;
   padding-top: 0.0625rem;
@@ -297,9 +297,29 @@
   border-radius: 0.125rem;
 }
 
+.read-text {
+  background-color: black;
+  color: white;
+  display: inline;
+}
+
+.dark .read-text {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
 .read-header {
   background-color: rgba(128, 128, 128, 0.2);
-  color: var(--muted-foreground);
+  color: hsl(var(--muted-foreground));
+  padding: 0 4px;
+  border-radius: 4px;
+  font-style: italic;
+  display: inline;
+}
+
+.dark .read-header {
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
   padding: 0 4px;
   border-radius: 4px;
   font-style: italic;

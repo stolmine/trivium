@@ -85,7 +85,7 @@ export function CreatedCardsList({
       : card.question.substring(0, 100) + (card.question.length > 100 ? '...' : '')
 
     return (
-      <div className="text-sm text-gray-800 leading-relaxed">
+      <div className="text-sm text-foreground leading-relaxed">
         {questionPreview}
       </div>
     )
@@ -93,10 +93,10 @@ export function CreatedCardsList({
 
   if (cards.length === 0) {
     return (
-      <div className="border-t border-gray-200 bg-gray-50 px-6 py-8">
+      <div className="border-t border-border bg-muted px-6 py-8">
         <div className="text-center">
-          <p className="text-sm text-gray-500 mb-2">No cards created yet</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-sm text-muted-foreground mb-2">No cards created yet</p>
+          <p className="text-xs text-muted-foreground opacity-70">
             Cards you create will appear here
           </p>
         </div>
@@ -105,9 +105,9 @@ export function CreatedCardsList({
   }
 
   return (
-    <div className="border-t border-gray-200 bg-gray-50">
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white">
-        <h3 className="text-sm font-semibold text-gray-900">
+    <div className="border-t border-border bg-muted">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-background">
+        <h3 className="text-sm font-semibold text-foreground">
           Created Today ({cards.length} {cards.length === 1 ? 'card' : 'cards'})
         </h3>
         {onClearAll && cards.length > 0 && (
@@ -115,7 +115,7 @@ export function CreatedCardsList({
             variant="ghost"
             size="sm"
             onClick={onClearAll}
-            className="text-xs text-gray-500 hover:text-gray-700"
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
             Clear All
           </Button>
@@ -132,8 +132,8 @@ export function CreatedCardsList({
             <div
               key={card.id}
               className={`
-                bg-white border rounded-lg shadow-sm transition-all duration-300
-                ${isHighlighted ? 'border-blue-400 shadow-md animate-pulse' : 'border-gray-200 hover:shadow-md'}
+                bg-background border rounded-lg shadow-sm transition-all duration-300
+                ${isHighlighted ? 'border-primary shadow-md animate-pulse' : 'border-border hover:shadow-md'}
                 ${isNewest ? 'animate-slideInTop' : ''}
               `}
             >
@@ -144,11 +144,11 @@ export function CreatedCardsList({
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2 flex-1">
                     {isExpanded ? (
-                      <ChevronUp className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                      <ChevronUp className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                     ) : (
-                      <ChevronDown className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                      <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                     )}
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       {formatRelativeTime(card.createdAt)}
                     </span>
                   </div>
@@ -160,7 +160,7 @@ export function CreatedCardsList({
                         e.stopPropagation()
                         onEdit(card)
                       }}
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-blue-600"
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
                       title="Edit card"
                     >
                       <Edit2 className="h-3 w-3" />
@@ -172,7 +172,7 @@ export function CreatedCardsList({
                         e.stopPropagation()
                         handleDeleteClick(card.id)
                       }}
-                      className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
                       title="Delete card"
                     >
                       <Trash2 className="h-3 w-3" />
@@ -185,14 +185,14 @@ export function CreatedCardsList({
                 {isExpanded && (
                   <div className="space-y-2 mt-2">
                     <div>
-                      <div className="text-xs font-medium text-gray-500 mb-1">Question</div>
-                      <div className="text-sm text-gray-800 leading-relaxed">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Question</div>
+                      <div className="text-sm text-foreground leading-relaxed">
                         {card.question}
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs font-medium text-gray-500 mb-1">Answer</div>
-                      <div className="text-sm text-gray-800 leading-relaxed">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Answer</div>
+                      <div className="text-sm text-foreground leading-relaxed">
                         {card.answer}
                       </div>
                     </div>
@@ -202,8 +202,8 @@ export function CreatedCardsList({
 
               {isExpanded && (
                 <div className="px-3 pb-3 pt-0">
-                  <div className="pt-2 border-t border-gray-100">
-                    <div className="text-xs text-gray-500">
+                  <div className="pt-2 border-t border-border">
+                    <div className="text-xs text-muted-foreground">
                       From: {card.textTitle}
                     </div>
                   </div>

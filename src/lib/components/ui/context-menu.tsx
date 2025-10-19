@@ -99,7 +99,7 @@ const ContextMenuContent: React.FC<ContextMenuContentProps> = ({ children, class
     <div
       ref={ref}
       className={cn(
-        "fixed z-50 min-w-[8rem] overflow-hidden rounded-md border bg-white dark:bg-gray-800 p-1 text-gray-900 dark:text-gray-100 shadow-md",
+        "fixed z-50 min-w-[8rem] overflow-hidden rounded-md border border-border bg-background p-1 text-foreground shadow-md",
         className
       )}
       style={{
@@ -138,7 +138,7 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
     <div
       className={cn(
         "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors",
-        !disabled && "hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer",
+        !disabled && "hover:bg-accent hover:text-accent-foreground cursor-pointer",
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
@@ -151,7 +151,7 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
 
 const ContextMenuSeparator: React.FC<{ className?: string }> = ({ className }) => {
   return (
-    <div className={cn("my-1 h-px bg-gray-200 dark:bg-gray-700", className)} />
+    <div className={cn("my-1 h-px bg-border", className)} />
   )
 }
 
@@ -160,7 +160,7 @@ const ContextMenuShortcut: React.FC<{
   className?: string
 }> = ({ children, className }) => {
   return (
-    <span className={cn("ml-auto text-xs text-gray-500 dark:text-gray-400", className)}>
+    <span className={cn("ml-auto text-xs text-muted-foreground", className)}>
       {children}
     </span>
   )
