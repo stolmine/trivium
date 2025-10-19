@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements + Triple-click position debugging)
+Last Updated: 2025-10-18 (Phase 18: Comprehensive UI overhaul with icons and persistent state)
 
 ---
 
@@ -71,6 +71,10 @@ Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements + Trip
 ### `/Users/why/repos/trivium/PHASE_12_FLASHCARD_CREATION_HUB.md`
 **Description**: Complete implementation documentation for Phase 12 Flashcard Creation Hub. **Overview**: Dedicated workspace for efficiently creating flashcards from previously marked text (cloze notes) with skip/bury workflow. **Backend**: Database migration adding workflow tracking to cloze_notes (status, last_seen_at, session_count, notes columns), flashcard_hub.rs commands module with 5 commands (get_hub_marks, skip_mark, bury_mark, create_card_from_mark, get_hub_stats), context extraction (~200 chars before/after), status workflow integration. **Frontend**: Hub types (MarkWithContext, HubStats, CreatedCard), cardCreation Zustand store, 5 core components (ScopeSelector, MarkNavigation, MarkContext, CardCreator, CreatedCardsList), main /create route (17KB), dashboard tile integration, sidebar navigation with Sparkles icon. **Features**: Library/Folder/Text scope selection, skip marks (temporary - Space key), bury marks (permanent 0-card - Shift+B), mark navigation (arrows/Ctrl+K/J), Q&A card creation with live preview (Shift+Enter), session tracking with created cards list, complete keyboard support (Ctrl+4 global access), real-time statistics. **Post-Phase 12 Improvements (2025-10-16)**: 5 critical bug fixes (folder recursive detection with CTE, scopeId type mismatch, scope selection triggering, premature loadMarks, React hooks dependencies) + 1 new feature (text filtering by marks with 80% noise reduction). **Files**: 18 created (3 backend, 12 frontend, 3 docs), 16 modified total (8 original + 8 post-phase). **Performance**: Sub-second queries, < 200ms card creation, < 500ms page load, ~5ms text filtering. Implementation time: ~6 hours (initial) + ~4 hours (post-phase improvements)
 **Last Updated**: 2025-10-16 (Updated with post-phase improvements section: 5 bug fixes + text filtering feature)
+
+### `/Users/why/repos/trivium/PHASE_18_UI_OVERHAUL.md`
+**Description**: Complete implementation documentation for Phase 18 comprehensive UI overhaul. **Core Changes**: (1) Icon system standardization - replaced all emoji with lucide-react icons (BookOpen, Brain, Sparkles, Zap, Activity, ArrowLeft) for visual consistency and accessibility, (2) Navigation improvements - moved back to reading button from dashboard to create cards header for better UX hierarchy, (3) Persistent flashcard sidebar state using localStorage, (4) Terminology standardization - "import" → "ingest" throughout UI, (5) Sticky page headers for better orientation during scrolling. **Attempted Feature (REVERTED)**: Alt+click link navigation to ingest page - reverted in commit 2930950 because it interfered with native text selection behavior. Documents lessons learned about not overriding browser defaults. **Files**: 15 modified (5 dashboard components, 5 page routes, 1 library component, 3 utilities/stores). **Performance**: No measurable impact, CSS-only sticky positioning, localStorage < 1ms. **Testing**: Manual cross-platform validation, all visual/UX improvements verified. Implementation time: ~4 hours
+**Last Updated**: 2025-10-18
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
 **Description**: Detailed 9-10 week implementation roadmap breaking down all 7 phases with task breakdowns, time estimates, dependencies, risk assessment, and success metrics. Includes critical path, alternative approaches (MVP in 4 weeks vs feature-rich in 12 weeks), and technical milestones
@@ -322,12 +326,12 @@ Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements + Trip
 
 ## Statistics
 
-**Total Documentation Files**: 54 markdown files
-**Total Lines of Documentation**: ~50,400+ lines
+**Total Documentation Files**: 55 markdown files
+**Total Lines of Documentation**: ~51,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 7 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub)
+- Project Planning: 8 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
 - Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
 - User Reference: 1 file
