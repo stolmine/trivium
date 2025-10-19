@@ -24,6 +24,7 @@ export interface ReviewState {
   toggleAnswer: () => void;
   nextCard: () => void;
   resetSession: () => void;
+  clearSession: () => void;
 }
 
 export const useReviewStore = create<ReviewState>((set, get) => ({
@@ -136,6 +137,27 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   resetSession: () => {
+    set({
+      queue: [],
+      currentIndex: 0,
+      currentCard: null,
+      showAnswer: false,
+      currentFilter: null,
+      isLoading: false,
+      error: null,
+      sessionStats: {
+        totalReviews: 0,
+        uniqueCards: 0,
+        againCount: 0,
+        hardCount: 0,
+        goodCount: 0,
+        easyCount: 0,
+        startTime: new Date(),
+      },
+    });
+  },
+
+  clearSession: () => {
     set({
       queue: [],
       currentIndex: 0,

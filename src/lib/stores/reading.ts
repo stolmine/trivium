@@ -31,6 +31,7 @@ interface ReadingState {
   calculateProgress: (textId: number) => Promise<void>;
   navigateToNextParagraph: () => void;
   navigateToPreviousParagraph: () => void;
+  clearCurrentText: () => void;
 }
 
 export const useReadingStore = create<ReadingState>((set, get) => ({
@@ -306,5 +307,16 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
     if (currentParagraphIndex > 0) {
       set({ currentParagraphIndex: currentParagraphIndex - 1 });
     }
+  },
+
+  clearCurrentText: () => {
+    set({
+      currentText: null,
+      readRanges: [],
+      paragraphs: [],
+      excludedRanges: [],
+      currentParagraphIndex: 0,
+      totalProgress: 0
+    });
   },
 }));

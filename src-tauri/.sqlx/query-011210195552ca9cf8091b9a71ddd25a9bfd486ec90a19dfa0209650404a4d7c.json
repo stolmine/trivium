@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM cloze_notes\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "011210195552ca9cf8091b9a71ddd25a9bfd486ec90a19dfa0209650404a4d7c"
+}

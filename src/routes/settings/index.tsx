@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/lib/components/ui/button';
 import type { SettingsTab } from '@/lib/types/settings';
-import { DefaultsSection, DatabaseSection } from '@/lib/components/settings';
+import { DefaultsSection, DatabaseSection, ResetSection } from '@/lib/components/settings';
 
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('defaults');
@@ -31,11 +31,19 @@ export function SettingsPage() {
               >
                 Database
               </Button>
+              <Button
+                variant={activeTab === 'reset' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('reset')}
+                className="rounded-b-none"
+              >
+                Reset
+              </Button>
             </div>
 
             <div className="space-y-6">
               {activeTab === 'defaults' && <DefaultsSection />}
               {activeTab === 'database' && <DatabaseSection />}
+              {activeTab === 'reset' && <ResetSection />}
             </div>
           </div>
         </div>

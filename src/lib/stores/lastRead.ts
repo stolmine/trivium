@@ -9,6 +9,7 @@ interface LastReadState {
   progress: number;
   setLastRead: (textId: number, textTitle: string, scrollPosition: number, progress: number) => void;
   clearLastRead: () => void;
+  clear: () => void;
   hasLastRead: () => boolean;
 }
 
@@ -32,6 +33,16 @@ export const useLastReadStore = create<LastReadState>()(
       },
 
       clearLastRead: () => {
+        set({
+          textId: null,
+          textTitle: null,
+          scrollPosition: 0,
+          timestamp: null,
+          progress: 0
+        });
+      },
+
+      clear: () => {
         set({
           textId: null,
           textTitle: null,

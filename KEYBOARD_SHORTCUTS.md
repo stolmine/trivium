@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-10-18 (Phase 19: Settings Menu)
+Last Updated: 2025-10-19 (Phase 19: Settings Menu)
 
 ---
 
@@ -31,6 +31,7 @@ These shortcuts work from anywhere in the application.
 | Go to Review | `Ctrl + 4` | `⌘ + 4` | Navigate to review setup |
 | Go to Ingest | `Ctrl + 5` | `⌘ + 5` | Open text import/ingest page |
 | Go to Settings | `Ctrl + 6` | `⌘ + 6` | Navigate to settings page |
+| Go to Settings (Alt) | `Ctrl + ,` | `⌘ + ,` | macOS standard settings shortcut |
 | New Ingest (Alt) | `Ctrl + N` | `⌘ + N` | Alternative hotkey for ingest page |
 
 ---
@@ -278,6 +279,11 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-10-19 (Phase 19 - Settings Menu Enhancement)
+- Added macOS standard settings shortcut (Ctrl+, / Cmd+,)
+- Settings now accessible via both Ctrl+6 and Ctrl+, (Cmd+6 and Cmd+, on macOS)
+- Follows macOS convention for settings access
 
 ### 2025-10-18 (Phase 19 - Settings Menu)
 - Added Settings page to global navigation (Ctrl+6 / Cmd+6)

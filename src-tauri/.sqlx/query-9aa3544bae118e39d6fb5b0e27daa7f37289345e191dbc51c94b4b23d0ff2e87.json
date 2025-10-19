@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM sqlite_sequence\n        WHERE name IN ('texts', 'folders', 'flashcards', 'cloze_notes', 'read_ranges', 'paragraphs', 'review_history')\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "9aa3544bae118e39d6fb5b0e27daa7f37289345e191dbc51c94b4b23d0ff2e87"
+}

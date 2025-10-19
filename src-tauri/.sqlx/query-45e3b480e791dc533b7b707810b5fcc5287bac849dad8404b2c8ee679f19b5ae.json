@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM read_ranges\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "45e3b480e791dc533b7b707810b5fcc5287bac849dad8404b2c8ee679f19b5ae"
+}

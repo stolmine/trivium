@@ -93,7 +93,12 @@ pub fn run() {
             commands::settings::get_settings,
             commands::settings::update_setting,
             commands::settings::get_database_size,
-            commands::settings::export_database
+            commands::settings::export_database,
+            commands::settings::import_database,
+            commands::settings::reset_all_data,
+            commands::settings::reset_reading_progress,
+            commands::settings::reset_all_flashcards,
+            commands::settings::reset_flashcard_stats
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

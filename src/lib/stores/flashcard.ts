@@ -13,6 +13,7 @@ interface FlashcardState {
   deleteFlashcard: (flashcardId: number) => Promise<void>;
   getPreview: (clozeText: string, clozeNumber: number) => Promise<FlashcardPreview>;
   setMostRecentlyReadTextId: (textId: number | null) => void;
+  clearSession: () => void;
 }
 
 export const useFlashcardStore = create<FlashcardState>((set) => ({
@@ -94,5 +95,13 @@ export const useFlashcardStore = create<FlashcardState>((set) => ({
 
   setMostRecentlyReadTextId: (textId: number | null) => {
     set({ mostRecentlyReadTextId: textId });
+  },
+
+  clearSession: () => {
+    set({
+      flashcards: [],
+      currentTextFlashcards: [],
+      mostRecentlyReadTextId: null
+    });
   },
 }));

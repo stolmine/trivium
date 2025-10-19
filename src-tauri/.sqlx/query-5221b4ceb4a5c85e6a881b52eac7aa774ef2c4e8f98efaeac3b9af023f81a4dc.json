@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM flashcards\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "5221b4ceb4a5c85e6a881b52eac7aa774ef2c4e8f98efaeac3b9af023f81a4dc"
+}

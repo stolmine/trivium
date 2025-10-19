@@ -23,4 +23,4 @@ export type {
   ScopeSelection
 } from './hub';
 export type { ReturnNavigationState, IngestPageLocationState, ReadPageLocationState } from './navigation';
-export type { Setting, SettingsTab } from './settings';
+export type { Setting, SettingsTab, ResetResult } from './settings';

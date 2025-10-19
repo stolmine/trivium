@@ -15,7 +15,8 @@ import type {
   MarkWithContext,
   CreatedCard,
   HubStats,
-  CreateCardRequest
+  CreateCardRequest,
+  ResetResult
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -274,6 +275,21 @@ export const api = {
     },
     exportDatabase: async (): Promise<void> => {
       return await invoke('export_database');
+    },
+    importDatabase: async (): Promise<string> => {
+      return await invoke('import_database');
+    },
+    resetAllData: async (): Promise<ResetResult> => {
+      return await invoke('reset_all_data');
+    },
+    resetReadingProgress: async (): Promise<{ count: number }> => {
+      return await invoke('reset_reading_progress');
+    },
+    resetAllFlashcards: async (): Promise<{ count: number }> => {
+      return await invoke('reset_all_flashcards');
+    },
+    resetFlashcardStats: async (): Promise<{ count: number }> => {
+      return await invoke('reset_flashcard_stats');
     },
   },
 };

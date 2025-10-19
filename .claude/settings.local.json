@@ -187,7 +187,8 @@
       "WebFetch(domain:liveblocks.io)",
       "WebFetch(domain:jkrsp.com)",
       "WebFetch(domain:code.visualstudio.com)",
-      "Bash(git -C /Users/why/repos/trivium status)"
+      "Bash(git -C /Users/why/repos/trivium status)",
+      "Bash(npx shadcn-ui@latest add switch)"
     ],
     "deny": [],
     "ask": []

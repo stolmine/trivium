@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-18 (Phase 19: Settings Menu MVP)
+Last Updated: 2025-10-19 (Phase 19: Settings Menu extensions - import, reset, UI refresh)
 
 ---
 

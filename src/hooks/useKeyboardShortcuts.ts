@@ -177,6 +177,13 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       category: 'navigation',
     },
     {
+      key: ',',
+      ctrlKey: true,
+      action: handleNavigation('/settings'),
+      description: 'Go to Settings (macOS standard)',
+      category: 'navigation',
+    },
+    {
       key: 'n',
       ctrlKey: true,
       action: handleNavigation('/ingest'),
