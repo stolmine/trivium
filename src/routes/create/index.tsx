@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/lib/components/ui/button';
-import { X } from 'lucide-react';
+import { X, BookOpen, AlertTriangle } from 'lucide-react';
 import { ScopeSelector } from '@/lib/components/create/ScopeSelector';
 import { MarkDisplay } from '@/lib/components/create/MarkDisplay';
 import { CardCreator } from '@/lib/components/create/CardCreator';
@@ -94,20 +94,21 @@ export function CreateCardsPage() {
   // Empty state: no marks
   if (marks.length === 0 && !isLoading && !error) {
     return (
-      <div className="flex-1 overflow-auto">
-        <div className="border-b">
+      <div className="flex flex-col h-full overflow-hidden">
+        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
           <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
             <h1 className="text-3xl font-bold">Create Flashcards</h1>
             <BackToReadingButton />
           </div>
-        </div>
-        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+        </header>
+        <div className="flex-1 overflow-y-auto">
+          <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             {/* Scope Selector */}
             <ScopeSelector />
 
             {/* Empty state message */}
             <div className="flex flex-col items-center justify-center py-16 space-y-6">
-              <div className="text-6xl">📚</div>
+              <BookOpen className="h-16 w-16 text-muted-foreground" />
               <div className="text-center space-y-2">
                 <h2 className="text-xl font-semibold">No marks need cards yet!</h2>
                 <p className="text-muted-foreground max-w-md">
@@ -121,6 +122,7 @@ export function CreateCardsPage() {
               </div>
             </div>
           </div>
+        </div>
       </div>
     );
   }
@@ -128,16 +130,17 @@ export function CreateCardsPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex-1 overflow-auto">
-        <div className="border-b">
+      <div className="flex flex-col h-full overflow-hidden">
+        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
           <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
             <h1 className="text-3xl font-bold">Create Flashcards</h1>
             <BackToReadingButton />
           </div>
-        </div>
-        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+        </header>
+        <div className="flex-1 overflow-y-auto">
+          <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             <div className="flex flex-col items-center justify-center py-16 space-y-6">
-              <div className="text-6xl">⚠️</div>
+              <AlertTriangle className="h-16 w-16 text-destructive" />
               <div className="text-center space-y-2">
                 <h2 className="text-xl font-semibold">Failed to load marks</h2>
                 <p className="text-muted-foreground max-w-md">
@@ -155,6 +158,7 @@ export function CreateCardsPage() {
               </div>
             </div>
           </div>
+        </div>
       </div>
     );
   }
@@ -162,14 +166,15 @@ export function CreateCardsPage() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex-1 overflow-auto">
-        <div className="border-b">
+      <div className="flex flex-col h-full overflow-hidden">
+        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
           <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
             <h1 className="text-3xl font-bold">Create Flashcards</h1>
             <BackToReadingButton />
           </div>
-        </div>
-        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+        </header>
+        <div className="flex-1 overflow-y-auto">
+          <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
             <div className="space-y-6">
               {/* Scope selector skeleton */}
               <div className="p-6 border rounded-lg animate-pulse">
@@ -205,20 +210,22 @@ export function CreateCardsPage() {
               </div>
             </div>
           </div>
+        </div>
       </div>
     );
   }
 
   // Main content with marks
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="border-b">
+    <div className="flex flex-col h-full overflow-hidden">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-          <BackToReadingButton />
           <h1 className="text-3xl font-bold">Create Flashcards</h1>
+          <BackToReadingButton />
         </div>
-      </div>
-      <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
           <div className="space-y-6">
             {/* Scope Selector */}
             <ScopeSelector />
@@ -261,6 +268,7 @@ export function CreateCardsPage() {
             onDelete={handleDeleteCard}
           />
         </div>
+      </div>
 
       {/* Keyboard Shortcuts Help Modal */}
       {showHelp && (

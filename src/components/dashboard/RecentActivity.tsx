@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, memo } from 'react';
 import { invoke } from '@tauri-apps/api/core';
-import { Clock } from 'lucide-react';
+import { Clock, Target, BookOpen, Sparkles } from 'lucide-react';
 import { api } from '../../lib/utils/tauri';
 import type { Text } from '../../lib/types';
 import { SkeletonList } from '../shared/SkeletonLoader';
@@ -27,11 +27,11 @@ interface ReviewHistoryEntry {
 
 const ActivityItem = memo(({ activity, getIcon, formatTime }: {
   activity: ActivityItem;
-  getIcon: (type: ActivityItem['type']) => string;
+  getIcon: (type: ActivityItem['type']) => React.ReactNode;
   formatTime: (date: Date) => string;
 }) => (
   <div className="flex items-start gap-3 text-sm pb-3 border-b last:border-b-0 last:pb-0">
-    <span className="text-lg mt-0.5">{getIcon(activity.type)}</span>
+    <span className="mt-0.5">{getIcon(activity.type)}</span>
     <div className="flex-1 min-w-0">
       <p className="text-foreground">{activity.description}</p>
       {activity.textTitle && (
@@ -128,16 +128,16 @@ export function RecentActivity() {
     return date.toLocaleDateString();
   }, []);
 
-  const getActivityIcon = useMemo(() => (type: ActivityItem['type']): string => {
+  const getActivityIcon = useMemo(() => (type: ActivityItem['type']): React.ReactNode => {
     switch (type) {
       case 'review':
-        return '🎯';
+        return <Target className="h-4 w-4 text-muted-foreground" />;
       case 'read':
-        return '📖';
+        return <BookOpen className="h-4 w-4 text-muted-foreground" />;
       case 'create':
-        return '✨';
+        return <Sparkles className="h-4 w-4 text-muted-foreground" />;
       default:
-        return '•';
+        return <Clock className="h-4 w-4 text-muted-foreground" />;
     }
   }, []);
 
@@ -173,7 +173,10 @@ export function RecentActivity() {
 
   return (
     <div className="border rounded-lg p-8 shadow-card bg-card">
-      <h2 className="text-lg font-semibold mb-6">Recent Activity</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <Clock className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Recent Activity</h2>
+      </div>
 
       <div className="space-y-3">
         {activities.map((activity) => (

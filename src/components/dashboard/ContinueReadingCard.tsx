@@ -43,7 +43,7 @@ export function ContinueReadingCard() {
         <EmptyState
           icon={BookOpen}
           title="No Reading in Progress"
-          description="Import a text to start reading and tracking your progress."
+          description="Ingest a text to start reading and tracking your progress."
           action={{
             label: 'Go to Library',
             onClick: () => navigate('/library'),
@@ -55,7 +55,10 @@ export function ContinueReadingCard() {
 
   return (
     <div className="border rounded-lg p-8 shadow-card bg-card">
-      <h2 className="text-lg font-semibold mb-6">Continue Reading</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <BookOpen className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Continue Reading</h2>
+      </div>
 
       <div className="space-y-3">
         <div>

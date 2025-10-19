@@ -257,7 +257,7 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
       <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
         <FileText className="h-12 w-12 text-muted-foreground mb-3 opacity-50" />
         <p className="text-sm text-muted-foreground">No texts or folders yet</p>
-        <p className="text-xs text-muted-foreground mt-1">Import texts to get started</p>
+        <p className="text-xs text-muted-foreground mt-1">Ingest texts to get started</p>
       </div>
     );
   }

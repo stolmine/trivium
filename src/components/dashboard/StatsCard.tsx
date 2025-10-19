@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { BarChart3 } from 'lucide-react';
 import { SkeletonCard } from '../shared/SkeletonLoader';
 
 interface WeeklyStats {
@@ -117,7 +118,10 @@ export function StatsCard() {
 
   return (
     <div className="border rounded-lg p-8 shadow-card bg-card">
-      <h2 className="text-lg font-semibold mb-6">Statistics</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <BarChart3 className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Statistics</h2>
+      </div>
 
       <div className="space-y-4">
         <div className="text-xs font-medium text-muted-foreground mb-3">

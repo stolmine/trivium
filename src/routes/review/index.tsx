@@ -76,14 +76,15 @@ export function ReviewHubPage() {
   };
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="border-b">
+    <div className="flex flex-col h-full overflow-hidden">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
           <h1 className="text-3xl font-bold">Review</h1>
           <BackToReadingButton />
         </div>
-      </div>
-      <div className="flex flex-col items-center px-8 pb-8 pt-6">
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col items-center px-8 pb-8 pt-6">
         <div className="w-full max-w-2xl space-y-8">
 
         <div className="space-y-4">
@@ -191,6 +192,7 @@ export function ReviewHubPage() {
         >
           Start Review ({loading ? '...' : Math.min(stats.dueCount ?? 0, config.sessionLimit)})
         </Button>
+        </div>
         </div>
       </div>
     </div>

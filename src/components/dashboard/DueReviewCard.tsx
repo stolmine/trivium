@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { GraduationCap } from 'lucide-react';
 import { Button } from '../../lib/components/ui';
 import { api } from '../../lib/utils/tauri';
 import type { Flashcard } from '../../lib/types';
@@ -90,7 +91,10 @@ export function DueReviewCard() {
 
   return (
     <div className="border rounded-lg p-8 shadow-card bg-card">
-      <h2 className="text-lg font-semibold mb-6">Due for Review</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <GraduationCap className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Due for Review</h2>
+      </div>
 
       <div className="space-y-4">
         <div className="text-center">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '../../lib/components/ui';
 import { Input } from '../../lib/components/ui/input';
 import { Label } from '../../lib/components/ui/label';
@@ -33,12 +33,12 @@ export function QuickImportCard() {
   return (
     <div className="border rounded-lg p-8 shadow-card bg-card">
       <div className="flex items-center gap-3 mb-6">
-        <FileText className="h-5 w-5" />
-        <h2 className="text-lg font-semibold">Quick Import</h2>
+        <Download className="h-5 w-5" />
+        <h2 className="text-lg font-semibold">Quick Ingest</h2>
       </div>
 
       <p className="text-sm text-muted-foreground mb-6">
-        Start importing content with optional pre-filled folder or Wikipedia link
+        Start ingesting content with optional pre-filled folder or Wikipedia link
       </p>
 
       <div className="space-y-4">
@@ -63,10 +63,10 @@ export function QuickImportCard() {
 
         <div className="space-y-2 pt-2">
           <Button onClick={handleImport} className="w-full">
-            Import with Settings
+            Ingest with Settings
           </Button>
           <Button onClick={handleJustImport} variant="ghost" className="w-full">
-            Just Import
+            Just Ingest
           </Button>
         </div>
       </div>

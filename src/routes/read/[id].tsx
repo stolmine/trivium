@@ -42,7 +42,11 @@ export function ReadPage() {
   const location = useLocation()
   const scrollPositionRef = useRef<number | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    // Restore sidebar state from localStorage on initial load
+    const saved = localStorage.getItem('flashcard-sidebar-collapsed')
+    return saved ? JSON.parse(saved) : false
+  })
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showFinishedDialog, setShowFinishedDialog] = useState(false)
@@ -127,6 +131,11 @@ export function ReadPage() {
       setMarks([])
     }
   }
+
+  // Persist sidebar collapse state to localStorage
+  useEffect(() => {
+    localStorage.setItem('flashcard-sidebar-collapsed', JSON.stringify(isSidebarCollapsed))
+  }, [isSidebarCollapsed])
 
   useEffect(() => {
     if (id) {

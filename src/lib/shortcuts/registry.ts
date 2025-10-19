@@ -161,7 +161,7 @@ export const SHORTCUT_REGISTRY: ShortcutDefinition[] = [
     id: 'ingest.submit',
     key: 'Enter',
     modifiers: ['Shift'],
-    description: 'Submit/import text',
+    description: 'Submit/ingest text',
     category: 'actions',
     scope: 'ingest',
   },

@@ -87,8 +87,8 @@ export function LibraryPage() {
   const sortedTexts = useMemo(() => sortTexts(texts, sortBy), [texts, sortBy])
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="border-b">
+    <div className="flex flex-col h-full overflow-hidden">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold">Library</h1>
@@ -138,12 +138,13 @@ export function LibraryPage() {
           )}
           <Button onClick={handleImportText}>
             <Plus className="h-4 w-4 mr-2" />
-            Import Text
+            Ingest Text
           </Button>
           </div>
         </div>
-      </div>
-      <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
         {error && (
           <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-4">
             {error}
@@ -157,7 +158,7 @@ export function LibraryPage() {
             <p className="mb-4">No texts in your library yet.</p>
             <Button onClick={handleImportText}>
               <Plus className="h-4 w-4 mr-2" />
-              Import Your First Text
+              Ingest Your First Text
             </Button>
           </div>
         ) : (
@@ -183,6 +184,7 @@ export function LibraryPage() {
             ))}
           </div>
         )}
+        </div>
       </div>
     </div>
   )

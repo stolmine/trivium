@@ -228,14 +228,15 @@ export function IngestPage() {
   }, [content, title, titleError, undo, redo, selectedFolderId])
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="border-b">
+    <div className="flex flex-col h-full overflow-hidden">
+      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container max-w-6xl mx-auto px-8 h-14 flex items-center gap-3">
-          <h1 className="text-3xl font-bold">Import New Text</h1>
+          <h1 className="text-3xl font-bold">Ingest New Text</h1>
           <BackToReadingButton />
         </div>
-      </div>
-      <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="container max-w-6xl mx-auto px-8 pb-8 pt-6">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-6">
@@ -382,7 +383,7 @@ export function IngestPage() {
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">
-                    Tip: Press Shift+Enter to import, Esc to cancel, {mod}+Z to undo, or {mod}+Shift+E to exclude selected text from progress tracking
+                    Tip: Press Shift+Enter to ingest, Esc to cancel, {mod}+Z to undo, or {mod}+Shift+E to exclude selected text from progress tracking
                   </p>
                 </div>
               </div>
@@ -402,11 +403,12 @@ export function IngestPage() {
                 onClick={handleSubmit}
                 disabled={isLoading || !title || !content || !!titleError}
               >
-                {isLoading ? 'Importing...' : 'Import to Library'}
+                {isLoading ? 'Ingesting...' : 'Ingest to Library'}
               </Button>
             </div>
           </form>
         </div>
+      </div>
     </div>
   )
 }

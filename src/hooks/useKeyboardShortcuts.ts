@@ -204,7 +204,7 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       key: 'Enter',
       shiftKey: true,
       action: () => {},
-      description: 'Submit/import text',
+      description: 'Submit/ingest text',
       category: 'ingest',
     },
     {
