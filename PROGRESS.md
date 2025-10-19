@@ -1,9 +1,9 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 20 Complete ✅ - Statistics & Analytics System
+## Current Status: Phase 20 Complete ✅ - Statistics & Analytics System (With Known Issues)
 
 **Branch**: `18_stats`
-**Last Updated**: 2025-10-19 (Phase 20: Statistics & Analytics with review/reading/study time tracking)
+**Last Updated**: 2025-10-19 (Phase 20: Statistics & Analytics - review stats working, reading stats under investigation)
 
 ---
 
@@ -2851,10 +2851,11 @@ const matches = text.match(/\{\{c\d+::/g);
 
 ---
 
-### ✅ Phase 20: Statistics & Analytics System (2025-10-19) - COMPLETE
+### ✅ Phase 20: Statistics & Analytics System (2025-10-19) - COMPLETE WITH KNOWN ISSUES
 **Completed**: 2025-10-19
 **Branch**: `18_stats`
 **Implementation Time**: ~6 hours with parallel agents
+**Status**: Core functionality complete, reading stats tracking under investigation
 
 **Overview**: Comprehensive statistics and analytics dashboard modeled after Anki, providing detailed insights into review performance, reading progress, study patterns, and future workload projections. Features session tracking, review timing instrumentation, and reading activity monitoring with a clean three-tab interface.
 
@@ -3133,6 +3134,32 @@ const matches = text.match(/\{\{c\d+::/g);
 - ✅ UI matches design system standards
 - ✅ Cross-platform compatibility verified
 - ✅ All keyboard shortcuts work correctly
+
+**Known Issues**:
+
+⚠️ **Reading Statistics Display** (Medium Severity):
+- **Issue**: Reading statistics chart shows no data despite correct schema and test data validation
+- **Root Cause**: Sessions not being created during actual reading operations
+- **Investigation**: Debugging infrastructure added in commit f352d42
+- **Schema Fix Applied**: Migration `20251019140000_fix_reading_sessions_id_type.sql` successfully applied
+- **Documentation**: See `READING_SESSION_TRACKING_IMPLEMENTATION.md` and `TESTING_SESSION_TRACKING.md`
+- **Status**: Under active investigation
+- **Workaround**: None currently available
+- **Impact**: Reading progress tracking unavailable, all other statistics features working correctly
+
+❓ **Stat Timeframe Selection** (Low Severity):
+- **Issue**: Date range filtering functionality not fully verified
+- **Status**: Uncertain if timeframe selection is working correctly
+- **Impact**: Default timeframes appear functional, but custom ranges need validation
+- **Workaround**: Use default timeframes
+
+✅ **Confirmed Working Features**:
+- Review statistics (total reviews, unique cards, retention rate, streak)
+- 7-day forecast (card projections by type)
+- Daily review breakdown (answer button distribution)
+- Hourly distribution (performance by hour of day)
+- Review timing instrumentation (duration tracking)
+- Statistics page infrastructure (three-tab interface, navigation, dark mode)
 
 **Future Enhancements** (Not Yet Implemented):
 

@@ -764,6 +764,108 @@ GROUP BY text_id, session_num;
 
 ---
 
-**Document Version**: 1.0
+**Document Version**: 1.1
 **Last Updated**: 2025-10-19
-**Status**: Planning Complete, Ready for Implementation
+**Status**: Implementation Complete with Known Issues
+
+---
+
+## Known Issues
+
+### Reading Statistics Chart - Data Display Issue
+
+**Status**: Under Investigation
+**Severity**: Medium
+**Impact**: Reading statistics tab shows chart but no data appears
+
+**Symptoms**:
+- Reading statistics chart component renders correctly
+- No data points appear in the visualization
+- Backend queries return empty results
+- Database schema has been verified and migration applied successfully
+
+**Investigation Completed**:
+- ✅ Database migration `20251019140000_fix_reading_sessions_id_type.sql` applied successfully
+- ✅ Schema fix verified - reading_sessions.id is now INTEGER (was TEXT)
+- ✅ Test data validated - manual inserts work correctly
+- ✅ Backend queries tested - return expected results with test data
+
+**Root Cause Hypothesis**:
+Sessions are not being created during actual reading operations. The session tracking lifecycle (start/end session calls) may not be executing correctly during live reading workflows.
+
+**Debugging Infrastructure Added** (Commit f352d42):
+- Console logging in ReadPage component for session lifecycle events
+- Backend logging in reading session commands
+- Data flow validation points throughout the stack
+- See `READING_SESSION_TRACKING_IMPLEMENTATION.md` for implementation details
+- See `TESTING_SESSION_TRACKING.md` for validation procedures
+
+**Workaround**: None currently available
+
+**Next Steps**:
+1. Verify session lifecycle calls are executing in ReadPage component
+2. Confirm `start_reading_session` and `end_reading_session` commands are being invoked
+3. Check for JavaScript errors in browser console during reading operations
+4. Validate that session IDs are being generated and passed correctly
+5. Review activity detection logic (scroll, mouse, keyboard events)
+
+### Stat Timeframe Selection - Verification Needed
+
+**Status**: Uncertain
+**Severity**: Low
+**Impact**: Unclear if date range filters are working correctly
+
+**Description**:
+The statistics page includes timeframe selection (7 days, 30 days, etc.), but functionality has not been fully verified during testing. Charts currently show data for default timeframes.
+
+**Testing Needed**:
+- Verify date range filtering works for review statistics
+- Confirm forecast timeframe selection affects displayed data
+- Test reading statistics timeframe changes
+- Validate that "All time" option works correctly
+
+**Workaround**: Default timeframes appear to work correctly
+
+### Working Features
+
+Despite the reading statistics display issue, the following features are **confirmed working**:
+
+✅ **Review Statistics** (100% functional):
+- Total review count and unique cards reviewed
+- Retention rate calculation
+- Study streak tracking
+- Average rating display
+
+✅ **7-Day Forecast** (100% functional):
+- Card due projections for next 7 days
+- Breakdown by card type (New/Learning/Review)
+- Visual chart rendering
+- Accurate data from FSRS scheduling
+
+✅ **Daily Review Breakdown** (100% functional):
+- Answer button distribution (Again/Hard/Good/Easy)
+- Historical review patterns
+- Chart visualization with color coding
+
+✅ **Hourly Distribution** (100% functional):
+- Performance analysis by hour of day (0-23)
+- Review count heatmap
+- Best study time identification
+
+✅ **Review Timing Instrumentation** (100% functional):
+- Duration tracking from answer reveal to grade
+- Session ID tracking in review_history
+- Accurate measurement of decision time
+
+✅ **Statistics Page Infrastructure** (100% functional):
+- Three-tab interface (Overview, Review Performance, Reading Progress)
+- Navigation via Ctrl+7 / Cmd+7
+- Dark mode support
+- Responsive layout
+- Empty states and loading skeletons
+
+---
+
+**Document Version**: 1.1
+**Last Updated**: 2025-10-19
+**Status**: Implementation Complete with Known Issues
