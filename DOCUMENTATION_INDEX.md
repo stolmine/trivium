@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements with platform detection utility)
+Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements + Triple-click position debugging)
 
 ---
 
@@ -290,6 +290,14 @@ Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements with p
 **Description**: Step-by-step browser debugging checklist for testing read highlighting feature. Provides decision tree for diagnosing issues (data loading, range computation, segment rendering, CSS application) with common issues, fixes, and cleanup instructions after debugging complete
 **Last Updated**: 2025-10-13
 
+### `/Users/why/repos/trivium/TRIPLE_CLICK_AND_CLOZE_DEBUGGING.md`
+**Description**: Comprehensive debugging documentation for triple-click paragraph selection and mark-as-read position calculation bugs. **Status: REVERTED** - Experimental refactor broke rendering. Fixed DOM position calculation using start + totalTextLength approach. Documents synthetic newline discovery, element offset semantics, sibling-walking logic, and boundary mismatch between DOM (rendered) and cleanedContent (markdown) position spaces. Core issue remains: visual highlight boundaries don't match exact selections due to position space conversion
+**Last Updated**: 2025-10-18
+
+### `/Users/why/repos/trivium/MARK_AS_READ_DEBUGGING_LESSONS_LEARNED.md`
+**Description**: Lessons learned from mark-as-read debugging efforts. Documents failed approaches (dual paragraph arrays, triple-click handler), successful fixes (duplicate ranges fix in TextSelectionMenu, cloze notes backend positions, black background CSS, DOM position calculation improvements), and root causes (position space mismatch between DOM textContent and cleanedContent markdown). Includes revert strategy and minimal fix recommendations. Current status: reverted to clean state with important fixes preserved
+**Last Updated**: 2025-10-18
+
 ---
 
 ## Unicode & Text Processing
@@ -314,8 +322,8 @@ Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements with p
 
 ## Statistics
 
-**Total Documentation Files**: 53 markdown files
-**Total Lines of Documentation**: ~50,000+ lines
+**Total Documentation Files**: 54 markdown files
+**Total Lines of Documentation**: ~50,400+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
@@ -324,7 +332,7 @@ Last Updated: 2025-10-18 (Phase 17++: OS-appropriate tooltip improvements with p
 - Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
 - User Reference: 1 file
 - Design System: 1 file
-- Debugging: 3 files
+- Debugging: 4 files (includes triple-click debugging)
 - Unicode & Text Processing: 4 files
 
 ---

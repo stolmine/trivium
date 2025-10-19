@@ -1,4 +1,4 @@
-import { useMemo, memo, Fragment } from 'react'
+import { useMemo, memo } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import type { ReadRange, ExcludedRange } from '../../types'
 
@@ -10,10 +10,9 @@ interface ReadHighlighterProps {
   linksEnabled?: boolean
   searchMatches?: Array<{ start: number; end: number }>
   activeSearchIndex?: number
-  onNavigateToIngest?: (url: string) => void
 }
 
-interface ParagraphSegment {
+interface TextSegment {
   text: string
   isRead: boolean
   isExcluded: boolean
@@ -24,62 +23,132 @@ interface ParagraphSegment {
   isActiveSearchMatch?: boolean
 }
 
-interface LinkMatch {
-  type: 'markdown' | 'url'
-  text: string
-  url: string
-  start: number
-  end: number
+function formatWikipediaHeaders(text: string): string {
+  const lines = text.split('\n')
+  const formattedLines = lines.map(line => {
+    const trimmedLine = line.trim()
+    // Use simple pattern without backreference for consistency
+    const headerMatch = trimmedLine.match(/^={2,}\s*(.+?)\s*={2,}$/)
+
+    if (headerMatch) {
+      const headerText = headerMatch[1].trim()
+      return line.replace(trimmedLine, `<strong>${headerText}</strong>`)
+    }
+
+    return line
+  })
+
+  return formattedLines.join('\n')
+}
+
+function renderTextWithLinks(text: string, linksEnabled: boolean): string {
+  const formattedText = formatWikipediaHeaders(text)
+
+  let textWithoutEmptyLinks = formattedText.replace(/\[\]\([^\)]+\)/g, '')
+
+  if (!linksEnabled) {
+    return textWithoutEmptyLinks.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+  }
+
+  let processed = textWithoutEmptyLinks.replace(/\[([^\]]+)\]\(([^\)]+)\)/g,
+    '<a href="$2" class="clickable-link" data-url="$2">$1</a>'
+  )
+
+  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g
+  const processedUrls = new Set<string>()
+
+  processed = processed.replace(/data-url="([^"]+)"/g, (match, url) => {
+    processedUrls.add(url)
+    return match
+  })
+
+  processed = processed.replace(urlRegex, (url) => {
+    if (processedUrls.has(url)) {
+      return url
+    }
+    return `<a href="${url}" class="clickable-link" data-url="${url}">${url}</a>`
+  })
+
+  return processed
 }
 
 function stripMarkdownLinks(text: string): string {
+  // Remove empty markdown links
   let stripped = text.replace(/\[\]\([^\)]+\)/g, '')
+  // Remove markdown link syntax but keep link text
   stripped = stripped.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+  // Remove header syntax === Text === → Text to match DOM textContent
+  // This must match what formatWikipediaHeaders does (removes === markers, keeps text)
   stripped = stripped.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
   return stripped
 }
 
+/**
+ * Convert position from rendered space to cleaned space
+ *
+ * Position Spaces:
+ * - RENDERED: What you see in DOM textContent (no markdown, no HTML)
+ * - CLEANED: Content with markdown syntax but without [[exclude]] tags
+ *
+ * @param renderedPos - Position in rendered space (from DOM selection)
+ * @param cleanedContent - The cleaned content string (with markdown)
+ * @returns Position in cleaned space
+ */
 export function renderedPosToCleanedPos(renderedPos: number, cleanedContent: string): number {
+  // Use stripMarkdownLinks to get the rendered version (strips both links and headers)
   const renderedContent = stripMarkdownLinks(cleanedContent)
 
+  // If position is beyond rendered content, clamp it
   if (renderedPos >= renderedContent.length) {
     return cleanedContent.length
   }
 
+  // Build a mapping by walking through both strings simultaneously
   let renderedIdx = 0
   let cleanedIdx = 0
 
   while (renderedIdx < renderedPos && cleanedIdx < cleanedContent.length) {
+    // Check if we're at a markdown link start
     const linkMatch = cleanedContent.substring(cleanedIdx).match(/^\[([^\]]+)\]\([^\)]+\)/)
     if (linkMatch) {
       const linkText = linkMatch[1]
       const fullLinkLength = linkMatch[0].length
 
+      // The link renders as just the link text
       if (renderedIdx + linkText.length <= renderedPos) {
+        // Skip the whole link
         renderedIdx += linkText.length
         cleanedIdx += fullLinkLength
       } else {
+        // Position is within this link text
         const offsetInLink = renderedPos - renderedIdx
-        return cleanedIdx + 1 + offsetInLink
+        return cleanedIdx + 1 + offsetInLink // +1 for the opening [
       }
       continue
     }
 
+    // Check if we're at an empty link
     const emptyLinkMatch = cleanedContent.substring(cleanedIdx).match(/^\[\]\([^\)]+\)/)
     if (emptyLinkMatch) {
+      // Empty links are removed entirely in rendered content
       cleanedIdx += emptyLinkMatch[0].length
       continue
     }
 
+    // Check if we're at a header start
     const headerMatch = cleanedContent.substring(cleanedIdx).match(/^={2,}\s*(.+?)\s*={2,}(?=\n|$)/)
     if (headerMatch) {
       const headerText = headerMatch[1].trim()
       const fullHeaderLength = headerMatch[0].length
 
+      // The header renders as just the header text (trimmed)
       if (renderedIdx + headerText.length <= renderedPos) {
+        // Skip the whole header
         renderedIdx += headerText.length
         cleanedIdx += fullHeaderLength
       } else {
+        // Position is within header text
+        // Find where the actual text starts (after leading = and spaces)
         const leadingMatch = cleanedContent.substring(cleanedIdx).match(/^={2,}\s*/)
         const leadingLength = leadingMatch ? leadingMatch[0].length : 0
         const offsetInHeader = renderedPos - renderedIdx
@@ -88,6 +157,7 @@ export function renderedPosToCleanedPos(renderedPos: number, cleanedContent: str
       continue
     }
 
+    // Regular character - advance both pointers
     renderedIdx++
     cleanedIdx++
   }
@@ -95,6 +165,12 @@ export function renderedPosToCleanedPos(renderedPos: number, cleanedContent: str
   return cleanedIdx
 }
 
+/**
+ * Parse text content and remove [[exclude]] tags
+ *
+ * @param content - Original content with potential [[exclude]] tags and markdown
+ * @returns Object with cleanedContent (no exclude tags, has markdown) and renderedContent (no markdown)
+ */
 export function parseExcludedRanges(content: string): {
   cleanedContent: string;
   renderedContent: string;
@@ -125,8 +201,10 @@ export function parseExcludedRanges(content: string): {
     offset += startTag.length + endTag.length
   }
 
+  // Strip markdown links to get the rendered text content that DOM will show
   const renderedContent = stripMarkdownLinks(cleanedContent)
 
+  // Adjust excluded ranges for rendered content
   const adjustedExcludedRanges = excludedRanges.map(range => {
     const textBeforeRange = cleanedContent.substring(0, range.startPosition)
     const rangeText = cleanedContent.substring(range.startPosition, range.endPosition)
@@ -150,6 +228,7 @@ interface HeaderRange {
 
 function detectHeaderRanges(content: string): HeaderRange[] {
   const headerRanges: HeaderRange[] = []
+  // Use simple pattern without backreference to match stripMarkdownLinks
   const regex = /^={2,}\s*(.+?)\s*={2,}$/gm
   let match
 
@@ -169,275 +248,112 @@ function isPositionInHeader(position: number, headerRanges: HeaderRange[]): bool
   )
 }
 
-function parseLinksInText(text: string): LinkMatch[] {
-  const links: LinkMatch[] = []
-
-  const markdownLinkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g
-  let markdownMatch: RegExpExecArray | null
-
-  while ((markdownMatch = markdownLinkRegex.exec(text)) !== null) {
-    links.push({
-      type: 'markdown',
-      text: markdownMatch[1],
-      url: markdownMatch[2],
-      start: markdownMatch.index,
-      end: markdownMatch.index + markdownMatch[0].length
-    })
-  }
-
-  const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g
-  let urlMatch: RegExpExecArray | null
-
-  while ((urlMatch = urlRegex.exec(text)) !== null) {
-    const isInsideMarkdownLink = links.some(
-      link => urlMatch!.index >= link.start && urlMatch!.index < link.end
-    )
-
-    if (!isInsideMarkdownLink) {
-      links.push({
-        type: 'url',
-        text: urlMatch[0],
-        url: urlMatch[0],
-        start: urlMatch.index,
-        end: urlMatch.index + urlMatch[0].length
-      })
-    }
-  }
-
-  links.sort((a, b) => a.start - b.start)
-
-  return links
-}
-
 const ReadHighlighterComponent = ({
   content,
   readRanges,
   className,
   linksEnabled = false,
   searchMatches = [],
-  activeSearchIndex = -1,
-  onNavigateToIngest
+  activeSearchIndex = -1
 }: ReadHighlighterProps) => {
-  const paragraphSegments = useMemo(() => {
-    console.log('[ReadHighlighter] Computing paragraphSegments with readRanges:', readRanges.length, readRanges);
-
+  const segments = useMemo(() => {
     const { cleanedContent, excludedRanges } = parseExcludedRanges(content)
-    console.log('[ReadHighlighter] cleanedContent length:', cleanedContent.length);
+    const headerRanges = detectHeaderRanges(cleanedContent)
 
-    // readRanges are already in RENDERED (DOM) space - no conversion needed!
-    // With <p> structure, DOM textContent has NO \n\n separators
-    // So we work directly with DOM positions throughout
-    const sortedReadRanges = [...readRanges]
-      .map(r => ({ start: r.startPosition, end: r.endPosition }))
-      .sort((a, b) => a.start - b.start)
+    if (!readRanges.length && !excludedRanges.length) {
+      return [{ text: cleanedContent, isRead: false, isExcluded: false, isHeader: false, start: 0, end: cleanedContent.length }]
+    }
 
-    console.log('[ReadHighlighter] sortedReadRanges:', sortedReadRanges);
+    // Convert read ranges from rendered space to cleaned space
+    const convertedReadRanges = readRanges.map(r => ({
+      startPosition: renderedPosToCleanedPos(r.startPosition, cleanedContent),
+      endPosition: renderedPosToCleanedPos(r.endPosition, cleanedContent)
+    }))
 
-    const sortedExcludedRanges = [...excludedRanges]
-      .map(r => ({ start: r.startPosition, end: r.endPosition }))
-      .sort((a, b) => a.start - b.start)
+    // Convert excluded ranges from rendered space to cleaned space
+    const convertedExcludedRanges = excludedRanges.map(r => ({
+      startPosition: renderedPosToCleanedPos(r.startPosition, cleanedContent),
+      endPosition: renderedPosToCleanedPos(r.endPosition, cleanedContent)
+    }))
+
+    const sortedReadRanges = [...convertedReadRanges].sort((a, b) => a.startPosition - b.startPosition)
+    const sortedExcludedRanges = [...convertedExcludedRanges].sort((a, b) => a.startPosition - b.startPosition)
 
     const mergedReadRanges: Array<{ start: number; end: number }> = []
     for (const range of sortedReadRanges) {
       if (mergedReadRanges.length === 0) {
-        mergedReadRanges.push({ start: range.start, end: range.end })
+        mergedReadRanges.push({ start: range.startPosition, end: range.endPosition })
       } else {
         const last = mergedReadRanges[mergedReadRanges.length - 1]
-        if (range.start <= last.end) {
-          last.end = Math.max(last.end, range.end)
+        if (range.startPosition <= last.end) {
+          last.end = Math.max(last.end, range.endPosition)
         } else {
-          mergedReadRanges.push({ start: range.start, end: range.end })
+          mergedReadRanges.push({ start: range.startPosition, end: range.endPosition })
         }
       }
     }
 
     const allRanges: Array<{ start: number; end: number; type: 'read' | 'excluded' }> = [
       ...mergedReadRanges.map(r => ({ start: r.start, end: r.end, type: 'read' as const })),
-      ...sortedExcludedRanges.map(r => ({ start: r.start, end: r.end, type: 'excluded' as const }))
+      ...sortedExcludedRanges.map(r => ({ start: r.startPosition, end: r.endPosition, type: 'excluded' as const }))
     ].sort((a, b) => a.start - b.start)
 
-    const paragraphs = cleanedContent.split('\n\n')
-    const result: Array<{ paragraphText: string; segments: ParagraphSegment[]; paragraphStart: number }> = []
-
-    // Track positions in DOM space (NO \n\n separators between paragraphs)
+    // Use converted positions with cleanedContent (which has markdown)
+    const result: TextSegment[] = []
     let currentPos = 0
-    for (const paragraph of paragraphs) {
-      if (paragraph.length === 0) {
-        // Skip empty paragraphs without advancing position
-        continue
-      }
 
-      const paragraphStart = currentPos
-      const paragraphEnd = currentPos + paragraph.length
-
-      // Detect headers within this paragraph (paragraph-relative positions)
-      const paragraphHeaderRanges = detectHeaderRanges(paragraph)
-
-      const relevantRanges = allRanges.filter(
-        range => range.start < paragraphEnd && range.end > paragraphStart
-      )
-
-      const segments: ParagraphSegment[] = []
-      let segmentPos = paragraphStart
-
-      for (const range of relevantRanges) {
-        const rangeStart = Math.max(range.start, paragraphStart)
-        const rangeEnd = Math.min(range.end, paragraphEnd)
-
-        if (segmentPos < rangeStart) {
-          // Convert absolute DOM positions to paragraph-relative positions
-          const relativeStart = segmentPos - paragraphStart
-          const relativeEnd = rangeStart - paragraphStart
-          const text = paragraph.substring(relativeStart, relativeEnd)
-          const isHeader = isPositionInHeader(relativeStart, paragraphHeaderRanges)
-          segments.push({
-            text,
-            isRead: false,
-            isExcluded: false,
-            isHeader,
-            start: segmentPos,
-            end: rangeStart
-          })
-        }
-
-        // Convert absolute DOM positions to paragraph-relative positions
-        const relativeStart = rangeStart - paragraphStart
-        const relativeEnd = rangeEnd - paragraphStart
-        const text = paragraph.substring(relativeStart, relativeEnd)
-        const isHeader = isPositionInHeader(relativeStart, paragraphHeaderRanges)
-        segments.push({
-          text,
-          isRead: range.type === 'read',
-          isExcluded: range.type === 'excluded',
-          isHeader,
-          start: rangeStart,
-          end: rangeEnd
-        })
-
-        segmentPos = rangeEnd
-      }
-
-      if (segmentPos < paragraphEnd) {
-        // Convert absolute DOM positions to paragraph-relative positions
-        const relativeStart = segmentPos - paragraphStart
-        const relativeEnd = paragraphEnd - paragraphStart
-        const text = paragraph.substring(relativeStart, relativeEnd)
-        const isHeader = isPositionInHeader(relativeStart, paragraphHeaderRanges)
-        segments.push({
+    for (const range of allRanges) {
+      if (currentPos < range.start) {
+        const text = cleanedContent.substring(currentPos, range.start)
+        const isHeader = isPositionInHeader(currentPos, headerRanges)
+        result.push({
           text,
           isRead: false,
           isExcluded: false,
           isHeader,
-          start: segmentPos,
-          end: paragraphEnd
+          start: currentPos,
+          end: range.start
         })
       }
 
-      if (segments.length === 0) {
-        const isHeader = isPositionInHeader(0, paragraphHeaderRanges)
-        segments.push({
-          text: paragraph,
-          isRead: false,
-          isExcluded: false,
-          isHeader,
-          start: paragraphStart,
-          end: paragraphEnd
-        })
-      }
-
+      const text = cleanedContent.substring(range.start, range.end)
+      const isHeader = isPositionInHeader(range.start, headerRanges)
       result.push({
-        paragraphText: paragraph,
-        segments,
-        paragraphStart
+        text,
+        isRead: range.type === 'read',
+        isExcluded: range.type === 'excluded',
+        isHeader,
+        start: range.start,
+        end: range.end
       })
 
-      // Advance to next paragraph (NO +2 because DOM has no \n\n separators)
-      currentPos = paragraphEnd
+      currentPos = range.end
+    }
+
+    if (currentPos < cleanedContent.length) {
+      const text = cleanedContent.substring(currentPos)
+      const isHeader = isPositionInHeader(currentPos, headerRanges)
+      result.push({
+        text,
+        isRead: false,
+        isExcluded: false,
+        isHeader,
+        start: currentPos,
+        end: cleanedContent.length
+      })
     }
 
     return result
   }, [content, readRanges])
 
-  // Search matches are already in DOM space - no conversion needed
   const convertedSearchMatches = useMemo(() => {
-    return searchMatches
-  }, [searchMatches])
-
-  const renderableSegments = useMemo(() => {
-    if (convertedSearchMatches.length === 0) {
-      return paragraphSegments.map(para => ({
-        ...para,
-        segments: para.segments.map((seg, idx) => ({ ...seg, key: `seg-${para.paragraphStart}-${idx}` }))
-      }))
-    }
-
-    return paragraphSegments.map(para => {
-      const result: Array<ParagraphSegment & { key: string }> = []
-
-      para.segments.forEach((segment, segIdx) => {
-        const overlappingMatches = convertedSearchMatches
-          .map((match, matchIdx) => ({ ...match, matchIdx }))
-          .filter(match => segment.start < match.end && segment.end > match.start)
-          .sort((a, b) => a.start - b.start)
-
-        if (overlappingMatches.length === 0) {
-          result.push({ ...segment, key: `seg-${para.paragraphStart}-${segIdx}` })
-          return
-        }
-
-        let currentPos = segment.start
-
-        overlappingMatches.forEach((match, matchSubIdx) => {
-          const matchStart = Math.max(match.start, segment.start)
-          const matchEnd = Math.min(match.end, segment.end)
-
-          if (currentPos < matchStart) {
-            const text = segment.text.substring(currentPos - segment.start, matchStart - segment.start)
-            result.push({
-              ...segment,
-              text,
-              start: currentPos,
-              end: matchStart,
-              key: `seg-${para.paragraphStart}-${segIdx}-pre-${matchSubIdx}`,
-              isSearchMatch: false,
-              isActiveSearchMatch: false
-            })
-          }
-
-          const matchText = segment.text.substring(matchStart - segment.start, matchEnd - segment.start)
-          result.push({
-            ...segment,
-            text: matchText,
-            start: matchStart,
-            end: matchEnd,
-            key: `seg-${para.paragraphStart}-${segIdx}-match-${matchSubIdx}`,
-            isSearchMatch: true,
-            isActiveSearchMatch: match.matchIdx === activeSearchIndex
-          })
-
-          currentPos = matchEnd
-        })
-
-        if (currentPos < segment.end) {
-          const text = segment.text.substring(currentPos - segment.start)
-          result.push({
-            ...segment,
-            text,
-            start: currentPos,
-            end: segment.end,
-            key: `seg-${para.paragraphStart}-${segIdx}-post`,
-            isSearchMatch: false,
-            isActiveSearchMatch: false
-          })
-        }
-      })
-
-      return {
-        ...para,
-        segments: result
-      }
-    })
-  }, [paragraphSegments, convertedSearchMatches, activeSearchIndex])
+    if (searchMatches.length === 0) return []
+    const { cleanedContent } = parseExcludedRanges(content)
+    return searchMatches.map(match => ({
+      start: renderedPosToCleanedPos(match.start, cleanedContent),
+      end: renderedPosToCleanedPos(match.end, cleanedContent)
+    }))
+  }, [searchMatches, content])
 
   const handleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement
@@ -445,126 +361,128 @@ const ReadHighlighterComponent = ({
       e.preventDefault()
       const url = target.getAttribute('data-url')
       if (url) {
-        if (e.altKey && onNavigateToIngest) {
-          onNavigateToIngest(url)
-        } else {
-          openUrl(url).catch((error: Error) => {
-            console.error('Failed to open URL:', error)
+        openUrl(url).catch((error: Error) => {
+          console.error('Failed to open URL:', error)
+        })
+      }
+    }
+  }
+
+  // Split segments into sub-segments based on search matches
+  const renderableSegments = useMemo(() => {
+    if (convertedSearchMatches.length === 0) {
+      return segments.map((seg, idx) => ({ ...seg, key: `seg-${idx}` }))
+    }
+
+    const result: Array<TextSegment & { key: string; isSearchMatch?: boolean; isActiveSearchMatch?: boolean }> = []
+
+    segments.forEach((segment, segIdx) => {
+      // Find search matches that overlap with this segment
+      const overlappingMatches = convertedSearchMatches
+        .map((match, matchIdx) => ({ ...match, matchIdx }))
+        .filter(match => segment.start < match.end && segment.end > match.start)
+        .sort((a, b) => a.start - b.start)
+
+      if (overlappingMatches.length === 0) {
+        // No search matches in this segment - render it as-is
+        result.push({ ...segment, key: `seg-${segIdx}` })
+        return
+      }
+
+      // Split segment into sub-segments around search matches
+      let currentPos = segment.start
+
+      overlappingMatches.forEach((match, matchSubIdx) => {
+        const matchStart = Math.max(match.start, segment.start)
+        const matchEnd = Math.min(match.end, segment.end)
+
+        // Add sub-segment before the match (if any)
+        if (currentPos < matchStart) {
+          const text = segment.text.substring(currentPos - segment.start, matchStart - segment.start)
+          result.push({
+            ...segment,
+            text,
+            start: currentPos,
+            end: matchStart,
+            key: `seg-${segIdx}-pre-${matchSubIdx}`,
+            isSearchMatch: false,
+            isActiveSearchMatch: false
           })
         }
+
+        // Add the match itself as a sub-segment
+        const matchText = segment.text.substring(matchStart - segment.start, matchEnd - segment.start)
+        result.push({
+          ...segment,
+          text: matchText,
+          start: matchStart,
+          end: matchEnd,
+          key: `seg-${segIdx}-match-${matchSubIdx}`,
+          isSearchMatch: true,
+          isActiveSearchMatch: match.matchIdx === activeSearchIndex
+        })
+
+        currentPos = matchEnd
+      })
+
+      // Add remaining sub-segment after last match (if any)
+      if (currentPos < segment.end) {
+        const text = segment.text.substring(currentPos - segment.start)
+        result.push({
+          ...segment,
+          text,
+          start: currentPos,
+          end: segment.end,
+          key: `seg-${segIdx}-post`,
+          isSearchMatch: false,
+          isActiveSearchMatch: false
+        })
       }
-    }
-  }
+    })
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    const target = e.target as HTMLElement
-    if (target.tagName === 'A' && target.classList.contains('clickable-link')) {
-      if (e.altKey && e.key === 'Enter' && onNavigateToIngest) {
-        e.preventDefault()
-        const url = target.getAttribute('data-url')
-        if (url) {
-          onNavigateToIngest(url)
-        }
-      }
-    }
-  }
-
-  const renderSegmentContent = (segment: ParagraphSegment & { key: string }) => {
-    let processedText = segment.text
-
-    processedText = processedText.replace(/\[\]\([^\)]+\)/g, '')
-
-    const headerMatch = processedText.match(/^={2,}\s*(.+?)\s*={2,}$/)
-    if (headerMatch) {
-      processedText = headerMatch[1].trim()
-    }
-
-    const links = linksEnabled ? parseLinksInText(segment.text) : []
-
-    if (links.length === 0) {
-      const renderedText = processedText.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
-
-      if (segment.isActiveSearchMatch) {
-        return <mark className="search-match-active" data-search-index={activeSearchIndex}>{renderedText}</mark>
-      } else if (segment.isSearchMatch) {
-        return <mark className="search-match">{renderedText}</mark>
-      } else if (segment.isExcluded) {
-        return <span className="excluded-text">{renderedText}</span>
-      } else if (segment.isRead && segment.isHeader) {
-        return <mark className="read-range read-header"><strong>{renderedText}</strong></mark>
-      } else if (segment.isRead) {
-        return <mark className="read-range">{renderedText}</mark>
-      } else if (segment.isHeader) {
-        return <strong>{renderedText}</strong>
-      }
-
-      return renderedText
-    }
-
-    const elements: React.ReactNode[] = []
-    let currentPos = 0
-
-    for (const link of links) {
-      if (currentPos < link.start) {
-        const beforeText = segment.text.substring(currentPos, link.start)
-        elements.push(beforeText)
-      }
-
-      elements.push(
-        <a
-          key={`link-${link.start}`}
-          href={link.url}
-          className="clickable-link"
-          data-url={link.url}
-          tabIndex={0}
-        >
-          {link.text}
-        </a>
-      )
-
-      currentPos = link.end
-    }
-
-    if (currentPos < segment.text.length) {
-      const afterText = segment.text.substring(currentPos)
-      elements.push(afterText)
-    }
-
-    if (segment.isActiveSearchMatch) {
-      return <mark className="search-match-active" data-search-index={activeSearchIndex}>{elements}</mark>
-    } else if (segment.isSearchMatch) {
-      return <mark className="search-match">{elements}</mark>
-    } else if (segment.isExcluded) {
-      return <span className="excluded-text">{elements}</span>
-    } else if (segment.isRead && segment.isHeader) {
-      return <mark className="read-range read-header"><strong>{elements}</strong></mark>
-    } else if (segment.isRead) {
-      return <mark className="read-range">{elements}</mark>
-    } else if (segment.isHeader) {
-      return <strong>{elements}</strong>
-    }
-
-    return <Fragment>{elements}</Fragment>
-  }
+    return result
+  }, [segments, convertedSearchMatches, activeSearchIndex])
 
   return (
     <div
       id="article-content"
       className={`whitespace-pre-wrap not-prose ${className || ''}`}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
     >
-      {renderableSegments.map((para) => (
-        <p key={`para-${para.paragraphStart}`}>
-          {para.segments.map(segment => (
-            <Fragment key={segment.key}>
-              {renderSegmentContent(segment)}
-            </Fragment>
-          ))}
-        </p>
-      ))}
+      {renderableSegments.map((segment) => {
+        let className = ''
+        let style: React.CSSProperties = {}
+
+        // Apply base styling (read/excluded/header)
+        if (segment.isExcluded) {
+          className = 'excluded-text'
+        } else if (segment.isRead && segment.isHeader) {
+          className = 'read-header'
+        } else if (segment.isRead) {
+          style = { backgroundColor: 'black', color: 'white' }
+        }
+
+        // Apply search highlighting - overrides base styling for matched text only
+        if (segment.isActiveSearchMatch) {
+          style = { ...style, backgroundColor: '#fed7aa', color: 'black' }
+        } else if (segment.isSearchMatch) {
+          style = { ...style, backgroundColor: '#fef08a', color: 'black' }
+        }
+
+        return (
+          <span
+            key={segment.key}
+            className={className}
+            style={style}
+            data-search-index={segment.isActiveSearchMatch ? activeSearchIndex : undefined}
+            dangerouslySetInnerHTML={{ __html: renderTextWithLinks(segment.text, linksEnabled) }}
+          />
+        )
+      })}
     </div>
   )
 }
 
+// Memoize component to prevent unnecessary re-renders
+// Only re-renders when props actually change
 export const ReadHighlighter = memo(ReadHighlighterComponent)
