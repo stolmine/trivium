@@ -17,6 +17,7 @@ fn greet(name: &str) -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let app_data_dir = app
                 .path()
@@ -88,7 +89,11 @@ pub fn run() {
             commands::folder::move_folder,
             commands::folder::get_texts_in_folder,
             commands::folder::calculate_folder_progress,
-            commands::wikipedia::fetch_wikipedia_article
+            commands::wikipedia::fetch_wikipedia_article,
+            commands::settings::get_settings,
+            commands::settings::update_setting,
+            commands::settings::get_database_size,
+            commands::settings::export_database
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

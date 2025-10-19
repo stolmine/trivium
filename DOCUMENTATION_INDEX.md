@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-18 (Phase 18: Comprehensive UI overhaul with icons and persistent state)
+Last Updated: 2025-10-18 (Phase 19: Settings Menu MVP)
 
 ---
 
@@ -74,6 +74,14 @@ Last Updated: 2025-10-18 (Phase 18: Comprehensive UI overhaul with icons and per
 
 ### `/Users/why/repos/trivium/PHASE_18_UI_OVERHAUL.md`
 **Description**: Complete implementation documentation for Phase 18 comprehensive UI overhaul. **Core Changes**: (1) Icon system standardization - replaced all emoji with lucide-react icons (BookOpen, Brain, Sparkles, Zap, Activity, ArrowLeft) for visual consistency and accessibility, (2) Navigation improvements - moved back to reading button from dashboard to create cards header for better UX hierarchy, (3) Persistent flashcard sidebar state using localStorage, (4) Terminology standardization - "import" → "ingest" throughout UI, (5) Sticky page headers for better orientation during scrolling. **Attempted Feature (REVERTED)**: Alt+click link navigation to ingest page - reverted in commit 2930950 because it interfered with native text selection behavior. Documents lessons learned about not overriding browser defaults. **Files**: 15 modified (5 dashboard components, 5 page routes, 1 library component, 3 utilities/stores). **Performance**: No measurable impact, CSS-only sticky positioning, localStorage < 1ms. **Testing**: Manual cross-platform validation, all visual/UX improvements verified. Implementation time: ~4 hours
+**Last Updated**: 2025-10-18
+
+### `/Users/why/repos/trivium/PHASE_19_SETTINGS_MENU.md`
+**Description**: Complete implementation documentation for Phase 19 Settings Menu MVP. **Overview**: New settings page with tab navigation for configurable application preferences. **Backend**: Database migration adding settings table (key-value store), settings.rs commands module with 4 commands (get_settings, update_setting, get_database_size, export_database), file dialog integration for database export. **Frontend**: Settings page with tab-based sections (Defaults, Database), settings store with localStorage persistence, Switch component integration, human-readable file size formatting. **Features**: Toggle default links visibility in reading view (Ctrl+L), view database size in human-readable format, export database to backup file with file picker, keyboard shortcut Ctrl+6 / Cmd+6 for settings navigation. **Files**: 15 created (1 migration, 1 backend module, 3 SQLx queries, 6 frontend components, 3 types/utils, 2 docs), 8 modified. **Performance**: Sub-100ms settings queries, instant localStorage sync. Implementation time: ~5 hours
+**Last Updated**: 2025-10-18
+
+### `/Users/why/repos/trivium/SETTINGS_QUICK_REFERENCE.md`
+**Description**: Quick reference guide for Settings Menu providing condensed overview for developers. Includes settings structure (key-value pairs), available settings list (show_links_by_default), keyboard shortcuts (Ctrl+6 navigation, Ctrl+L toggle), backend commands reference, frontend components overview, and common usage patterns. Designed as companion to full Phase 19 documentation for rapid lookups during development
 **Last Updated**: 2025-10-18
 
 ### `/Users/why/repos/trivium/ROADMAP.md`
@@ -326,12 +334,12 @@ Last Updated: 2025-10-18 (Phase 18: Comprehensive UI overhaul with icons and per
 
 ## Statistics
 
-**Total Documentation Files**: 55 markdown files
-**Total Lines of Documentation**: ~51,000+ lines
+**Total Documentation Files**: 57 markdown files
+**Total Lines of Documentation**: ~52,000+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 8 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul)
+- Project Planning: 10 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + settings quick reference)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
 - Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
 - User Reference: 1 file

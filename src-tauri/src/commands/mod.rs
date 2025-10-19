@@ -5,3 +5,4 @@ pub mod flashcard_hub;
 pub mod review;
 pub mod folder;
 pub mod wikipedia;
+pub mod settings;

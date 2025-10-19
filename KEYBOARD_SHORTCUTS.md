@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-10-18
+Last Updated: 2025-10-18 (Phase 19: Settings Menu)
 
 ---
 
@@ -30,6 +30,7 @@ These shortcuts work from anywhere in the application.
 | Go to Create Cards | `Ctrl + 3` | `⌘ + 3` | Navigate to flashcard creation hub |
 | Go to Review | `Ctrl + 4` | `⌘ + 4` | Navigate to review setup |
 | Go to Ingest | `Ctrl + 5` | `⌘ + 5` | Open text import/ingest page |
+| Go to Settings | `Ctrl + 6` | `⌘ + 6` | Navigate to settings page |
 | New Ingest (Alt) | `Ctrl + N` | `⌘ + N` | Alternative hotkey for ingest page |
 
 ---
@@ -277,6 +278,12 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-10-18 (Phase 19 - Settings Menu)
+- Added Settings page to global navigation (Ctrl+6 / Cmd+6)
+- New settings page with Defaults and Database sections
+- Toggle default links visibility (Ctrl+L persisted in settings)
+- Database size display and export functionality
 
 ### 2025-10-18 (Phase 17.5 - Navigation Integration)
 - Integrated Ingest page into main navigation system

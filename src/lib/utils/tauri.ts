@@ -265,4 +265,15 @@ export const api = {
       return await invoke('get_hub_stats');
     },
   },
+  settings: {
+    updateSetting: async (key: string, value: string): Promise<void> => {
+      return await invoke('update_setting', { key, value });
+    },
+    getDatabaseSize: async (): Promise<number> => {
+      return await invoke('get_database_size');
+    },
+    exportDatabase: async (): Promise<void> => {
+      return await invoke('export_database');
+    },
+  },
 };

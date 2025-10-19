@@ -11,6 +11,7 @@ const ReviewHubPage = lazy(() => import('./routes/review').then(module => ({ def
 const ReviewSessionPage = lazy(() => import('./routes/review/session').then(module => ({ default: module.ReviewSessionPage })))
 const CreateCardsPage = lazy(() => import('./routes/create').then(module => ({ default: module.CreateCardsPage })))
 const IngestPage = lazy(() => import('./routes/ingest').then(module => ({ default: module.IngestPage })))
+const SettingsPage = lazy(() => import('./routes/settings').then(module => ({ default: module.SettingsPage })))
 
 function NavigationTracker() {
   const location = useLocation()
@@ -103,6 +104,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<SkeletonDashboard />}>
             <IngestPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'settings',
+        element: (
+          <Suspense fallback={<SkeletonDashboard />}>
+            <SettingsPage />
           </Suspense>
         ),
       },
