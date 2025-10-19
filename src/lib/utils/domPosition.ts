@@ -71,13 +71,11 @@ export function getAbsolutePosition(
 
   let position = 0;
   let currentNode: Node | null;
-  let foundNode = false;
   let nodeCount = 0;
 
   while ((currentNode = walker.nextNode())) {
     nodeCount++;
     if (currentNode === node) {
-      foundNode = true;
       const result = position + offset;
       console.log('[getAbsolutePosition] Found node:', {
         nodeName: node.nodeName,

@@ -84,7 +84,7 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
     if (entry) {
       // Add __fromHistory flag to prevent NavigationTracker from pushing duplicate entry
       navigate(entry.pathname, {
-        state: { ...entry.state, __fromHistory: true },
+        state: { ...(entry.state || {}), __fromHistory: true },
         replace: true
       });
     }
@@ -99,7 +99,7 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
     if (entry) {
       // Add __fromHistory flag to prevent NavigationTracker from pushing duplicate entry
       navigate(entry.pathname, {
-        state: { ...entry.state, __fromHistory: true },
+        state: { ...(entry.state || {}), __fromHistory: true },
         replace: true
       });
     }
