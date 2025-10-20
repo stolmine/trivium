@@ -21,7 +21,7 @@ import {
   Input,
   Label
 } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar, InlineRegionEditor } from '../../lib/components/reading'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar, InlineRegionEditor, LinksSidebar } from '../../lib/components/reading'
 import { expandToSentenceBoundary, expandToSmartBoundary, shouldRespectExactSelection } from '../../lib/utils/sentenceBoundary'
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
@@ -30,11 +30,13 @@ import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSideba
 import { detectEditRegion } from '../../lib/utils/markdownEdit'
 import { updateMarkPositions } from '../../lib/utils/markPositions'
 import { useReadingHistoryStore } from '../../lib/stores/readingHistory'
-import { MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle } from 'lucide-react'
+import { MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle, Link2, Zap } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
+import { cn } from '../../lib/utils'
 import { useSearchStore } from '../../lib/stores/search'
 import { findMatches } from '../../lib/utils/textSearch'
 import { api } from '../../lib/utils/tauri'
+import { useLinksSidebarStore } from '../../lib/stores/linksSidebar'
 
 export function ReadPage() {
   const { id } = useParams<{ id: string }>()
@@ -42,11 +44,7 @@ export function ReadPage() {
   const location = useLocation()
   const scrollPositionRef = useRef<number | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    // Restore sidebar state from localStorage on initial load
-    const saved = localStorage.getItem('flashcard-sidebar-collapsed')
-    return saved ? JSON.parse(saved) : false
-  })
+  const [isFlashcardSidebarOpen, setIsFlashcardSidebarOpen] = useState(false)
   const [showRenameDialog, setShowRenameDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showFinishedDialog, setShowFinishedDialog] = useState(false)
@@ -107,7 +105,11 @@ export function ReadPage() {
     closeSearch,
     setMatches
   } = useSearchStore()
+  const { extractLinks, isOpen: isLinksOpen, setOpen: setLinksOpen } = useLinksSidebarStore()
   const mod = getModifierKey()
+
+  // Detect when both sidebars are open
+  const bothSidebarsOpen = isLinksOpen && isFlashcardSidebarOpen
 
   const loadMarks = async (textId: number) => {
     try {
@@ -133,11 +135,6 @@ export function ReadPage() {
     }
   }
 
-  // Persist sidebar collapse state to localStorage
-  useEffect(() => {
-    localStorage.setItem('flashcard-sidebar-collapsed', JSON.stringify(isSidebarCollapsed))
-  }, [isSidebarCollapsed])
-
   useEffect(() => {
     if (id) {
       const textId = parseInt(id, 10)
@@ -155,8 +152,9 @@ export function ReadPage() {
       const { excludedRanges } = parseExcludedRanges(currentText.content)
       setExcludedRanges(excludedRanges)
       setRenameTextTitle(currentText.title)
+      extractLinks(currentText.content)
     }
-  }, [currentText, setExcludedRanges])
+  }, [currentText, setExcludedRanges, extractLinks])
 
   useEffect(() => {
     if (currentText) {
@@ -973,15 +971,27 @@ export function ReadPage() {
               <div className="flex items-center justify-between h-full">
                 <div className="flex items-center gap-4">
                   <div>
-                    <h1 className="text-lg font-semibold">{currentText.title}</h1>
+                    <h1
+                      className={cn(
+                        "text-lg font-semibold truncate",
+                        bothSidebarsOpen ? "max-w-[280px]" : "max-w-[600px]"
+                      )}
+                      title={currentText.title}
+                    >
+                      {currentText.title}
+                    </h1>
                     {currentText.author && (
                       <p className="text-sm text-muted-foreground">by {currentText.author}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className={cn(
+                  "flex items-center",
+                  bothSidebarsOpen ? "gap-1" : "gap-4"
+                )}>
                 <div className="text-sm text-muted-foreground">
-                  Progress: <span className="font-medium">{totalProgress.toFixed(0)}%</span>
+                  {!bothSidebarsOpen && 'Progress: '}
+                  <span className="font-medium">{totalProgress.toFixed(0)}%</span>
                 </div>
                 <Button
                   variant={inlineEditActive ? 'default' : 'outline'}
@@ -999,8 +1009,8 @@ export function ReadPage() {
                   aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text globally'}
                   className="h-9"
                 >
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  {inlineEditActive ? 'Cancel Edit' : 'Global Edit'}
+                  <Edit2 className="h-4 w-4" />
+                  {!bothSidebarsOpen && <span className="ml-2">{inlineEditActive ? 'Cancel Edit' : 'Global Edit'}</span>}
                 </Button>
                 <Button
                   variant={linksEnabled ? 'default' : 'outline'}
@@ -1011,6 +1021,24 @@ export function ReadPage() {
                   className="h-9 w-9 p-0"
                 >
                   <Link className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={isLinksOpen ? 'default' : 'ghost'}
+                  size="icon"
+                  onClick={() => setLinksOpen(!isLinksOpen)}
+                  title="Toggle links sidebar"
+                  aria-label="Toggle links sidebar"
+                >
+                  <Link2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={isFlashcardSidebarOpen ? 'default' : 'ghost'}
+                  size="icon"
+                  onClick={() => setIsFlashcardSidebarOpen(!isFlashcardSidebarOpen)}
+                  title="Toggle flashcards sidebar"
+                  aria-label="Toggle flashcards sidebar"
+                >
+                  <Zap className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -1083,14 +1111,6 @@ export function ReadPage() {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                  className="md:hidden"
-                >
-                  Cards
-                </Button>
               </div>
             </div>
             </div>
@@ -1264,17 +1284,14 @@ export function ReadPage() {
         </div>
       </div>
 
-      <div
-        className={`hidden md:flex flex-col border-l transition-all duration-300 ${
-          isSidebarCollapsed ? 'w-12' : 'w-96'
-        }`}
-      >
+      {isFlashcardSidebarOpen && (
         <FlashcardSidebar
           textId={currentText.id}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          onClose={() => setIsFlashcardSidebarOpen(false)}
         />
-      </div>
+      )}
+
+      <LinksSidebar onNavigateToIngest={handleNavigateToIngest} />
 
       {/* Rename Dialog */}
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>

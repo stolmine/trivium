@@ -10,3 +10,5 @@ export { HighlightOverlay, type Highlight, type HighlightOverlayProps } from './
 export { SelectionToolbar } from './SelectionToolbar';
 export { SelectionEditor } from './SelectionEditor';
 export { InlineRegionEditor } from './InlineRegionEditor';
+export { LinksSidebar } from './LinksSidebar';
+export { LinkItem } from './LinkItem';

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Trash2, ArrowUpDown } from 'lucide-react'
+import { X, ChevronDown, ChevronUp, Trash2, ArrowUpDown, Zap } from 'lucide-react'
 import { useFlashcardStore } from '../../stores/flashcard'
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../ui'
 import { formatRelativeDue, formatDueDate, getDueColorClass } from '../../utils'
@@ -49,11 +49,10 @@ const getFlashcardSortLabel = (sortBy: FlashcardSortOption): string => {
 
 interface FlashcardSidebarProps {
   textId: number
-  isCollapsed: boolean
-  onToggleCollapse: () => void
+  onClose: () => void
 }
 
-export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: FlashcardSidebarProps) {
+export function FlashcardSidebar({ textId, onClose }: FlashcardSidebarProps) {
   const {
     currentTextFlashcards,
     isLoading,
@@ -206,26 +205,13 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
     [currentTextFlashcards, sortBy]
   )
 
-  if (isCollapsed) {
-    return (
-      <div className="flex flex-col items-center border-l border-border bg-muted">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onToggleCollapse}
-          className="mt-4"
-          title="Expand flashcards"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-col border-l border-border bg-muted overflow-hidden">
+    <aside className="w-96 border-l border-border bg-muted flex flex-col">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
-        <h2 className="text-lg font-semibold text-foreground">Flashcards</h2>
+        <div className="flex items-center gap-2">
+          <Zap className="w-5 h-5 text-foreground" />
+          <h2 className="text-lg font-semibold text-foreground">Flashcards ({currentTextFlashcards.length})</h2>
+        </div>
         <div className="flex items-center gap-2">
           {currentTextFlashcards.length > 0 && (
             <DropdownMenu>
@@ -263,10 +249,10 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
           <Button
             variant="ghost"
             size="sm"
-            onClick={onToggleCollapse}
-            title="Collapse sidebar"
+            onClick={onClose}
+            title="Close sidebar"
           >
-            <ChevronRight className="h-4 w-4" />
+            <X className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -285,10 +271,11 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
         )}
 
         {!isLoading && !error && currentTextFlashcards.length === 0 && (
-          <div className="text-center text-sm text-muted-foreground py-8">
-            <p className="mb-2">No flashcards yet</p>
-            <p className="text-xs">
-              Select text and press Ctrl+N to create one
+          <div className="text-center text-muted-foreground mt-8">
+            <Zap className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p className="text-sm">No flashcards yet</p>
+            <p className="text-xs mt-1">
+              Select text and press Ctrl+D to create one
             </p>
           </div>
         )}
@@ -369,12 +356,6 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
         )}
       </div>
 
-      <div className="border-t border-border bg-card px-4 py-3">
-        <div className="text-xs text-muted-foreground text-center">
-          {currentTextFlashcards.length} {currentTextFlashcards.length === 1 ? 'card' : 'cards'}
-        </div>
-      </div>
-
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
@@ -403,6 +384,6 @@ export function FlashcardSidebar({ textId, isCollapsed, onToggleCollapse }: Flas
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </aside>
   )
 }
