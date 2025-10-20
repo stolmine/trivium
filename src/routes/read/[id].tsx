@@ -32,6 +32,7 @@ import { updateMarkPositions } from '../../lib/utils/markPositions'
 import { useReadingHistoryStore } from '../../lib/stores/readingHistory'
 import { MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle, Link2, Zap } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
+import { cn } from '../../lib/utils'
 import { useSearchStore } from '../../lib/stores/search'
 import { findMatches } from '../../lib/utils/textSearch'
 import { api } from '../../lib/utils/tauri'
@@ -106,6 +107,9 @@ export function ReadPage() {
   } = useSearchStore()
   const { extractLinks, isOpen: isLinksOpen, setOpen: setLinksOpen } = useLinksSidebarStore()
   const mod = getModifierKey()
+
+  // Detect when both sidebars are open
+  const bothSidebarsOpen = isLinksOpen && isFlashcardSidebarOpen
 
   const loadMarks = async (textId: number) => {
     try {
@@ -967,15 +971,27 @@ export function ReadPage() {
               <div className="flex items-center justify-between h-full">
                 <div className="flex items-center gap-4">
                   <div>
-                    <h1 className="text-lg font-semibold">{currentText.title}</h1>
+                    <h1
+                      className={cn(
+                        "text-lg font-semibold truncate",
+                        bothSidebarsOpen ? "max-w-[280px]" : "max-w-[600px]"
+                      )}
+                      title={currentText.title}
+                    >
+                      {currentText.title}
+                    </h1>
                     {currentText.author && (
                       <p className="text-sm text-muted-foreground">by {currentText.author}</p>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className={cn(
+                  "flex items-center",
+                  bothSidebarsOpen ? "gap-1" : "gap-4"
+                )}>
                 <div className="text-sm text-muted-foreground">
-                  Progress: <span className="font-medium">{totalProgress.toFixed(0)}%</span>
+                  {!bothSidebarsOpen && 'Progress: '}
+                  <span className="font-medium">{totalProgress.toFixed(0)}%</span>
                 </div>
                 <Button
                   variant={inlineEditActive ? 'default' : 'outline'}
@@ -993,8 +1009,8 @@ export function ReadPage() {
                   aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text globally'}
                   className="h-9"
                 >
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  {inlineEditActive ? 'Cancel Edit' : 'Global Edit'}
+                  <Edit2 className="h-4 w-4" />
+                  {!bothSidebarsOpen && <span className="ml-2">{inlineEditActive ? 'Cancel Edit' : 'Global Edit'}</span>}
                 </Button>
                 <Button
                   variant={linksEnabled ? 'default' : 'outline'}
@@ -1005,24 +1021,6 @@ export function ReadPage() {
                   className="h-9 w-9 p-0"
                 >
                   <Link className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    openSearch()
-                    setTimeout(() => {
-                      const searchInput = document.querySelector('input[placeholder="Find in page..."]') as HTMLInputElement
-                      if (searchInput) {
-                        searchInput.focus()
-                        searchInput.select()
-                      }
-                    }, 0)
-                  }}
-                  title={`Search in text (${mod}+F)`}
-                  aria-label="Search in text"
-                >
-                  <Search className="h-4 w-4" />
                 </Button>
                 <Button
                   variant={isLinksOpen ? 'default' : 'ghost'}
@@ -1041,6 +1039,24 @@ export function ReadPage() {
                   aria-label="Toggle flashcards sidebar"
                 >
                   <Zap className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    openSearch()
+                    setTimeout(() => {
+                      const searchInput = document.querySelector('input[placeholder="Find in page..."]') as HTMLInputElement
+                      if (searchInput) {
+                        searchInput.focus()
+                        searchInput.select()
+                      }
+                    }, 0)
+                  }}
+                  title={`Search in text (${mod}+F)`}
+                  aria-label="Search in text"
+                >
+                  <Search className="h-4 w-4" />
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -3319,6 +3319,36 @@ const matches = text.match(/\{\{c\d+::/g);
 - Documentation: ~1,000 lines (2 design docs)
 - **Total: ~1,450 lines added/modified**
 
+### Phase 21 Polish Improvements
+**Completed**: 2025-10-20
+
+**Enhancements**:
+- ✅ Wikipedia links section now collapsible with chevron toggle
+- ✅ Sort links by document order (default) or alphabetically
+- ✅ Search functionality for filtering links (real-time with clear button)
+- ✅ Intelligent header collapse when both sidebars open:
+  - Article title truncates to 280px with hover tooltip
+  - "Global Edit" shows icon only
+  - "Progress:" label hidden (shows just percentage)
+  - Button spacing reduced (gap-1)
+- ✅ Search button repositioned to second from right (left of context menu)
+- ✅ Fixed React hooks error in LinksSidebar component
+
+**Implementation Details**:
+- Added `showWikipedia`, `sortMode`, and `searchQuery` state to store
+- Implemented `sortLinks` and `filterLinks` functions with useMemo optimization
+- Added sort dropdown (ArrowUpDown icon) in sidebar header
+- Added search input with magnifying glass icon and clear button
+- Modified header to detect `bothSidebarsOpen` state and adjust layout
+- Moved hooks before early return to fix React Rules of Hooks violation
+
+**User Benefits**:
+- Collapse sections to focus on relevant links
+- Sort by appearance order or alphabetically for easier navigation
+- Quickly find specific links with real-time search
+- Header remains fully functional with both sidebars open
+- Clean, professional UI that adapts to workspace needs
+
 ---
 
 ### 📁 Phase 7: Future Enhancements
