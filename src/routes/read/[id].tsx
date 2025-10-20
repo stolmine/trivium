@@ -331,7 +331,7 @@ export function ReadPage() {
 
   const handleMarkAsFinished = async () => {
     if (currentText) {
-      await markAsFinished(currentText.id, currentText.contentLength)
+      await markAsFinished(currentText.id)
       setShowFinishedDialog(false)
     }
   }

@@ -63,6 +63,7 @@ pub fn run() {
             commands::reading::clear_read_progress,
             commands::reading::start_reading_session,
             commands::reading::end_reading_session,
+            commands::reading::get_countable_length,
             commands::flashcards::create_flashcard_from_cloze,
             commands::flashcards::get_flashcards_by_text,
             commands::flashcards::delete_flashcard,

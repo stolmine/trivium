@@ -33,20 +33,22 @@ pub async fn mark_range_as_read(
     session_id: Option<String>,
     character_count: Option<i64>,
     word_count: Option<i64>,
+    is_auto_completed: Option<bool>,
     db: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<(), String> {
     let db = db.lock().await;
     let pool = db.pool();
     let now = Utc::now();
     let user_id = 1;
+    let is_auto_completed = is_auto_completed.unwrap_or(false);
 
     sqlx::query!(
         r#"
         INSERT INTO read_ranges (
             text_id, user_id, start_position, end_position, marked_at,
-            session_id, character_count, word_count
+            session_id, character_count, word_count, is_auto_completed
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         text_id,
         user_id,
@@ -55,7 +57,8 @@ pub async fn mark_range_as_read(
         now,
         session_id,
         character_count,
-        word_count
+        word_count,
+        is_auto_completed
     )
     .execute(pool)
     .await
@@ -82,7 +85,8 @@ pub async fn get_read_ranges(
             user_id as "user_id!",
             start_position as "start_position!",
             end_position as "end_position!",
-            marked_at as "marked_at: _"
+            marked_at as "marked_at: _",
+            is_auto_completed as "is_auto_completed: bool"
         FROM read_ranges
         WHERE text_id = ? AND user_id = ?
         ORDER BY start_position ASC
@@ -136,7 +140,8 @@ pub async fn calculate_text_progress(
             user_id as "user_id!",
             start_position as "start_position!",
             end_position as "end_position!",
-            marked_at as "marked_at: _"
+            marked_at as "marked_at: _",
+            is_auto_completed as "is_auto_completed: bool"
         FROM read_ranges
         WHERE text_id = ? AND user_id = ?
         "#,
@@ -226,7 +231,8 @@ pub async fn get_next_unread_paragraph(
             user_id as "user_id!",
             start_position as "start_position!",
             end_position as "end_position!",
-            marked_at as "marked_at: _"
+            marked_at as "marked_at: _",
+            is_auto_completed as "is_auto_completed: bool"
         FROM read_ranges
         WHERE text_id = ? AND user_id = ?
         "#,
@@ -421,4 +427,32 @@ pub async fn end_reading_session(
     .map_err(|e| format!("Failed to end reading session: {}", e))?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub async fn get_countable_length(
+    text_id: i64,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<i64, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+
+    let text_result = sqlx::query!(
+        r#"
+        SELECT content_length, content
+        FROM texts
+        WHERE id = ?
+        "#,
+        text_id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch text: {}", e))?;
+
+    let total_chars = text_result.content_length;
+    let excluded_chars = parser::calculate_excluded_character_count(&text_result.content);
+    let header_chars = parser::calculate_header_character_count(&text_result.content);
+    let countable_chars = total_chars - excluded_chars - header_chars;
+
+    Ok(countable_chars)
 }

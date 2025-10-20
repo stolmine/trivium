@@ -330,7 +330,8 @@ pub async fn calculate_folder_progress(
                 user_id as "user_id!",
                 start_position as "start_position!",
                 end_position as "end_position!",
-                marked_at as "marked_at: _"
+                marked_at as "marked_at: _",
+                is_auto_completed as "is_auto_completed: bool"
             FROM read_ranges
             WHERE text_id = ? AND user_id = ?
             "#,

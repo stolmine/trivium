@@ -15,6 +15,7 @@ interface ReadHighlighterProps {
 interface TextSegment {
   text: string
   isRead: boolean
+  isAutoCompleted: boolean
   isExcluded: boolean
   isHeader: boolean
   start: number
@@ -41,18 +42,102 @@ function formatWikipediaHeaders(text: string): string {
   return formattedLines.join('\n')
 }
 
+function parseMarkdownLink(text: string, startIndex: number): { linkText: string; url: string; endIndex: number } | null {
+  // Manual parser for markdown links to handle URLs with parentheses and hashtags
+  // Handles: [text](url) where url can contain () and # like https://wiki.com/Name_(disambiguation)#section
+  // Also handles link text with brackets like [[text]](url)
+
+  if (text[startIndex] !== '[') return null
+
+  // Find the closing ]( for link text - we need to find ] followed by (
+  // This allows brackets within the link text itself
+  let i = startIndex + 1
+  let linkText = ''
+  let foundEnd = false
+
+  while (i < text.length) {
+    if (text[i] === ']' && i + 1 < text.length && text[i + 1] === '(') {
+      // Found the end of link text: ](
+      // Note: We don't include this final ] in linkText - it's the closing bracket of the markdown syntax
+      foundEnd = true
+      i++ // skip the ]
+      break
+    }
+    linkText += text[i]
+    i++
+  }
+
+  if (!foundEnd || i >= text.length || text[i] !== '(') return null
+  i++ // skip (
+
+  // Parse URL - match everything until ) that's followed by non-URL characters
+  // URLs can contain () and # so we need to be smart about finding the closing )
+  let url = ''
+  let parenDepth = 0
+
+  while (i < text.length) {
+    if (text[i] === '(') {
+      parenDepth++
+      url += text[i]
+      i++
+    } else if (text[i] === ')') {
+      if (parenDepth > 0) {
+        // This ) is part of the URL (closing a ( within the URL)
+        parenDepth--
+        url += text[i]
+        i++
+      } else {
+        // This ) closes the markdown link
+        break
+      }
+    } else {
+      url += text[i]
+      i++
+    }
+  }
+
+  if (i >= text.length || text[i] !== ')') return null
+  i++ // skip )
+
+  return { linkText, url, endIndex: i }
+}
+
 function renderTextWithLinks(text: string, linksEnabled: boolean): string {
   const formattedText = formatWikipediaHeaders(text)
 
+  // Remove empty markdown links: [](...)
   let textWithoutEmptyLinks = formattedText.replace(/\[\]\([^\)]+\)/g, '')
 
   if (!linksEnabled) {
-    return textWithoutEmptyLinks.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+    // Extract link text from markdown links
+    let result = ''
+    let i = 0
+    while (i < textWithoutEmptyLinks.length) {
+      const linkInfo = parseMarkdownLink(textWithoutEmptyLinks, i)
+      if (linkInfo) {
+        result += linkInfo.linkText
+        i = linkInfo.endIndex
+      } else {
+        result += textWithoutEmptyLinks[i]
+        i++
+      }
+    }
+    return result
   }
 
-  let processed = textWithoutEmptyLinks.replace(/\[([^\]]+)\]\(([^\)]+)\)/g,
-    '<a href="$2" class="clickable-link" data-url="$2">$1</a>'
-  )
+  // Process markdown links with support for URLs containing parentheses and hashtags
+  let processed = ''
+  let i = 0
+  while (i < textWithoutEmptyLinks.length) {
+    const linkInfo = parseMarkdownLink(textWithoutEmptyLinks, i)
+    if (linkInfo) {
+      processed += `<a href="${linkInfo.url}" class="clickable-link" data-url="${linkInfo.url}">${linkInfo.linkText}</a>`
+      i = linkInfo.endIndex
+    } else {
+      processed += textWithoutEmptyLinks[i]
+      i++
+    }
+  }
 
   const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+)/g
   const processedUrls = new Set<string>()
@@ -75,12 +160,25 @@ function renderTextWithLinks(text: string, linksEnabled: boolean): string {
 function stripMarkdownLinks(text: string): string {
   // Remove empty markdown links
   let stripped = text.replace(/\[\]\([^\)]+\)/g, '')
-  // Remove markdown link syntax but keep link text
-  stripped = stripped.replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+
+  // Remove markdown link syntax but keep link text, using the parser
+  let result = ''
+  let i = 0
+  while (i < stripped.length) {
+    const linkInfo = parseMarkdownLink(stripped, i)
+    if (linkInfo) {
+      result += linkInfo.linkText
+      i = linkInfo.endIndex
+    } else {
+      result += stripped[i]
+      i++
+    }
+  }
+
   // Remove header syntax === Text === → Text to match DOM textContent
   // This must match what formatWikipediaHeaders does (removes === markers, keeps text)
-  stripped = stripped.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
-  return stripped
+  result = result.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
+  return result
 }
 
 /**
@@ -108,11 +206,11 @@ export function renderedPosToCleanedPos(renderedPos: number, cleanedContent: str
   let cleanedIdx = 0
 
   while (renderedIdx < renderedPos && cleanedIdx < cleanedContent.length) {
-    // Check if we're at a markdown link start
-    const linkMatch = cleanedContent.substring(cleanedIdx).match(/^\[([^\]]+)\]\([^\)]+\)/)
-    if (linkMatch) {
-      const linkText = linkMatch[1]
-      const fullLinkLength = linkMatch[0].length
+    // Check if we're at a markdown link start - use parseMarkdownLink to handle brackets in link text
+    const linkInfo = parseMarkdownLink(cleanedContent, cleanedIdx)
+    if (linkInfo) {
+      const linkText = linkInfo.linkText
+      const fullLinkLength = linkInfo.endIndex - cleanedIdx
 
       // The link renders as just the link text
       if (renderedIdx + linkText.length <= renderedPos) {
@@ -261,13 +359,14 @@ const ReadHighlighterComponent = ({
     const headerRanges = detectHeaderRanges(cleanedContent)
 
     if (!readRanges.length && !excludedRanges.length) {
-      return [{ text: cleanedContent, isRead: false, isExcluded: false, isHeader: false, start: 0, end: cleanedContent.length }]
+      return [{ text: cleanedContent, isRead: false, isAutoCompleted: false, isExcluded: false, isHeader: false, start: 0, end: cleanedContent.length }]
     }
 
-    // Convert read ranges from rendered space to cleaned space
+    // Convert read ranges from rendered space to cleaned space, preserving isAutoCompleted flag
     const convertedReadRanges = readRanges.map(r => ({
       startPosition: renderedPosToCleanedPos(r.startPosition, cleanedContent),
-      endPosition: renderedPosToCleanedPos(r.endPosition, cleanedContent)
+      endPosition: renderedPosToCleanedPos(r.endPosition, cleanedContent),
+      isAutoCompleted: r.isAutoCompleted
     }))
 
     // Convert excluded ranges from rendered space to cleaned space
@@ -279,22 +378,24 @@ const ReadHighlighterComponent = ({
     const sortedReadRanges = [...convertedReadRanges].sort((a, b) => a.startPosition - b.startPosition)
     const sortedExcludedRanges = [...convertedExcludedRanges].sort((a, b) => a.startPosition - b.startPosition)
 
-    const mergedReadRanges: Array<{ start: number; end: number }> = []
+    const mergedReadRanges: Array<{ start: number; end: number; isAutoCompleted: boolean }> = []
     for (const range of sortedReadRanges) {
       if (mergedReadRanges.length === 0) {
-        mergedReadRanges.push({ start: range.startPosition, end: range.endPosition })
+        mergedReadRanges.push({ start: range.startPosition, end: range.endPosition, isAutoCompleted: range.isAutoCompleted })
       } else {
         const last = mergedReadRanges[mergedReadRanges.length - 1]
         if (range.startPosition <= last.end) {
           last.end = Math.max(last.end, range.endPosition)
+          // If merging with an auto-completed range, preserve that flag
+          last.isAutoCompleted = last.isAutoCompleted || range.isAutoCompleted
         } else {
-          mergedReadRanges.push({ start: range.startPosition, end: range.endPosition })
+          mergedReadRanges.push({ start: range.startPosition, end: range.endPosition, isAutoCompleted: range.isAutoCompleted })
         }
       }
     }
 
-    const allRanges: Array<{ start: number; end: number; type: 'read' | 'excluded' }> = [
-      ...mergedReadRanges.map(r => ({ start: r.start, end: r.end, type: 'read' as const })),
+    const allRanges: Array<{ start: number; end: number; type: 'read' | 'excluded'; isAutoCompleted?: boolean }> = [
+      ...mergedReadRanges.map(r => ({ start: r.start, end: r.end, type: 'read' as const, isAutoCompleted: r.isAutoCompleted })),
       ...sortedExcludedRanges.map(r => ({ start: r.startPosition, end: r.endPosition, type: 'excluded' as const }))
     ].sort((a, b) => a.start - b.start)
 
@@ -309,6 +410,7 @@ const ReadHighlighterComponent = ({
         result.push({
           text,
           isRead: false,
+          isAutoCompleted: false,
           isExcluded: false,
           isHeader,
           start: currentPos,
@@ -321,6 +423,7 @@ const ReadHighlighterComponent = ({
       result.push({
         text,
         isRead: range.type === 'read',
+        isAutoCompleted: range.isAutoCompleted || false,
         isExcluded: range.type === 'excluded',
         isHeader,
         start: range.start,
@@ -336,6 +439,7 @@ const ReadHighlighterComponent = ({
       result.push({
         text,
         isRead: false,
+        isAutoCompleted: false,
         isExcluded: false,
         isHeader,
         start: currentPos,
@@ -459,8 +563,13 @@ const ReadHighlighterComponent = ({
         } else if (segment.isRead && segment.isHeader) {
           classNames.push('read-header')
         } else if (segment.isRead) {
-          // Use Tailwind utilities for dark mode support
-          classNames.push('bg-black', 'text-white', 'dark:bg-gray-700', 'dark:text-gray-100', 'inline')
+          if (segment.isAutoCompleted) {
+            // Auto-completed ranges use lighter/dimmer styling to indicate user may not have read it
+            classNames.push('bg-gray-400', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-300', 'inline', 'opacity-70')
+          } else {
+            // Manual marks use solid black/white styling
+            classNames.push('bg-black', 'text-white', 'dark:bg-gray-700', 'dark:text-gray-100', 'inline')
+          }
         }
 
         // Apply search highlighting - overrides base styling for matched text only

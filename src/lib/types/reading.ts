@@ -4,6 +4,7 @@ export interface ReadRange {
   startPosition: number;
   endPosition: number;
   markedAt: string;
+  isAutoCompleted: boolean;
   // Optional: Original RENDERED space positions (used when positions are converted to CLEANED space)
   originalStartPosition?: number;
   originalEndPosition?: number;

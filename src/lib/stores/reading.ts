@@ -21,7 +21,7 @@ interface ReadingState {
   setCurrentText: (text: Text | null) => void;
   markRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
   unmarkRangeAsRead: (textId: number, startPosition: number, endPosition: number) => Promise<void>;
-  markAsFinished: (textId: number, contentLength: number) => Promise<void>;
+  markAsFinished: (textId: number) => Promise<void>;
   clearProgress: (textId: number) => Promise<void>;
   isRangeRead: (startPosition: number, endPosition: number) => boolean;
   isRangeExcluded: (startPosition: number, endPosition: number) => boolean;
@@ -194,13 +194,13 @@ export const useReadingStore = create<ReadingState>((set, get) => ({
     }
   },
 
-  markAsFinished: async (textId: number, contentLength: number) => {
+  markAsFinished: async (textId: number) => {
     try {
-      await api.reading.markRangeAsRead(textId, 0, contentLength);
+      const countableLength = await api.reading.getCountableLength(textId);
+      await api.reading.markRangeAsRead(textId, 0, countableLength, true);
       await get().getReadRanges(textId);
       await get().calculateProgress(textId);
       invalidateProgressCache(textId);
-      // Invalidate folder progress cache if text belongs to a folder
       const currentText = get().currentText;
       if (currentText?.folderId) {
         invalidateFolderProgressCache(currentText.folderId);

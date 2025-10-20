@@ -98,11 +98,12 @@ export const api = {
     },
   },
   reading: {
-    markRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
+    markRangeAsRead: async (textId: number, startPosition: number, endPosition: number, isAutoCompleted?: boolean): Promise<void> => {
       return await invoke('mark_range_as_read', {
         textId: textId,
         startPos: startPosition,
-        endPos: endPosition
+        endPos: endPosition,
+        isAutoCompleted: isAutoCompleted || false
       });
     },
     unmarkRangeAsRead: async (textId: number, startPosition: number, endPosition: number): Promise<void> => {
@@ -133,6 +134,9 @@ export const api = {
       return await invoke('end_reading_session', {
         request: { sessionId, endPosition, durationSeconds }
       });
+    },
+    getCountableLength: async (textId: number): Promise<number> => {
+      return await invoke('get_countable_length', { textId: textId });
     },
   },
   flashcards: {

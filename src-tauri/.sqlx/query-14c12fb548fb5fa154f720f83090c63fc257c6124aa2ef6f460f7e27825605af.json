@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n            SELECT\n                id as \"id!\",\n                text_id as \"text_id!\",\n                user_id as \"user_id!\",\n                start_position as \"start_position!\",\n                end_position as \"end_position!\",\n                marked_at as \"marked_at: _\"\n            FROM read_ranges\n            WHERE text_id = ? AND user_id = ?\n            ",
+  "query": "\n        SELECT\n            id as \"id!\",\n            text_id as \"text_id!\",\n            user_id as \"user_id!\",\n            start_position as \"start_position!\",\n            end_position as \"end_position!\",\n            marked_at as \"marked_at: _\",\n            is_auto_completed as \"is_auto_completed: bool\"\n        FROM read_ranges\n        WHERE text_id = ? AND user_id = ?\n        ORDER BY start_position ASC\n        ",
   "describe": {
     "columns": [
       {
@@ -32,6 +32,11 @@
         "name": "marked_at: _",
         "ordinal": 5,
         "type_info": "Datetime"
+      },
+      {
+        "name": "is_auto_completed: bool",
+        "ordinal": 6,
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -43,8 +48,9 @@
       true,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "1e492c73f27b409544f95d93736a0f4a2ddd977b40f06daef141474d8a99d222"
+  "hash": "14c12fb548fb5fa154f720f83090c63fc257c6124aa2ef6f460f7e27825605af"
 }

@@ -11,4 +11,5 @@ pub struct ReadRange {
     pub start_position: i64,
     pub end_position: i64,
     pub marked_at: DateTime<Utc>,
+    pub is_auto_completed: bool,
 }
