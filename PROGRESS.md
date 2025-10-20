@@ -3351,6 +3351,91 @@ const matches = text.match(/\{\{c\d+::/g);
 
 ---
 
+### Phase 21 Reading View Touchups
+**Completed**: 2025-10-20
+
+**Overview**: Critical bug fixes for reading view addressing complex markdown link rendering, mark-as-completed styling, and progress calculation accuracy.
+
+**Bug Fixes**:
+
+#### 1. Complex Link Rendering Fix
+**Problem**: Markdown links with bracketed text (e.g., `[[ˌɑmstərˈdɑm]](url)`) were parsed incorrectly, breaking position mapping and link rendering.
+
+**Root Cause**: Parser was searching for first `]` instead of the `](` boundary, causing early termination when link text contained brackets.
+
+**Solution**:
+- Updated `parseMarkdownLink` to search for `](` boundary pattern
+- Changed position mapping logic to use parser instead of regex
+- Ensures correct handling of IPA notation, nested brackets, and complex link text
+
+**Files Modified**:
+- `src/lib/components/reading/ReadHighlighter.tsx` - Updated parser and position mapping
+
+**Impact**: Links with complex text now render correctly, preventing broken highlights and inaccurate position tracking.
+
+#### 2. Mark As Completed Styling
+**Problem**: Auto-completed ranges (from "Mark as Finished" button) appeared identical to manually marked ranges, causing confusion about reading progress.
+
+**Solution**:
+- Added `is_auto_completed` boolean field to `read_ranges` table
+- Auto-completed ranges render with distinct gray dimmed styling (70% opacity)
+- Manual marks retain solid black/white appearance
+- Visual differentiation helps users understand their actual reading progress
+
+**Backend Changes**:
+- Database migration: `20251020000000_add_auto_completed_flag.sql`
+- Updated `reading.rs` to set `is_auto_completed` flag
+- Modified `folder.rs` progress calculations to track both types
+- Updated `read_range.rs` model with new field
+
+**Frontend Changes**:
+- `reading.ts` store methods support `isAutoCompleted` parameter
+- `tauri.ts` API wrappers handle new field
+- `ReadHighlighter.tsx` renders auto-completed with dimmed style
+- `TextSegment` interface includes `isAutoCompleted` property
+
+**Impact**: Users can now visually distinguish between text they actively read versus text marked complete, providing clearer progress feedback.
+
+#### 3. Mark As Completed Progress Fix
+**Problem**: Using "Mark as Finished" caused progress to exceed 100% because it marked total content length rather than countable length (excluding headers and previously marked ranges).
+
+**Root Cause**: Frontend was calculating mark range using `content.length` instead of actual countable characters.
+
+**Solution**:
+- Added `get_countable_length` backend command
+- Returns countable chars: `total - excluded - headers - already_read`
+- Updated `markAsFinished` to use countable length instead of total length
+- Prevents duplicate marking and ensures accurate progress calculation
+
+**Backend Changes**:
+- `reading.rs`: New `get_countable_length` command with proper calculation logic
+- `lib.rs`: Registered new command in Tauri handler
+
+**Frontend Changes**:
+- `tauri.ts`: Added `getCountableLength` API wrapper
+- `reading.ts`: Updated `markAsFinished` to call countable length
+- `read/[id].tsx`: Uses correct length for marking completion
+
+**Impact**: Progress percentage now stays at or below 100%, providing accurate reading completion metrics.
+
+**Technical Notes**:
+- All changes maintain UTF-16 position consistency throughout system
+- Position mapping handles complex markdown syntax correctly
+- Database migration is backwards compatible (defaults `is_auto_completed` to 0)
+- No performance impact on existing mark operations
+
+**Files Modified** (Total: 8):
+- Backend (4): `reading.rs`, `lib.rs`, `folder.rs`, `read_range.rs`
+- Frontend (3): `reading.ts`, `tauri.ts`, `ReadHighlighter.tsx`
+- Database (1): `20251020000000_add_auto_completed_flag.sql`
+
+**Lines of Code**:
+- Backend: ~120 lines (command + model updates + migration)
+- Frontend: ~80 lines (store methods + UI styling)
+- **Total: ~200 lines added/modified**
+
+---
+
 ### 📁 Phase 7: Future Enhancements
 **Status**: Not Started
 
