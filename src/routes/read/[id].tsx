@@ -21,7 +21,7 @@ import {
   Input,
   Label
 } from '../../lib/components/ui'
-import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar, InlineRegionEditor, LinksSidebar } from '../../lib/components/reading'
+import { TextSelectionMenu, ReadHighlighter, parseExcludedRanges, renderedPosToCleanedPos, TextEditor, InlineEditor, SelectionEditor, SelectionToolbar, InlineRegionEditor, LinksSidebar, TypewriterReader } from '../../lib/components/reading'
 import { expandToSentenceBoundary, expandToSmartBoundary, shouldRespectExactSelection } from '../../lib/utils/sentenceBoundary'
 import { getSelectionRange } from '../../lib/utils/domPosition'
 import type { ClozeNote } from '../../lib/types/flashcard'
@@ -72,6 +72,7 @@ export function ReadPage() {
   } | null>(null)
   const [isUndoing, setIsUndoing] = useState(false)
   const [isRedoing, setIsRedoing] = useState(false)
+  const [isTypewriterMode, setIsTypewriterMode] = useState(false)
   const sessionInactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const {
     currentText,
@@ -1105,6 +1106,11 @@ export function ReadPage() {
                       Clear Progress
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setIsTypewriterMode(true)}>
+                      <Zap className="mr-2 h-4 w-4" />
+                      Focus Mode
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
                       <Trash2 className="mr-2 h-4 w-4 text-destructive" />
                       <span className="text-destructive">Delete</span>
@@ -1239,44 +1245,57 @@ export function ReadPage() {
               />
             ) : (
               <>
-                <article className="reading-content mx-auto space-y-4" style={{ fontSize: `${fontSize}rem` }}>
-                  <TextSelectionMenu textId={currentText.id}>
-                    {inlineEditActive ? (
-                      <InlineEditor
-                        initialContent={currentText.content}
-                        onContentChange={setEditingContent}
-                        onActivate={() => setInlineEditActive(true)}
-                        onDeactivate={handleSaveInlineEdit}
-                        isActive={true}
-                        className="font-serif"
-                        fontSize={fontSize}
-                      />
-                    ) : (
-                      <div
-                        id="article-content"
-                        onMouseUp={handleTextSelection}
-                        onKeyUp={handleTextSelection}
-                      >
-                        <ReadHighlighter
-                          content={currentText.content}
-                          readRanges={readRanges}
-                          linksEnabled={linksEnabled}
-                          searchMatches={matches}
-                          activeSearchIndex={currentIndex}
-                        />
-                      </div>
-                    )}
-                  </TextSelectionMenu>
-                </article>
-
-                {selectionInfo && !inlineEditActive && (
-                  <SelectionToolbar
-                    selection={selectionInfo}
-                    onEdit={handleActivateSelectionEdit}
-                    onEditInline={handleActivateInlineEdit}
-                    onMarkAsRead={handleMarkSelectionRead}
-                    position={selectionInfo.position}
+                {isTypewriterMode ? (
+                  <TypewriterReader
+                    content={currentText.content}
+                    textId={currentText.id}
+                    onExit={() => setIsTypewriterMode(false)}
+                    linksEnabled={false}
                   />
+                ) : (
+                  <>
+                    <article className="reading-content mx-auto space-y-4" style={{ fontSize: `${fontSize}rem` }}>
+                      <TextSelectionMenu
+                        textId={currentText.id}
+                      >
+                        {inlineEditActive ? (
+                          <InlineEditor
+                            initialContent={currentText.content}
+                            onContentChange={setEditingContent}
+                            onActivate={() => setInlineEditActive(true)}
+                            onDeactivate={handleSaveInlineEdit}
+                            isActive={true}
+                            className="font-serif"
+                            fontSize={fontSize}
+                          />
+                        ) : (
+                          <div
+                            id="article-content"
+                            onMouseUp={handleTextSelection}
+                            onKeyUp={handleTextSelection}
+                          >
+                            <ReadHighlighter
+                              content={currentText.content}
+                              readRanges={readRanges}
+                              linksEnabled={linksEnabled}
+                              searchMatches={matches}
+                              activeSearchIndex={currentIndex}
+                            />
+                          </div>
+                        )}
+                      </TextSelectionMenu>
+                    </article>
+
+                    {selectionInfo && !inlineEditActive && (
+                      <SelectionToolbar
+                        selection={selectionInfo}
+                        onEdit={handleActivateSelectionEdit}
+                        onEditInline={handleActivateInlineEdit}
+                        onMarkAsRead={handleMarkSelectionRead}
+                        position={selectionInfo.position}
+                      />
+                    )}
+                  </>
                 )}
               </>
             )}

@@ -172,7 +172,12 @@ function isAbbreviation(text: string, position: number): boolean {
   const commonAbbreviations = [
     'Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.', 'Sr.', 'Jr.',
     'etc.', 'vs.', 'e.g.', 'i.e.', 'Ph.D.', 'M.D.',
-    'St.', 'Ave.', 'Rd.', 'Blvd.'
+    'St.', 'Ave.', 'Rd.', 'Blvd.',
+    'lit.', 'Fig.', 'Vol.', 'No.',
+    'Jan.', 'Feb.', 'Mar.', 'Apr.', 'May.', 'Jun.',
+    'Jul.', 'Aug.', 'Sep.', 'Sept.', 'Oct.', 'Nov.', 'Dec.',
+    'Corp.', 'Inc.', 'Ltd.', 'Co.',
+    'Approx.', 'Misc.', 'Dept.'
   ];
 
   return commonAbbreviations.some(abbr =>

@@ -56,7 +56,7 @@ export function LinksSidebar({ onNavigateToIngest }: LinksSidebarProps) {
   if (!isOpen) return null
 
   return (
-    <aside className="w-96 border-l border-border bg-muted flex flex-col">
+    <aside className="w-96 border-l border-border bg-muted flex flex-col animate-slideInRight">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
         <div className="flex items-center gap-2 flex-1">
           <div className="flex items-center gap-2">

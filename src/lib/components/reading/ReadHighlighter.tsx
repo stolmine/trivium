@@ -182,6 +182,81 @@ function stripMarkdownLinks(text: string): string {
 }
 
 /**
+ * Convert position from cleaned space to rendered space
+ *
+ * Position Spaces:
+ * - CLEANED: Content with markdown syntax but without [[exclude]] tags
+ * - RENDERED: What you see in DOM textContent (no markdown, no HTML)
+ *
+ * @param cleanedPos - Position in cleaned space (with markdown)
+ * @param cleanedContent - The cleaned content string (with markdown)
+ * @returns Position in rendered space
+ */
+export function cleanedPosToRenderedPos(cleanedPos: number, cleanedContent: string): number {
+  const renderedContent = stripMarkdownLinks(cleanedContent)
+
+  if (cleanedPos >= cleanedContent.length) {
+    return renderedContent.length
+  }
+
+  let renderedIdx = 0
+  let cleanedIdx = 0
+
+  while (cleanedIdx < cleanedPos && cleanedIdx < cleanedContent.length) {
+    const linkInfo = parseMarkdownLink(cleanedContent, cleanedIdx)
+    if (linkInfo) {
+      const linkText = linkInfo.linkText
+      const fullLinkLength = linkInfo.endIndex - cleanedIdx
+
+      if (cleanedIdx + fullLinkLength <= cleanedPos) {
+        renderedIdx += linkText.length
+        cleanedIdx += fullLinkLength
+      } else {
+        const offsetInLink = cleanedPos - cleanedIdx
+        if (offsetInLink <= 1 + linkText.length) {
+          return renderedIdx + Math.max(0, offsetInLink - 1)
+        } else {
+          return renderedIdx + linkText.length
+        }
+      }
+      continue
+    }
+
+    const emptyLinkMatch = cleanedContent.substring(cleanedIdx).match(/^\[\]\([^\)]+\)/)
+    if (emptyLinkMatch) {
+      cleanedIdx += emptyLinkMatch[0].length
+      continue
+    }
+
+    const headerMatch = cleanedContent.substring(cleanedIdx).match(/^={2,}\s*(.+?)\s*={2,}(?=\n|$)/)
+    if (headerMatch) {
+      const headerText = headerMatch[1].trim()
+      const fullHeaderLength = headerMatch[0].length
+
+      if (cleanedIdx + fullHeaderLength <= cleanedPos) {
+        renderedIdx += headerText.length
+        cleanedIdx += fullHeaderLength
+      } else {
+        const leadingMatch = cleanedContent.substring(cleanedIdx).match(/^={2,}\s*/)
+        const leadingLength = leadingMatch ? leadingMatch[0].length : 0
+        const offsetInHeader = cleanedPos - cleanedIdx
+        if (offsetInHeader >= leadingLength && offsetInHeader < leadingLength + headerText.length) {
+          return renderedIdx + (offsetInHeader - leadingLength)
+        } else {
+          return renderedIdx
+        }
+      }
+      continue
+    }
+
+    renderedIdx++
+    cleanedIdx++
+  }
+
+  return renderedIdx
+}
+
+/**
  * Convert position from rendered space to cleaned space
  *
  * Position Spaces:

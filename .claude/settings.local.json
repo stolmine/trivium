@@ -188,7 +188,16 @@
       "WebFetch(domain:jkrsp.com)",
       "WebFetch(domain:code.visualstudio.com)",
       "Bash(git -C /Users/why/repos/trivium status)",
-      "Bash(npx shadcn-ui@latest add switch)"
+      "Bash(npx shadcn-ui@latest add switch)",
+      "Bash(xargs -r kill -9)",
+      "Bash(git diff --name-only --diff-filter=M,D)",
+      "Bash(hdiutil info)",
+      "Bash(hdiutil detach /Volumes/Trivium -force)",
+      "Bash(hdiutil create -volname \"Trivium\" -srcfolder macos/Trivium.app -ov -format UDZO Trivium_0.1.0_aarch64.dmg)",
+      "Bash(hdiutil imageinfo /Users/why/repos/trivium/src-tauri/target/release/bundle/Trivium_0.1.0_aarch64.dmg)",
+      "Bash(hdiutil imageinfo /Users/why/repos/trivium/src-tauri/target/release/bundle/dmg/Trivium_0.1.0_aarch64.dmg)",
+      "Bash(git diff main --name-only --diff-filter=A)",
+      "Bash(git fetch origin)"
     ],
     "deny": [],
     "ask": []

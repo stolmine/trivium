@@ -12,3 +12,4 @@ export { SelectionEditor } from './SelectionEditor';
 export { InlineRegionEditor } from './InlineRegionEditor';
 export { LinksSidebar } from './LinksSidebar';
 export { LinkItem } from './LinkItem';
+export { TypewriterReader } from './TypewriterReader';

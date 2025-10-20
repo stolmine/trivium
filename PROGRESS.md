@@ -1,8 +1,8 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 21 Complete ✅ - Links Sidebar
+## Current Status: Phase 22 Complete ✅ - Typewriter/Focus Mode
 
-**Branch**: `20_altClick_ingest`
+**Branch**: `22_typewriter`
 **Last Updated**: 2025-10-20
 
 ---
@@ -3433,6 +3433,123 @@ const matches = text.match(/\{\{c\d+::/g);
 - Backend: ~120 lines (command + model updates + migration)
 - Frontend: ~80 lines (store methods + UI styling)
 - **Total: ~200 lines added/modified**
+
+---
+
+### ✅ Phase 22: Typewriter/Focus Mode (Week TBD) - COMPLETE
+**Completed**: 2025-10-20
+**Branch**: `22_typewriter`
+
+**Overview**: Full-viewport reading mode with sentence-by-sentence navigation, centered scrolling (typewriter effect), and automatic progress tracking. Provides distraction-free reading experience with sentence-level granularity.
+
+**Backend**: No backend changes required (uses existing mark and read range commands)
+
+**Frontend**:
+- ✅ TypewriterReader component (318+ lines) - Full-viewport reading interface
+- ✅ Sentence-by-sentence navigation with arrow keys (Up/Down)
+- ✅ Current sentence fully visible, others dimmed (70% opacity)
+- ✅ Centered scrolling - active sentence stays at screen center
+- ✅ Auto-mark as read - navigating past sentence marks it automatically
+- ✅ Paragraph structure preserved - sentences grouped in paragraph blocks
+- ✅ Links disabled - render as plain text (not clickable)
+- ✅ Creates marks for card creation hub (not just read ranges)
+- ✅ Markdown stripped from marks to match manual marking behavior
+- ✅ Enhanced sentence boundary detection with 21+ new abbreviations
+- ✅ Position space conversion for accurate mark boundaries
+- ✅ Slide-in animations for sidebar entries (125ms with easing)
+
+**Key Features**:
+- **Full-Viewport Mode**: Dedicated reading experience (no sidebars, minimal UI)
+- **Sentence Navigation**: Arrow keys (Up/Down) move between sentences
+- **Typewriter Scrolling**: Active sentence stays centered on screen
+- **Visual Focus**: Current sentence 100% opacity, others dimmed to 70%
+- **Auto-Progress Tracking**: Dual mark creation:
+  - Read ranges (for progress calculation)
+  - Cloze notes (for flashcard creation hub)
+- **Paragraph Awareness**: Sentences grouped by paragraphs with visual spacing
+- **Link Safety**: Links rendered as plain text to prevent accidental clicks
+- **Smooth Animations**: 125ms slide-in for new sidebar entries (Material Design curve)
+- **Accessible via**: Global dropdown menu (three-dot icon in header)
+
+**Enhanced Sentence Boundary Detection**:
+- Added 21+ abbreviations to prevent false sentence breaks
+- New additions: lit., Fig., Ph.D., Inc., Ltd., Corp., LLC
+- Month abbreviations: Jan., Feb., Mar., Apr., etc.
+- Common titles: Dr., Mr., Mrs., Ms., Prof., Rev., etc.
+- Academic: vol., ed., p., pp., ch., sec.
+- Improved accuracy for academic and formal texts
+
+**Position Space Conversion**:
+- New `cleanedPosToRenderedPos()` function in ReadHighlighter
+- Converts from cleaned markdown positions to rendered HTML positions
+- Ensures accurate mark boundaries when creating cloze notes
+- Handles markdown link syntax: `[text](url)` → `text` (position adjustment)
+- Critical for dual mark creation (read ranges + cloze notes)
+
+**Architecture**:
+- TypewriterReader component with sentence detection utilities
+- Dual mark creation: `markRangeAsRead()` + `createMark()` in parallel
+- Paragraph-aware rendering: `<span>` elements for inline flow
+- Smooth scroll with `scrollIntoView({ behavior: 'smooth', block: 'center' })`
+- Position tracking: current sentence index, navigation history
+- Exit handler: cleanup on component unmount
+
+**User Experience**:
+- **Entry**: Three-dot menu → "Typewriter Mode"
+- **Navigation**: Arrow Up (previous), Arrow Down (next)
+- **Exit**: Escape key or close button
+- **Visual Feedback**: Smooth opacity transitions, centered scrolling
+- **Progress**: Automatic marking (no manual selection needed)
+- **Card Creation**: Marked sentences appear in Flashcard Creation Hub
+
+**Success Criteria Met**:
+- ✅ Full-viewport mode: Clean, distraction-free interface
+- ✅ Sentence navigation: Arrow keys work, wraparound at boundaries
+- ✅ Centered scrolling: Active sentence stays in viewport center
+- ✅ Auto-marking: Creates both read ranges and marks
+- ✅ Position accuracy: Marks align with rendered text (not cleaned content)
+- ✅ Link safety: No accidental navigation during reading
+- ✅ Paragraph structure: Visual grouping maintained
+- ✅ Animation polish: Smooth 125ms sidebar slide-in
+
+**Files Created**:
+- `src/lib/components/reading/TypewriterReader.tsx` - Main typewriter mode component (318+ lines)
+
+**Files Modified**:
+- `src/lib/utils/sentenceBoundary.ts` - Added 21+ abbreviations for better detection
+- `src/lib/components/reading/ReadHighlighter.tsx` - Added `cleanedPosToRenderedPos()` function
+- `src/lib/components/reading/TextSelectionMenu.tsx` - Removed focus mode option (moved to global menu)
+- `src/lib/components/reading/index.ts` - Exported TypewriterReader component
+- `src/routes/read/[id].tsx` - Added typewriter mode state and global menu option
+- `src/lib/components/flashcard/FlashcardSidebar.tsx` - Added slideInRight animation (125ms)
+- `src/lib/components/reading/LinksSidebar.tsx` - Added slideInRight animation (125ms)
+- `src/index.css` - Added slideInRight keyframe animation with Material Design easing
+
+**Implementation Time**: ~4 hours (design + implementation + polish)
+
+**User Benefits**:
+- Distraction-free reading with sentence-level focus
+- Automatic progress tracking (no manual marking needed)
+- Creates flashcard marks automatically for later review
+- Typewriter-style centered scrolling reduces eye movement
+- Clear visual focus on current sentence
+- Smooth, polished animations and transitions
+
+**Technical Highlights**:
+- **Sentence Detection**: Comprehensive abbreviation list prevents false breaks
+- **Position Mapping**: Accurate conversion between markdown and rendered positions
+- **Dual Mark Creation**: Simultaneous read ranges and cloze notes
+- **Paragraph Preservation**: Maintains document structure during rendering
+- **Smooth Animations**: 125ms with cubic-bezier(0.4, 0, 0.2, 1) easing
+- **Performance**: Minimal re-renders, efficient sentence parsing
+
+**Commits**:
+- To be created in `22_typewriter` branch (2025-10-20)
+
+**Lines of Code**:
+- Frontend: ~400 lines (1 new component + 7 modified files)
+- CSS: ~20 lines (animation keyframes)
+- **Total: ~420 lines added/modified**
 
 ---
 
