@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-19 (Phase 20: Statistics & Analytics System Complete with Known Issues - Post-Phase 20 Improvements (collapsible sidebar navigation, keyboard shortcut conflict resolution))
+Last Updated: 2025-10-20 (Phase 21: Links Sidebar Complete - Intelligent link deduplication with Wikipedia filtering and dual-mode sidebar)
 
 ---
 
@@ -276,6 +276,18 @@ Last Updated: 2025-10-19 (Phase 20: Statistics & Analytics System Complete with 
 
 ---
 
+### Links Sidebar (Phase 21)
+
+#### `/Users/why/repos/trivium/LINKS_SIDEBAR_DESIGN.md`
+**Description**: Complete design specification for Links Sidebar feature. Covers intelligent Wikipedia link deduplication, dual-mode sidebar (Cards/Links), unified design system integration, component architecture with TypeScript interfaces, state management patterns, user interaction flows, accessibility requirements (WCAG compliant), performance benchmarks, 3-phase implementation plan, and comprehensive testing strategy. 23,000+ word specification serving as primary design contract
+**Last Updated**: 2025-10-20
+
+#### `/Users/why/repos/trivium/LINKS_SIDEBAR_SUMMARY.md`
+**Description**: Executive summary for Links Sidebar feature providing condensed overview for rapid understanding. Covers problem statement, solution overview, key features (intelligent deduplication, Wikipedia filtering), visual mockups, technical architecture, user flows, implementation phases with time estimates, risk assessment, and success metrics. Designed as companion to full specification for stakeholders and developers
+**Last Updated**: 2025-10-20
+
+---
+
 ## User Reference
 
 ### `/Users/why/repos/trivium/KEYBOARD_SHORTCUTS.md`
@@ -338,14 +350,14 @@ Last Updated: 2025-10-19 (Phase 20: Statistics & Analytics System Complete with 
 
 ## Statistics
 
-**Total Documentation Files**: 58 markdown files
-**Total Lines of Documentation**: ~52,800+ lines
+**Total Documentation Files**: 60 markdown files
+**Total Lines of Documentation**: ~53,800+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 11 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + Phase 20 statistics + settings quick reference)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 28 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 1 history store implementation)
+- Feature-Specific: 30 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 2 Phase 21 links sidebar docs + 1 history store implementation)
 - User Reference: 1 file
 - Design System: 1 file
 - Debugging: 4 files (includes triple-click debugging)

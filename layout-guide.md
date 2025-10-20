@@ -92,11 +92,277 @@
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Sidebar (Collapsible)
+### Sidebar (Collapsible, Dual-Mode)
 - Width: 384px (w-96) when expanded
 - Width: 48px (w-12) when collapsed
-- Contains flashcard list
+- **Two Modes**: Flashcards OR Links (toggle buttons in header)
+- Contains flashcard list (Flashcards mode) or links list (Links mode)
 - Border-left separator
+
+**Mode Toggle Buttons** (in reading view header):
+```
+[Cards] [Links]
+  ^       ^
+  Flashcard mode / Links mode
+```
+
+---
+
+## Links Sidebar Feature
+
+**Last Updated**: 2025-10-20
+**Status**: DESIGN COMPLETE - Ready for Phase 20 Implementation
+
+### Overview
+
+The Links Sidebar displays all article links in a dedicated panel with ingest/open actions, completely replacing the problematic context menu approach that interfered with native text selection.
+
+**Core Philosophy**: Native browser text selection is sacrosanct. The sidebar provides link management without event interception or selection blocking.
+
+### Visual Structure
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ Reading View Header                        [Cards][Links][Search][⋮]  │ ← Toggle buttons
+├─────────────────────────────────────────┬──────────────────────────────┤
+│ Article Content                         │ Links Sidebar                │
+│                                         │ ┌──────────────────────────┐ │
+│ Text with [link] continues...          │ │ Links (3)            [×] │ │
+│ ██████████████████████ (read text)     │ ├──────────────────────────┤ │
+│                                         │ │ ┌──────────────────────┐ │ │
+│ More content with [another link]...    │ │ │ Link Title           │ │ │
+│                                         │ │ │ wikipedia.org/...    │ │ │
+│                                         │ │ │ [Ingest] [Open] [📋]│ │ │
+│                                         │ │ └──────────────────────┘ │ │
+│                                         │ └──────────────────────────┘ │
+└─────────────────────────────────────────┴──────────────────────────────┘
+```
+
+### LinkItem Component Structure
+
+```
+┌────────────────────────────────────────────────┐
+│ Natural Selection                              │ ← displayTitle (text-sm font-medium)
+│ en.wikipedia.org/wiki/Natural_selection        │ ← truncated URL (text-xs muted)
+│                                                │
+│ Appears 3 times • Sections: History, Modern... │ ← Frequency indicator (optional)
+│                                                │
+│ [📥 Ingest]  [↗ Open]  [📋]                   │ ← Action buttons
+│  └─ h-8      └─ h-8     └─ icon-only          │
+└────────────────────────────────────────────────┘
+
+Styling:
+- Card: bg-card, border, rounded-lg, shadow-sm
+- Hover: shadow-md, scale(1.02)
+- Padding: 12px
+- Gap between buttons: 8px
+- Transition: 150ms cubic-bezier
+```
+
+### Deduplication Algorithm
+
+**Input**: Multiple links to same base URL with different anchors
+```
+[Natural Selection](https://en.wikipedia.org/wiki/Natural_selection)
+[NS History](https://en.wikipedia.org/wiki/Natural_selection#History)
+[Modern Synthesis](https://en.wikipedia.org/wiki/Natural_selection#Modern_synthesis)
+```
+
+**Output**: Single deduplicated entry
+```
+Base URL: https://en.wikipedia.org/wiki/Natural_selection
+Title: "Natural Selection" (longest non-URL title)
+Frequency: 3
+Anchors: ["History", "Modern_synthesis"]
+```
+
+**Rules**:
+- URLs differing ONLY by hash (#anchor) → SAME entry
+- URLs with different query params → DIFFERENT entries
+- Choose best title: prefer non-URL text, then longest, then alphabetical
+
+### State Management
+
+**Zustand Store**: `useLinksSidebarStore`
+```typescript
+interface LinksSidebarState {
+  sidebarMode: 'flashcards' | 'links'
+  isCollapsed: boolean
+  links: DeduplicatedLink[]
+
+  setSidebarMode(mode): void
+  setIsCollapsed(collapsed): void
+  extractAndSetLinks(content): void  // Parses markdown, deduplicates
+  clearLinks(): void
+}
+```
+
+**Persistence**: Only UI state (mode, collapsed) persisted. Links regenerated on load.
+
+**Integration**:
+```typescript
+// In ReadPage component
+useEffect(() => {
+  if (currentText) {
+    extractAndSetLinks(currentText.content)  // Extract on load
+  }
+}, [currentText?.content])
+
+// Re-extract after inline editing
+handleSaveInlineEdit = async () => {
+  // ... save ...
+  extractAndSetLinks(editingContent)  // Refresh links
+}
+```
+
+### Component Files
+
+**New Files**:
+```
+src/lib/stores/linksSidebar.ts          - State management
+src/lib/components/reading/LinksSidebar.tsx - Main container
+src/lib/components/reading/LinkItem.tsx     - Individual link card
+src/lib/components/reading/SidebarToggleButtons.tsx - [Cards][Links] switcher
+```
+
+**Modified Files**:
+```
+src/routes/read/[id].tsx                - Integrate toggle buttons
+src/lib/components/reading/ReadHighlighter.tsx - REMOVE context menu
+```
+
+**Deleted Files**:
+```
+src/lib/components/reading/LinkContextMenu.tsx - No longer needed
+```
+
+### Keyboard Shortcuts (Proposed)
+
+- `Ctrl+Shift+L` - Toggle Links sidebar (future enhancement)
+- `Tab` - Navigate through link action buttons
+- `Enter/Space` - Activate focused button
+
+### Accessibility
+
+**ARIA Structure**:
+```html
+<div role="complementary" aria-label="Article links sidebar">
+  <div role="list" aria-label="Article links">
+    <div role="listitem">
+      <h3 id="link-1-title">Natural Selection</h3>
+      <button aria-describedby="link-1-title">Ingest</button>
+      <button aria-describedby="link-1-title">Open</button>
+      <button aria-describedby="link-1-title">Copy URL</button>
+    </div>
+  </div>
+</div>
+```
+
+**Screen Reader Announcements**:
+- Opening sidebar: "Links sidebar opened. 5 links found."
+- Link item focus: "Natural Selection. Wikipedia link. Ingest button."
+- Copy action: "URL copied to clipboard"
+
+### Performance
+
+**Benchmarks** (Target):
+- Link extraction: <50ms for 200 links
+- Deduplication: <20ms
+- Rendering: No virtualization needed for <100 links
+- Total overhead: <70ms (imperceptible)
+
+**Optimization**:
+- Memoize extraction (only re-run when content changes)
+- Shallow comparison for links array
+- Memo individual LinkItem components
+
+### Styling Guidelines
+
+**Colors** (uses CSS variables for dark mode):
+```css
+.link-item {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+}
+
+.link-item:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  transform: scale(1.02);
+}
+```
+
+**Button Hierarchy**:
+1. **[Ingest]** - Primary action (bg-primary, icon Download)
+2. **[Open]** - Secondary (outline, icon ExternalLink)
+3. **[Copy]** - Tertiary (ghost icon-only, icon Copy)
+
+### Migration from Context Menu
+
+**Removed Behavior**:
+- ❌ Right-click link → Custom context menu
+- ❌ Event interception (onContextMenu)
+- ❌ stopPropagation() calls
+
+**New Behavior**:
+- ✅ Right-click link → Native browser context menu
+- ✅ No event interception
+- ✅ Perfect text selection (no interference)
+- ✅ All links visible in sidebar at once
+
+**User Communication**:
+```
+Changelog Entry:
+"Replaced link context menu with Links Sidebar. Right-clicking
+links now shows native browser menu (copy/open). Use the new
+[Links] button to see all article links with Ingest actions."
+```
+
+### Implementation Phases
+
+**Phase 1: Core (8-12 hours)**:
+- [x] Create linksSidebar.ts store
+- [x] Create LinksSidebar.tsx component
+- [x] Create LinkItem.tsx component
+- [x] Create SidebarToggleButtons.tsx
+- [x] Integrate into ReadPage
+- [x] Remove LinkContextMenu
+- [x] Testing: extraction, deduplication, navigation
+
+**Phase 2: Polish (4-6 hours)**:
+- [ ] Add frequency display
+- [ ] Add Copy URL button
+- [ ] Improve empty state
+- [ ] Keyboard shortcut (Ctrl+Shift+L)
+- [ ] Accessibility audit
+- [ ] Performance optimization
+
+**Phase 3: Advanced (Future)**:
+- [ ] Search/filter links
+- [ ] Link grouping by domain
+- [ ] "Already ingested" indicator
+- [ ] Bulk ingest
+- [ ] Link annotations
+
+### Design Rationale
+
+**Why sidebar instead of context menu?**
+1. Native browser UX preserved (copy link, open in new tab)
+2. No selection interference
+3. Overview of ALL links at once
+4. Better discoverability (visible toggle)
+5. Familiar pattern (matches Flashcard sidebar)
+
+**Why deduplicate by base URL?**
+- Wikipedia articles reference same page multiple times with different anchors
+- Showing 5 identical "Natural Selection" entries is cluttered
+- User wants to ingest the full article, not individual sections
+- Frequency indicator shows importance ("Appears 5 times")
+
+**Why separate Ingest/Open buttons?**
+- Different user intents: "Save for later" vs "Quick reference"
+- Making Ingest primary guides toward Trivium workflow
+- Both actions equally accessible (2 clicks max)
 
 ---
 
