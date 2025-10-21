@@ -29,22 +29,22 @@ export function ReviewSessionPage() {
     const filterParam = searchParams.get('filter')
     const limitParam = searchParams.get('limit')
 
-    const filter: ReviewFilter = filterParam
+    const filter: ReviewFilter | undefined = filterParam
       ? JSON.parse(filterParam)
-      : { type: 'global' }
+      : undefined
     const limit = limitParam ? parseInt(limitParam) : 20
 
     loadDueCards(filter, limit)
 
     const loadFilterName = async () => {
-      if (filter.type === 'text') {
+      if (filter?.type === 'text') {
         try {
           const text = await api.texts.get(filter.textId)
           setFilterDisplayName(text.title)
         } catch {
           setFilterDisplayName(`Text #${filter.textId}`)
         }
-      } else if (filter.type === 'folder') {
+      } else if (filter?.type === 'folder') {
         setFilterDisplayName('Folder')
       } else {
         setFilterDisplayName('All Cards')

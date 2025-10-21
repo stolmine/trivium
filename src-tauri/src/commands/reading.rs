@@ -42,29 +42,130 @@ pub async fn mark_range_as_read(
     let user_id = 1;
     let is_auto_completed = is_auto_completed.unwrap_or(false);
 
-    sqlx::query!(
+    // Fetch existing read ranges for this text
+    let existing_ranges = sqlx::query_as!(
+        ReadRange,
         r#"
-        INSERT INTO read_ranges (
-            text_id, user_id, start_position, end_position, marked_at,
-            session_id, character_count, word_count, is_auto_completed
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        SELECT
+            id as "id!",
+            text_id as "text_id!",
+            user_id as "user_id!",
+            start_position as "start_position!",
+            end_position as "end_position!",
+            marked_at as "marked_at: _",
+            is_auto_completed as "is_auto_completed: bool"
+        FROM read_ranges
+        WHERE text_id = ? AND user_id = ?
+        ORDER BY start_position ASC
         "#,
         text_id,
-        user_id,
-        start_pos,
-        end_pos,
-        now,
-        session_id,
-        character_count,
-        word_count,
-        is_auto_completed
+        user_id
     )
-    .execute(pool)
+    .fetch_all(pool)
     .await
-    .map_err(|e| format!("Failed to insert read range: {}", e))?;
+    .map_err(|e| format!("Failed to fetch existing read ranges: {}", e))?;
+
+    // Calculate unread portions of the new range
+    let unread_portions = calculate_unread_portions(start_pos, end_pos, &existing_ranges);
+
+    // Insert only the unread portions
+    for (unread_start, unread_end) in unread_portions {
+        let range_char_count = character_count.map(|c| {
+            // Proportionally scale the character count based on the unread portion
+            let original_length = end_pos - start_pos;
+            let unread_length = unread_end - unread_start;
+            if original_length > 0 {
+                (c * unread_length / original_length).max(1)
+            } else {
+                c
+            }
+        });
+
+        let range_word_count = word_count.map(|w| {
+            // Proportionally scale the word count based on the unread portion
+            let original_length = end_pos - start_pos;
+            let unread_length = unread_end - unread_start;
+            if original_length > 0 {
+                (w * unread_length / original_length).max(1)
+            } else {
+                w
+            }
+        });
+
+        sqlx::query!(
+            r#"
+            INSERT INTO read_ranges (
+                text_id, user_id, start_position, end_position, marked_at,
+                session_id, character_count, word_count, is_auto_completed
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "#,
+            text_id,
+            user_id,
+            unread_start,
+            unread_end,
+            now,
+            session_id,
+            range_char_count,
+            range_word_count,
+            is_auto_completed
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to insert read range: {}", e))?;
+    }
 
     Ok(())
+}
+
+/// Calculate which portions of a new range are not already covered by existing ranges
+/// Returns a vector of (start, end) tuples representing unread portions
+fn calculate_unread_portions(
+    new_start: i64,
+    new_end: i64,
+    existing_ranges: &[ReadRange],
+) -> Vec<(i64, i64)> {
+    if existing_ranges.is_empty() {
+        return vec![(new_start, new_end)];
+    }
+
+    // Sort ranges by start position
+    let mut sorted_ranges: Vec<_> = existing_ranges
+        .iter()
+        .filter(|r| {
+            // Only consider ranges that overlap with our new range
+            r.end_position > new_start && r.start_position < new_end
+        })
+        .collect();
+
+    sorted_ranges.sort_by_key(|r| r.start_position);
+
+    if sorted_ranges.is_empty() {
+        return vec![(new_start, new_end)];
+    }
+
+    let mut unread_portions = Vec::new();
+    let mut current_pos = new_start;
+
+    for range in sorted_ranges {
+        let range_start = range.start_position.max(new_start);
+        let range_end = range.end_position.min(new_end);
+
+        // If there's a gap between current position and this range, add it as unread
+        if current_pos < range_start {
+            unread_portions.push((current_pos, range_start));
+        }
+
+        // Move current position to the end of this range
+        current_pos = current_pos.max(range_end);
+    }
+
+    // If there's remaining space after the last range, add it as unread
+    if current_pos < new_end {
+        unread_portions.push((current_pos, new_end));
+    }
+
+    unread_portions
 }
 
 #[tauri::command]

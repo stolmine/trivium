@@ -52,8 +52,9 @@ export function MarkDisplay({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFirstMark, isLastMark, onPrevious, onNext, onDelete]);
 
-  const contextBefore = mark.beforeContext.slice(-200);
-  const contextAfter = mark.afterContext.slice(0, 200);
+  // Context display temporarily disabled - position offset bug
+  // const contextBefore = mark.beforeContext.slice(-200);
+  // const contextAfter = mark.afterContext.slice(0, 200);
   const markedDate = formatDueDate(mark.createdAt);
 
   if (totalMarks === 0) {
@@ -125,11 +126,12 @@ export function MarkDisplay({
         </div>
 
         <div className="font-serif text-lg leading-relaxed">
-          {contextBefore && (
+          {/* Context display temporarily disabled - position offset bug */}
+          {/* {contextBefore && (
             <span className="text-muted-foreground">
               ...{contextBefore}{' '}
             </span>
-          )}
+          )} */}
 
           <span
             className={cn(
@@ -140,11 +142,11 @@ export function MarkDisplay({
             {mark.markedText}
           </span>
 
-          {contextAfter && (
+          {/* {contextAfter && (
             <span className="text-muted-foreground">
               {' '}{contextAfter}...
             </span>
-          )}
+          )} */}
         </div>
       </div>
     </div>

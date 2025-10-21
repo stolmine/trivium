@@ -459,10 +459,12 @@ const ReadHighlighterComponent = ({
         mergedReadRanges.push({ start: range.startPosition, end: range.endPosition, isAutoCompleted: range.isAutoCompleted })
       } else {
         const last = mergedReadRanges[mergedReadRanges.length - 1]
-        if (range.startPosition <= last.end) {
+        // Only merge if ranges overlap/touch AND have the same isAutoCompleted flag
+        // This prevents manual marks from merging with auto-completed marks,
+        // allowing both styles to coexist visually on the same page
+        if (range.startPosition <= last.end && last.isAutoCompleted === range.isAutoCompleted) {
           last.end = Math.max(last.end, range.endPosition)
-          // If merging with an auto-completed range, preserve that flag
-          last.isAutoCompleted = last.isAutoCompleted || range.isAutoCompleted
+          // isAutoCompleted stays the same since we only merge same-type ranges
         } else {
           mergedReadRanges.push({ start: range.startPosition, end: range.endPosition, isAutoCompleted: range.isAutoCompleted })
         }

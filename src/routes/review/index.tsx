@@ -19,12 +19,20 @@ export function ReviewHubPage() {
   const [stats, setStats] = useState({ dueCount: 0, newCount: 0 });
   const [loading, setLoading] = useState(false);
   const [texts, setTexts] = useState<Text[]>([]);
+  const [localLimit, setLocalLimit] = useState(config.sessionLimit);
 
   useEffect(() => {
     loadFolderTree();
     loadTexts();
+  }, []);
+
+  useEffect(() => {
     fetchStats();
-  }, [config, folderTree.length]);
+  }, [config.filterType, config.folderId, config.textId]);
+
+  useEffect(() => {
+    setLocalLimit(config.sessionLimit);
+  }, [config.sessionLimit]);
 
   const loadTexts = async () => {
     try {
@@ -52,7 +60,7 @@ export function ReviewHubPage() {
     }
   };
 
-  const buildFilter = (): ReviewFilter | undefined => {
+  const buildFilter = (): ReviewFilter => {
     if (config.filterType === 'folder' && config.folderId) {
       return { type: 'folder', folderId: config.folderId };
     } else if (config.filterType === 'text' && config.textId) {
@@ -61,17 +69,28 @@ export function ReviewHubPage() {
     return { type: 'global' };
   };
 
+  const buildSessionFilter = (): ReviewFilter | undefined => {
+    if (config.filterType === 'folder' && config.folderId) {
+      return { type: 'folder', folderId: config.folderId };
+    } else if (config.filterType === 'text' && config.textId) {
+      return { type: 'text', textId: config.textId };
+    }
+    // Return undefined for "All Cards" to bypass daily limits and use only session limit
+    return undefined;
+  };
+
   const getTextName = (textId: number): string => {
     const text = texts.find(t => t.id === textId);
     return text?.title || textId.toString();
   };
 
   const handleStartReview = () => {
-    const filter = buildFilter();
-    const params = new URLSearchParams({
-      filter: JSON.stringify(filter),
-      limit: config.sessionLimit.toString(),
-    });
+    const filter = buildSessionFilter();
+    const params = new URLSearchParams();
+    if (filter) {
+      params.set('filter', JSON.stringify(filter));
+    }
+    params.set('limit', config.sessionLimit.toString());
     navigate(`/review/session?${params}`);
   };
 
@@ -168,10 +187,11 @@ export function ReviewHubPage() {
 
           <div className="p-4 border border-border rounded-lg bg-card space-y-4">
             <div>
-              <Label>Cards per session: {config.sessionLimit}</Label>
+              <Label>Cards per session: {localLimit}</Label>
               <Slider
-                value={[config.sessionLimit]}
-                onValueChange={([value]) => setSessionLimit(value)}
+                value={[localLimit]}
+                onValueChange={([value]) => setLocalLimit(value)}
+                onValueCommit={([value]) => setSessionLimit(value)}
                 min={10}
                 max={100}
                 step={5}

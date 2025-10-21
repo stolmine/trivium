@@ -511,19 +511,19 @@ pub async fn create_card_from_mark(
     mark_id: i64,
     selected_text: String,
     cloze_text: String,
-    db: State<'_, Arc<Mutex<Database>>>,
+    db_state: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<Vec<CreatedCard>, String> {
     use crate::services::cloze_parser::ClozeParser;
 
-    let db = db.lock().await;
+    let db = db_state.lock().await;
     let pool = db.pool();
     let now = Utc::now();
     let user_id = 1;
 
-    // Get the cloze note details
+    // Get the cloze note details including positions
     let cloze_note = sqlx::query!(
         r#"
-        SELECT cn.id, cn.text_id, t.title as text_title
+        SELECT cn.id, cn.text_id, t.title as text_title, cn.start_position, cn.end_position
         FROM cloze_notes cn
         INNER JOIN texts t ON cn.text_id = t.id
         WHERE cn.id = ?
@@ -636,19 +636,61 @@ pub async fn create_card_from_mark(
         next_display_index += 1;
     }
 
-    // Mark the cloze note as 'converted'
-    sqlx::query!(
-        r#"
-        UPDATE cloze_notes
-        SET status = 'converted', updated_at = ?
-        WHERE id = ?
-        "#,
-        now,
-        mark_id
-    )
-    .execute(pool)
-    .await
-    .map_err(|e| format!("Failed to update cloze note status: {}", e))?;
+    // Mark the range as read if positions are available
+    // This ensures the text is marked as completed even if portions are already read
+    if let (Some(start_pos), Some(end_pos)) = (cloze_note.start_position, cloze_note.end_position) {
+        use crate::commands::reading::mark_range_as_read;
+
+        // Drop the database lock before calling mark_range_as_read to avoid deadlock
+        drop(db);
+
+        // Mark the range as read (with auto_completed flag set to true)
+        // The mark_range_as_read function will automatically skip already-read portions
+        mark_range_as_read(
+            cloze_note.text_id,
+            start_pos,
+            end_pos,
+            None, // session_id
+            None, // character_count
+            None, // word_count
+            Some(true), // is_auto_completed
+            db_state.clone(),
+        )
+        .await
+        .map_err(|e| format!("Failed to mark range as read: {}", e))?;
+
+        // Re-acquire the lock
+        let db = db_state.lock().await;
+        let pool = db.pool();
+
+        // Mark the cloze note as 'converted'
+        sqlx::query!(
+            r#"
+            UPDATE cloze_notes
+            SET status = 'converted', updated_at = ?
+            WHERE id = ?
+            "#,
+            now,
+            mark_id
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to update cloze note status: {}", e))?;
+    } else {
+        // If no positions available, just mark as converted
+        sqlx::query!(
+            r#"
+            UPDATE cloze_notes
+            SET status = 'converted', updated_at = ?
+            WHERE id = ?
+            "#,
+            now,
+            mark_id
+        )
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to update cloze note status: {}", e))?;
+    }
 
     Ok(created_cards)
 }

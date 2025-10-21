@@ -4,6 +4,7 @@ import { cn } from "../../utils"
 interface SliderProps {
   value: number[]
   onValueChange: (value: number[]) => void
+  onValueCommit?: (value: number[]) => void
   min?: number
   max?: number
   step?: number
@@ -14,6 +15,7 @@ interface SliderProps {
 const Slider: React.FC<SliderProps> = ({
   value,
   onValueChange,
+  onValueCommit,
   min = 0,
   max = 100,
   step = 1,
@@ -22,6 +24,7 @@ const Slider: React.FC<SliderProps> = ({
 }) => {
   const trackRef = React.useRef<HTMLDivElement>(null)
   const [isDragging, setIsDragging] = React.useState(false)
+  const lastValueRef = React.useRef<number>(value[0] ?? min)
 
   const currentValue = value[0] ?? min
 
@@ -36,6 +39,7 @@ const Slider: React.FC<SliderProps> = ({
     const steppedValue = Math.round(rawValue / step) * step
     const clampedValue = Math.max(min, Math.min(max, steppedValue))
 
+    lastValueRef.current = clampedValue
     onValueChange([clampedValue])
   }, [min, max, step, onValueChange, disabled])
 
@@ -54,6 +58,9 @@ const Slider: React.FC<SliderProps> = ({
 
     const handleMouseUp = () => {
       setIsDragging(false)
+      if (onValueCommit) {
+        onValueCommit([lastValueRef.current])
+      }
     }
 
     document.addEventListener('mousemove', handleMouseMove)
