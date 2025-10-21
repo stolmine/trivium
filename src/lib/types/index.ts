@@ -20,7 +20,8 @@ export type {
   MarkWithContext,
   CreatedCard,
   CreateCardRequest,
-  ScopeSelection
+  ScopeSelection,
+  HubMarksResponse
 } from './hub';
 export type { ReturnNavigationState, IngestPageLocationState, ReadPageLocationState } from './navigation';
 export type { Setting, SettingsTab, ResetResult } from './settings';

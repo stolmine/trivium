@@ -10,8 +10,13 @@ export interface CardCreationState {
   createdCards: CreatedCard[];
   isLoading: boolean;
   error: string | null;
+  totalCount: number;
+  hasMore: boolean;
+  currentOffset: number;
+  isLoadingMore: boolean;
   setScope: (scope: HubScope, selectedId?: string | null) => void;
   loadMarks: () => Promise<void>;
+  loadMoreMarks: () => Promise<void>;
   nextMark: () => void;
   prevMark: () => void;
   deleteMark: () => Promise<void>;
@@ -29,6 +34,10 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
   createdCards: [],
   isLoading: false,
   error: null,
+  totalCount: 0,
+  hasMore: false,
+  currentOffset: 0,
+  isLoadingMore: false,
 
   setScope: (scope: HubScope, selectedId?: string | null) => {
     set({
@@ -52,9 +61,12 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { scope, selectedId } = get();
-      const marks = await api.hub.getMarksForScope(scope, selectedId);
+      const response = await api.hub.getMarksForScope(scope, selectedId);
       set({
-        marks,
+        marks: response.marks,
+        totalCount: response.totalCount,
+        hasMore: response.hasMore,
+        currentOffset: response.marks.length,
         currentMarkIndex: 0,
         isLoading: false
       });
@@ -67,10 +79,47 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
     }
   },
 
+  loadMoreMarks: async () => {
+    const { scope, selectedId, marks, currentOffset, isLoadingMore, hasMore } = get();
+
+    if (!hasMore || isLoadingMore) return;
+
+    set({ isLoadingMore: true });
+    try {
+      const response = await api.hub.getMarksForScope(
+        scope,
+        selectedId,
+        undefined,
+        currentOffset
+      );
+
+      set({
+        marks: [...marks, ...response.marks],
+        hasMore: response.hasMore,
+        currentOffset: currentOffset + response.marks.length,
+        totalCount: response.totalCount,
+        isLoadingMore: false
+      });
+    } catch (error) {
+      console.error('Failed to load more marks:', error);
+      set({
+        isLoadingMore: false,
+        error: error instanceof Error ? error.message : 'Failed to load more marks'
+      });
+    }
+  },
+
   nextMark: () => {
-    const { marks, currentMarkIndex } = get();
-    if (currentMarkIndex < marks.length - 1) {
-      set({ currentMarkIndex: currentMarkIndex + 1 });
+    const { marks, currentMarkIndex, hasMore } = get();
+    const newIndex = currentMarkIndex + 1;
+
+    if (newIndex >= marks.length && hasMore) {
+      get().loadMoreMarks();
+      return;
+    }
+
+    if (newIndex < marks.length) {
+      set({ currentMarkIndex: newIndex });
     }
   },
 
@@ -170,7 +219,11 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
       currentMarkIndex: 0,
       createdCards: [],
       isLoading: false,
-      error: null
+      error: null,
+      totalCount: 0,
+      hasMore: false,
+      currentOffset: 0,
+      isLoadingMore: false
     });
   }
 }));

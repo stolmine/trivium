@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                SELECT\n                    cn.id,\n                    cn.text_id,\n                    t.title,\n                    t.content,\n                    cn.original_text,\n                    cn.start_position,\n                    cn.end_position,\n                    cn.created_at,\n                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as \"card_count!: i64\"\n                FROM cloze_notes cn\n                INNER JOIN texts t ON cn.text_id = t.id\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                  AND cn.text_id = ?\n                ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC\n                LIMIT ?\n                ",
+  "query": "\n                SELECT\n                    cn.id,\n                    cn.text_id,\n                    t.title,\n                    t.content,\n                    cn.original_text,\n                    cn.start_position,\n                    cn.end_position,\n                    cn.created_at,\n                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as card_count\n                FROM cloze_notes cn\n                INNER JOIN texts t ON cn.text_id = t.id\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC\n                LIMIT ? OFFSET ?\n                ",
   "describe": {
     "columns": [
       {
@@ -44,9 +44,9 @@
         "type_info": "Datetime"
       },
       {
-        "name": "card_count!: i64",
+        "name": "card_count",
         "ordinal": 8,
-        "type_info": "Null"
+        "type_info": "Integer"
       }
     ],
     "parameters": {
@@ -61,8 +61,8 @@
       true,
       true,
       false,
-      null
+      false
     ]
   },
-  "hash": "2e2ec58a12321253bb5ae6e69c1c6fec1bd046222519c7bb3e155414b0216fcb"
+  "hash": "958137b79713b8aba581b319a67bfbd4eb510dc12308894d299cc88b8dbd1ca9"
 }

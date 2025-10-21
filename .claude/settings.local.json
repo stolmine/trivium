@@ -198,7 +198,9 @@
       "Bash(hdiutil imageinfo /Users/why/repos/trivium/src-tauri/target/release/bundle/dmg/Trivium_0.1.0_aarch64.dmg)",
       "Bash(git diff main --name-only --diff-filter=A)",
       "Bash(git fetch origin)",
-      "Bash(npx vue-tsc --noEmit)"
+      "Bash(npx vue-tsc --noEmit)",
+      "Bash(git -C /Users/why/repos/trivium diff --stat)",
+      "Bash(git -C /Users/why/repos/trivium diff HEAD --name-only)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT COUNT(*) as \"count!\"\n                FROM cloze_notes cn\n                INNER JOIN texts t ON cn.text_id = t.id\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                  AND t.folder_id IN (\n                    WITH RECURSIVE folder_tree AS (\n                        SELECT id FROM folders WHERE id = ?\n                        UNION ALL\n                        SELECT f.id FROM folders f\n                        INNER JOIN folder_tree ft ON f.parent_id = ft.id\n                    )\n                    SELECT id FROM folder_tree\n                )\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c3418bf6c4390849a1e1cda6fbc7563646e94e482e69c566acb625f8a4961183"
+}

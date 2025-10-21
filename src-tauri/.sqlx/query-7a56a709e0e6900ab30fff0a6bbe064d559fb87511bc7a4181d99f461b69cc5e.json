@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            INSERT INTO read_ranges (\n                text_id, user_id, start_position, end_position, marked_at,\n                session_id, character_count, word_count, is_auto_completed\n            )\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "7a56a709e0e6900ab30fff0a6bbe064d559fb87511bc7a4181d99f461b69cc5e"
+}

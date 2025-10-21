@@ -20,6 +20,8 @@ export function CreateCardsPage() {
   const createdCards = useCardCreationStore((state) => state.createdCards);
   const isLoading = useCardCreationStore((state) => state.isLoading);
   const error = useCardCreationStore((state) => state.error);
+  const totalCount = useCardCreationStore((state) => state.totalCount);
+  const isLoadingMore = useCardCreationStore((state) => state.isLoadingMore);
   const loadMarks = useCardCreationStore((state) => state.loadMarks);
   const createCard = useCardCreationStore((state) => state.createCard);
   const nextMark = useCardCreationStore((state) => state.nextMark);
@@ -228,6 +230,22 @@ export function CreateCardsPage() {
           <div className="space-y-6">
             {/* Scope Selector */}
             <ScopeSelector />
+
+            {/* Pagination Alert */}
+            {totalCount > marks.length && (
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Showing {marks.length} of {totalCount} marks - more will load automatically as you progress
+                </p>
+              </div>
+            )}
+
+            {/* Loading More Indicator */}
+            {isLoadingMore && (
+              <div className="text-center py-2">
+                <p className="text-sm text-muted-foreground">Loading more marks...</p>
+              </div>
+            )}
 
             {/* Mark Display (integrated navigation + context) */}
             {currentMark && (

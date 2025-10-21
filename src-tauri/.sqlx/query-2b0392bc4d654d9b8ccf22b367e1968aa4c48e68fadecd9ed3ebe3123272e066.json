@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\n                SELECT\n                    cn.id,\n                    cn.text_id,\n                    t.title,\n                    t.content,\n                    cn.original_text,\n                    cn.start_position,\n                    cn.end_position,\n                    cn.created_at,\n                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as card_count\n                FROM cloze_notes cn\n                INNER JOIN texts t ON cn.text_id = t.id\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC\n                LIMIT ?\n                ",
+  "query": "\n                SELECT\n                    cn.id,\n                    cn.text_id,\n                    t.title,\n                    t.content,\n                    cn.original_text,\n                    cn.start_position,\n                    cn.end_position,\n                    cn.created_at,\n                    (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) as \"card_count!: i64\"\n                FROM cloze_notes cn\n                INNER JOIN texts t ON cn.text_id = t.id\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                  AND cn.text_id = ?\n                ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC\n                LIMIT ? OFFSET ?\n                ",
   "describe": {
     "columns": [
       {
@@ -44,13 +44,13 @@
         "type_info": "Datetime"
       },
       {
-        "name": "card_count",
+        "name": "card_count!: i64",
         "ordinal": 8,
-        "type_info": "Integer"
+        "type_info": "Null"
       }
     ],
     "parameters": {
-      "Right": 1
+      "Right": 3
     },
     "nullable": [
       true,
@@ -61,8 +61,8 @@
       true,
       true,
       false,
-      false
+      null
     ]
   },
-  "hash": "c23c01c71ae6ddefef0ec9135422f0eb8045939d8e9ab24b69b31102b289b3fd"
+  "hash": "2b0392bc4d654d9b8ccf22b367e1968aa4c48e68fadecd9ed3ebe3123272e066"
 }

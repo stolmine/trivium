@@ -30,6 +30,16 @@ pub struct MarkWithContext {
     pub created_at: DateTime<Utc>,
 }
 
+/// Response for paginated marks
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HubMarksResponse {
+    pub marks: Vec<MarkWithContext>,
+    pub total_count: i64,
+    pub has_more: bool,
+    pub current_offset: i64,
+}
+
 /// Hub statistics for dashboard and progress tracking
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -166,20 +176,40 @@ fn extract_context(content: &str, marked_text: &str, context_chars: usize) -> (S
 /// # Arguments
 /// * `scope` - Filter scope: library, folder, or text
 /// * `scope_id` - Optional ID for folder or text scope
-/// * `limit` - Maximum number of marks to return (default 20, max 100)
+/// * `limit` - Maximum number of marks to return (default varies by scope)
+/// * `offset` - Offset for pagination (default 0)
 #[tauri::command]
 pub async fn get_hub_marks(
     scope: ScopeType,
     scope_id: Option<String>,
     limit: Option<i64>,
+    offset: Option<i64>,
     db: State<'_, Arc<Mutex<Database>>>,
-) -> Result<Vec<MarkWithContext>, String> {
+) -> Result<HubMarksResponse, String> {
     let db = db.lock().await;
     let pool = db.pool();
-    let clamped_limit = limit.unwrap_or(20).clamp(1, 100);
+    let clamped_limit = match scope {
+        ScopeType::Library => limit.unwrap_or(1000).clamp(1, 1000),
+        ScopeType::Folder => limit.unwrap_or(200).clamp(1, 200),
+        ScopeType::Text => limit.unwrap_or(100).clamp(1, 100),
+    };
+    let offset_val = offset.unwrap_or(0);
 
-    let marks = match scope {
+    let (total_count, marks) = match scope {
         ScopeType::Library => {
+            // Get total count first
+            let total_count: i64 = sqlx::query_scalar!(
+                r#"
+                SELECT COUNT(*) as "count!"
+                FROM cloze_notes cn
+                WHERE cn.status IN ('pending', 'skipped')
+                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
+                "#
+            )
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("Failed to count library marks: {}", e))?;
+
             // Get all pending marks from entire library
             let rows = sqlx::query!(
                 r#"
@@ -198,15 +228,16 @@ pub async fn get_hub_marks(
                 WHERE cn.status IN ('pending', 'skipped')
                   AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
                 ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 "#,
-                clamped_limit
+                clamped_limit,
+                offset_val
             )
             .fetch_all(pool)
             .await
             .map_err(|e| format!("Failed to fetch library marks: {}", e))?;
 
-            rows.into_iter()
+            let marks: Vec<MarkWithContext> = rows.into_iter()
                 .map(|row| {
                     // Use stored positions if available, otherwise fallback to string search
                     let (before_context, after_context, start_pos, end_pos) = match (row.start_position, row.end_position) {
@@ -232,11 +263,37 @@ pub async fn get_hub_marks(
                         created_at: DateTime::from_naive_utc_and_offset(row.created_at, Utc),
                     }
                 })
-                .collect()
+                .collect();
+
+            (total_count, marks)
         }
         ScopeType::Folder => {
             let folder_id = scope_id
                 .ok_or_else(|| "Folder ID required for folder scope".to_string())?;
+
+            // Get total count first
+            let total_count: i64 = sqlx::query_scalar!(
+                r#"
+                SELECT COUNT(*) as "count!"
+                FROM cloze_notes cn
+                INNER JOIN texts t ON cn.text_id = t.id
+                WHERE cn.status IN ('pending', 'skipped')
+                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
+                  AND t.folder_id IN (
+                    WITH RECURSIVE folder_tree AS (
+                        SELECT id FROM folders WHERE id = ?
+                        UNION ALL
+                        SELECT f.id FROM folders f
+                        INNER JOIN folder_tree ft ON f.parent_id = ft.id
+                    )
+                    SELECT id FROM folder_tree
+                )
+                "#,
+                folder_id
+            )
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("Failed to count folder marks: {}", e))?;
 
             // Get pending marks from texts in specified folder AND all its subfolders (recursive)
             let rows = sqlx::query!(
@@ -265,16 +322,17 @@ pub async fn get_hub_marks(
                     SELECT id FROM folder_tree
                 )
                 ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 "#,
                 folder_id,
-                clamped_limit
+                clamped_limit,
+                offset_val
             )
             .fetch_all(pool)
             .await
             .map_err(|e| format!("Failed to fetch folder marks: {}", e))?;
 
-            rows.into_iter()
+            let marks: Vec<MarkWithContext> = rows.into_iter()
                 .map(|row| {
                     // Use stored positions if available, otherwise fallback to string search
                     let (before_context, after_context, start_pos, end_pos) = match (row.start_position, row.end_position) {
@@ -300,13 +358,30 @@ pub async fn get_hub_marks(
                         created_at: DateTime::from_naive_utc_and_offset(row.created_at, Utc),
                     }
                 })
-                .collect()
+                .collect();
+
+            (total_count, marks)
         }
         ScopeType::Text => {
             let text_id = scope_id
                 .ok_or_else(|| "Text ID required for text scope".to_string())?
                 .parse::<i64>()
                 .map_err(|e| format!("Invalid text ID: {}", e))?;
+
+            // Get total count first
+            let total_count: i64 = sqlx::query_scalar!(
+                r#"
+                SELECT COUNT(*) as "count!"
+                FROM cloze_notes cn
+                WHERE cn.status IN ('pending', 'skipped')
+                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
+                  AND cn.text_id = ?
+                "#,
+                text_id
+            )
+            .fetch_one(pool)
+            .await
+            .map_err(|e| format!("Failed to count text marks: {}", e))?;
 
             // Get pending marks from specific text
             let rows = sqlx::query!(
@@ -327,16 +402,17 @@ pub async fn get_hub_marks(
                   AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0
                   AND cn.text_id = ?
                 ORDER BY cn.last_seen_at ASC NULLS FIRST, cn.created_at ASC
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 "#,
                 text_id,
-                clamped_limit
+                clamped_limit,
+                offset_val
             )
             .fetch_all(pool)
             .await
             .map_err(|e| format!("Failed to fetch text marks: {}", e))?;
 
-            rows.into_iter()
+            let marks: Vec<MarkWithContext> = rows.into_iter()
                 .map(|row| {
                     // Use stored positions if available, otherwise fallback to string search
                     let (before_context, after_context, start_pos, end_pos) = match (row.start_position, row.end_position) {
@@ -362,11 +438,19 @@ pub async fn get_hub_marks(
                         created_at: DateTime::from_naive_utc_and_offset(row.created_at, Utc),
                     }
                 })
-                .collect()
+                .collect();
+
+            (total_count, marks)
         }
     };
 
-    Ok(marks)
+    let marks_len = marks.len() as i64;
+    Ok(HubMarksResponse {
+        marks,
+        total_count,
+        has_more: offset_val + marks_len < total_count,
+        current_offset: offset_val,
+    })
 }
 
 /// Skip a mark - mark as skipped for current session (will reappear later)

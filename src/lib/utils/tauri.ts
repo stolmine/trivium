@@ -12,9 +12,9 @@ import type {
   ReviewStats,
   LimitStatus,
   WikipediaArticle,
-  MarkWithContext,
   CreatedCard,
   HubStats,
+  HubMarksResponse,
   CreateCardRequest,
   ResetResult,
   ReviewStatistics,
@@ -259,11 +259,17 @@ export const api = {
     },
   },
   hub: {
-    getMarksForScope: async (scope: string, scopeId: string | number | null): Promise<MarkWithContext[]> => {
+    getMarksForScope: async (
+      scope: string,
+      scopeId: string | number | null,
+      limit?: number,
+      offset?: number
+    ): Promise<HubMarksResponse> => {
       return await invoke('get_hub_marks', {
         scope,
         scopeId: scopeId !== null ? String(scopeId) : null,
-        includeWithCards: false,
+        limit: limit ?? null,
+        offset: offset ?? 0,
       });
     },
     skipMark: async (markId: number): Promise<void> => {

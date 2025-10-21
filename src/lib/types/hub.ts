@@ -66,3 +66,13 @@ export interface ScopeSelection {
   scope: HubScope;
   selectedId: string | number | null;
 }
+
+/**
+ * Paginated response for hub marks
+ */
+export interface HubMarksResponse {
+  marks: MarkWithContext[];
+  totalCount: number;
+  hasMore: boolean;
+  currentOffset: number;
+}

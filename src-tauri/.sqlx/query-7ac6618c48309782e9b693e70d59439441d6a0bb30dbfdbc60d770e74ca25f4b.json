@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT COUNT(*) as \"count!\"\n                FROM cloze_notes cn\n                WHERE cn.status IN ('pending', 'skipped')\n                  AND (SELECT COUNT(*) FROM flashcards WHERE cloze_note_id = cn.id) = 0\n                ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count!",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7ac6618c48309782e9b693e70d59439441d6a0bb30dbfdbc60d770e74ca25f4b"
+}

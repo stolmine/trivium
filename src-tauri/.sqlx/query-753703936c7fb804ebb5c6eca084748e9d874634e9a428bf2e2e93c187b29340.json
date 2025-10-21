@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        SELECT cn.id, cn.text_id, t.title as text_title, cn.start_position, cn.end_position\n        FROM cloze_notes cn\n        INNER JOIN texts t ON cn.text_id = t.id\n        WHERE cn.id = ?\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      },
+      {
+        "name": "text_id",
+        "ordinal": 1,
+        "type_info": "Integer"
+      },
+      {
+        "name": "text_title",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "start_position",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "end_position",
+        "ordinal": 4,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "753703936c7fb804ebb5c6eca084748e9d874634e9a428bf2e2e93c187b29340"
+}
