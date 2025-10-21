@@ -975,22 +975,29 @@ export function ReadPage() {
                     <h1
                       className={cn(
                         "text-lg font-semibold truncate",
-                        bothSidebarsOpen ? "max-w-[280px]" : "max-w-[600px]"
+                        bothSidebarsOpen ? "max-w-[200px]" : "max-w-[600px]"
                       )}
                       title={currentText.title}
                     >
                       {currentText.title}
                     </h1>
                     {currentText.author && (
-                      <p className="text-sm text-muted-foreground">by {currentText.author}</p>
+                      <p className={cn(
+                        "text-sm text-muted-foreground truncate",
+                        bothSidebarsOpen ? "max-w-[200px]" : "max-w-[600px]"
+                      )}
+                        title={currentText.author}
+                      >
+                        by {currentText.author}
+                      </p>
                     )}
                   </div>
                 </div>
                 <div className={cn(
                   "flex items-center",
-                  bothSidebarsOpen ? "gap-1" : "gap-4"
+                  bothSidebarsOpen ? "gap-1.5" : "gap-4"
                 )}>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground whitespace-nowrap">
                   {!bothSidebarsOpen && 'Progress: '}
                   <span className="font-medium">{totalProgress.toFixed(0)}%</span>
                 </div>
@@ -1008,7 +1015,10 @@ export function ReadPage() {
                   disabled={isEditButtonProcessing}
                   title={inlineEditActive ? 'Cancel editing (Esc)' : `Edit text inline (${mod}+E)`}
                   aria-label={inlineEditActive ? 'Cancel editing' : 'Edit text globally'}
-                  className="h-9"
+                  className={cn(
+                    "h-9",
+                    bothSidebarsOpen && "px-2.5"
+                  )}
                 >
                   <Edit2 className="h-4 w-4" />
                   {!bothSidebarsOpen && <span className="ml-2">{inlineEditActive ? 'Cancel Edit' : 'Global Edit'}</span>}
