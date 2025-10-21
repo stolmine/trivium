@@ -3553,6 +3553,85 @@ const matches = text.match(/\{\{c\d+::/g);
 
 ---
 
+### ✅ Phase 22 Post-Release: UTF-16 Panic Fix in Flashcard Hub
+**Completed**: 2025-10-20
+**Branch**: `23_typewriterTouchup`
+
+**Overview**: Critical bug fix preventing panic when extracting context for marks containing multi-byte characters like 'É'. The flashcard hub's context extraction was using UTF-16 code unit positions directly as byte indices for string slicing, causing runtime panics when positions landed inside multi-byte characters.
+
+**Problem**:
+- **Error**: "byte index 676 is not a char boundary; it is inside 'É' (bytes 675..677) of `...`"
+- **Root Cause**: Database stores positions as UTF-16 code units (matching JavaScript `.length`), but Rust string slicing requires byte offsets
+- **Impact**: Flashcard Creation Hub would panic when loading marks from texts containing accented characters, emoji, or other multi-byte Unicode
+- **Trigger**: The `extract_context_from_positions()` function in `flashcard_hub.rs` was using UTF-16 positions directly as byte indices
+
+**Fix Implemented**:
+Added `utf16_offset_to_byte_offset()` helper function to properly convert UTF-16 code unit positions to byte offsets before slicing strings:
+
+```rust
+/// Convert UTF-16 code unit offset to byte offset
+/// Positions in the database are UTF-16 code units (matching JavaScript's string.length)
+/// but Rust string slicing requires byte offsets
+fn utf16_offset_to_byte_offset(text: &str, utf16_offset: usize) -> usize {
+    let mut current_utf16 = 0;
+    let mut byte_offset = 0;
+
+    for ch in text.chars() {
+        if current_utf16 >= utf16_offset {
+            break;
+        }
+        current_utf16 += ch.len_utf16();
+        byte_offset += ch.len_utf8();
+    }
+
+    byte_offset
+}
+```
+
+**Changes Made**:
+- **File**: `src-tauri/src/commands/flashcard_hub.rs`
+- **Lines 58-74**: Added `utf16_offset_to_byte_offset()` conversion function
+- **Lines 88-102**: Updated `extract_context_from_positions()` to use conversion before slicing
+- **Lines 104-110**: Updated context boundary calculations to use UTF-16-safe conversion
+
+**Technical Details**:
+- Maintains consistency with UTF-16 standard used throughout the backend (established in Phase 8)
+- Handles all Unicode characters correctly: ASCII, accented characters (É, ñ), emoji (👋, 😊), CJK characters
+- Preserves existing behavior for ASCII-only text (no performance impact)
+- No database migration required (positions already stored as UTF-16 code units)
+
+**Why This Wasn't Caught Earlier**:
+- Phase 8 fixed UTF-16 handling in text ingestion and progress tracking (`parser.rs`, `texts.rs`)
+- Phase 12 implemented the Flashcard Creation Hub but test data lacked multi-byte characters
+- This specific code path (`extract_context_from_positions`) was not exercised with non-ASCII text until real-world use
+
+**Success Criteria Met**:
+- ✅ Flashcard hub loads marks with accented characters without panicking
+- ✅ Context extraction works correctly for all Unicode text
+- ✅ Maintains UTF-16 consistency established in Phase 8
+- ✅ No regression in existing functionality
+- ✅ Backend compiles without errors
+
+**Files Modified**: 1
+- `src-tauri/src/commands/flashcard_hub.rs` - Added UTF-16 to byte offset conversion
+
+**Lines of Code**:
+- Backend: ~30 lines (1 helper function + 3 call sites updated)
+
+**User Benefits**:
+- Flashcard Creation Hub now works reliably with all languages and Unicode text
+- No more crashes when processing marks from Wikipedia articles or foreign language texts
+- Consistent UTF-16 handling throughout the entire application
+
+**Related Documentation**:
+- See `docs/unicode-bug-fixes.md` for comprehensive UTF-16 bug fix history
+- This fix maintains consistency with Phase 8 Unicode bug fixes
+
+**Commits**:
+- Fix UTF-16 panic in flashcard hub context extraction (2025-10-20)
+
+---
+
 ### 📁 Phase 7: Future Enhancements
 **Status**: Not Started
 

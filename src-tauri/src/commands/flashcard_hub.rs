@@ -55,6 +55,24 @@ pub struct CreatedCard {
     pub text_title: String,
 }
 
+/// Convert UTF-16 code unit offset to byte offset
+/// Positions in the database are UTF-16 code units (matching JavaScript's string.length)
+/// but Rust string slicing requires byte offsets
+fn utf16_offset_to_byte_offset(text: &str, utf16_offset: usize) -> usize {
+    let mut current_utf16 = 0;
+    let mut byte_offset = 0;
+
+    for ch in text.chars() {
+        if current_utf16 >= utf16_offset {
+            break;
+        }
+        current_utf16 += ch.len_utf16();
+        byte_offset += ch.len_utf8();
+    }
+
+    byte_offset
+}
+
 /// Helper to extract context around marked text using stored positions in DOM space
 ///
 /// Positions are stored in DOM textContent space (rendered HTML with no markdown).
@@ -67,21 +85,35 @@ fn extract_context_from_positions(content: &str, start_pos: i64, end_pos: i64, c
     // This matches how the frontend processes content for rendering
     let dom_content = process_content_to_dom_space(content);
 
-    let start = start_pos as usize;
-    let end = end_pos as usize;
+    // Convert UTF-16 positions to byte offsets for safe string slicing
+    let start_utf16 = start_pos as usize;
+    let end_utf16 = end_pos as usize;
 
-    // Ensure positions are within bounds
-    if start >= dom_content.len() || end > dom_content.len() || start >= end {
+    // Get UTF-16 length to check bounds
+    let dom_utf16_len = dom_content.encode_utf16().count();
+
+    // Ensure positions are within bounds (in UTF-16 space)
+    if start_utf16 >= dom_utf16_len || end_utf16 > dom_utf16_len || start_utf16 >= end_utf16 {
         return (String::new(), String::new(), start_pos, end_pos);
     }
 
+    // Convert UTF-16 offsets to byte offsets
+    let start_byte = utf16_offset_to_byte_offset(&dom_content, start_utf16);
+    let end_byte = utf16_offset_to_byte_offset(&dom_content, end_utf16);
+
+    // Calculate context boundaries in UTF-16 space
+    let before_start_utf16 = start_utf16.saturating_sub(context_chars);
+    let after_end_utf16 = std::cmp::min(end_utf16 + context_chars, dom_utf16_len);
+
+    // Convert context boundaries to byte offsets
+    let before_start_byte = utf16_offset_to_byte_offset(&dom_content, before_start_utf16);
+    let after_end_byte = utf16_offset_to_byte_offset(&dom_content, after_end_utf16);
+
     // Extract before context (up to context_chars before)
-    let before_start = start.saturating_sub(context_chars);
-    let before_context = dom_content[before_start..start].to_string();
+    let before_context = dom_content[before_start_byte..start_byte].to_string();
 
     // Extract after context (up to context_chars after)
-    let after_end = std::cmp::min(end + context_chars, dom_content.len());
-    let after_context = dom_content[end..after_end].to_string();
+    let after_context = dom_content[end_byte..after_end_byte].to_string();
 
     (before_context, after_context, start_pos, end_pos)
 }
