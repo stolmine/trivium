@@ -15,7 +15,6 @@ export type HubScope = 'library' | 'folder' | 'text';
 export interface HubStats {
   pending: number;      // Marks without cards
   skipped: number;      // Marks skipped in current session
-  buried: number;       // Marks buried (0-card)
   converted: number;    // Marks with cards created
   todayCount: number;   // Cards created today
   weekCount: number;    // Cards created this week

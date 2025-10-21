@@ -1,9 +1,108 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 22 Complete ✅ - Typewriter/Focus Mode
+## Current Status: Phase 23 Complete ✅ - UI Polish
 
-**Branch**: `22_typewriter`
-**Last Updated**: 2025-10-20
+**Branch**: `23_typewriterTouchup`
+**Last Updated**: 2025-10-21
+
+---
+
+## Phase 23: UI Polish - Dark Mode, Icons, and Delete Functionality
+
+### Overview
+**Branch**: `23_typewriterTouchup`
+**Date**: 2025-10-21
+**Status**: Complete ✅
+
+Three focused UI improvements addressing dark mode theming, icon conflicts, and terminology clarity.
+
+### Changes
+
+#### 1. Search Bar Dark Mode Theming Fix
+**Problem**: Search bars in both library and reading views used `bg-white` which appeared incorrectly in dark mode.
+
+**Solution**: Replaced hardcoded `bg-white` with `bg-background` CSS variable for proper theme-aware styling.
+
+**Files Modified**:
+- `/Users/why/repos/trivium/src/components/library/LibrarySearchBar.tsx` - Line 83: Changed input background
+- `/Users/why/repos/trivium/src/lib/components/reading/SearchBar.tsx` - Line 75: Changed container background
+
+**Technical Details**:
+- Uses CSS custom properties from theme system
+- `bg-background` automatically adapts to light/dark modes
+- Maintains proper contrast with `text-foreground` and `border-border`
+
+---
+
+#### 2. Focus Mode Icon Change (Zap → CircleDot)
+**Problem**: Typewriter/Focus mode used Zap icon which conflicted with flashcard sidebar's Zap icon, causing visual confusion.
+
+**Solution**: Changed focus mode icon from `Zap` to `CircleDot` (target/focus metaphor).
+
+**Files Modified**:
+- `/Users/why/repos/trivium/src/routes/read/[id].tsx` - Line 33: Updated import and icon usage
+
+**Visual Impact**:
+- Flashcard sidebar: Zap icon (energy/quick action)
+- Focus mode: CircleDot icon (target/concentration)
+- Clear visual distinction between features
+
+---
+
+#### 3. Bury → Delete Functionality Change
+**Problem**: "Bury" terminology was confusing - marks weren't buried (hidden temporarily), they were permanently deleted from the database.
+
+**Solution**: Renamed "bury" to "delete" throughout create cards hub with proper delete semantics.
+
+**Files Modified**:
+- `/Users/why/repos/trivium/src-tauri/src/commands/flashcard_hub.rs`:
+  - Renamed `bury_mark` command to `delete_mark`
+  - Updated function documentation to clarify permanent deletion
+- `/Users/why/repos/trivium/src/lib/components/create/MarkDisplay.tsx`:
+  - Changed button label from "Bury" to "Delete"
+  - Updated keyboard shortcut from `Shift+B` to `Shift+D`
+  - Changed icon context to Trash2 for clarity
+  - Updated tooltip text
+- `/Users/why/repos/trivium/src/lib/stores/cardCreation.ts`:
+  - Renamed `buryMark` method to `deleteMark`
+  - Updated Tauri command invocation
+- `/Users/why/repos/trivium/src/routes/create/index.tsx`:
+  - Updated component prop from `onBury` to `onDelete`
+  - Updated handler function name
+- `/Users/why/repos/trivium/src/lib/types/hub.ts`:
+  - Updated type definitions
+- `/Users/why/repos/trivium/src/lib/utils/tauri.ts`:
+  - Updated Tauri command export name
+
+**Database Impact**:
+- No database changes required (deletion already permanent)
+- Command now accurately reflects behavior
+
+**Keyboard Shortcut Change**:
+- Old: `Shift+B` (Bury)
+- New: `Shift+D` (Delete)
+- More intuitive mnemonic
+
+**SQLx Prepared Queries**:
+- Updated query cache for `delete_mark` command
+- Removed obsolete `bury_mark` query cache files
+
+---
+
+### Testing
+- ✅ Search bars display correctly in light mode
+- ✅ Search bars display correctly in dark mode
+- ✅ Focus mode icon distinct from flashcard sidebar icon
+- ✅ Delete button properly removes marks from database
+- ✅ Shift+D keyboard shortcut triggers deletion
+- ✅ Application compiles without errors
+- ✅ No TypeScript type errors
+
+### Impact
+- **User Experience**: Improved visual consistency and clarity
+- **Dark Mode**: Search functionality now properly themed
+- **Icon System**: Reduced visual confusion between features
+- **Terminology**: Accurate description of permanent deletion
 
 ---
 

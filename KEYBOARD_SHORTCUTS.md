@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-10-19 (Phase 19: Mark/Unmark Shortcut Change)
+Last Updated: 2025-10-21 (Phase 23: Delete Mark Shortcut Change)
 
 ---
 
@@ -130,7 +130,7 @@ These shortcuts control the UI appearance and help system.
 |--------|---------------|-------|-------------|
 | Previous Mark | `←` or `Ctrl + K` | `←` or `⌘ + K` | Navigate to previous mark |
 | Next Mark | `→` or `Ctrl + J` | `→` or `⌘ + J` | Navigate to next mark |
-| Bury Mark | `Shift + B` | `Shift + B` | Permanently skip this mark (0-card) |
+| Delete Mark | `Shift + D` | `Shift + D` | Permanently delete this mark |
 
 ### Card Creation
 
@@ -279,6 +279,12 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-10-21 (Phase 23 - Delete Mark Shortcut Change)
+- Changed "Bury Mark" to "Delete Mark" in Create Cards section
+- Updated keyboard shortcut from Shift+B to Shift+D
+- Clarified that marks are permanently deleted (not temporarily hidden)
+- Improved terminology accuracy and user understanding
 
 ### 2025-10-19 (Phase 19 - Mark/Unmark Shortcut Change)
 - Changed Mark/Unmark text shortcut from Ctrl+M / Cmd+M to Ctrl+D / Cmd+D

@@ -269,8 +269,8 @@ export const api = {
     skipMark: async (markId: number): Promise<void> => {
       return await invoke('skip_mark', { markId });
     },
-    buryMark: async (markId: number): Promise<void> => {
-      return await invoke('bury_mark', { markId });
+    deleteMark: async (markId: number): Promise<void> => {
+      return await invoke('delete_mark', { markId });
     },
     createCardFromMark: async (request: CreateCardRequest): Promise<CreatedCard[]> => {
       return await invoke('create_card_from_mark', {

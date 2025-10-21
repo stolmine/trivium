@@ -36,7 +36,6 @@ pub struct MarkWithContext {
 pub struct HubStats {
     pub pending: i64,      // Becomes "pending" in JSON
     pub skipped: i64,      // Becomes "skipped" in JSON
-    pub buried: i64,       // Becomes "buried" in JSON
     pub converted: i64,    // Becomes "converted" in JSON
     pub today_count: i64,  // Becomes "todayCount" in JSON
     pub week_count: i64,   // Becomes "weekCount" in JSON
@@ -401,33 +400,26 @@ pub async fn skip_mark(
     Ok(())
 }
 
-/// Bury a mark - permanently mark as not needing cards (won't reappear)
-/// Sets status to 'buried' and updates timestamps
+/// Delete a mark - permanently remove from database
+/// Flashcards created from this mark will be preserved (ON DELETE SET NULL)
 #[tauri::command]
-pub async fn bury_mark(
+pub async fn delete_mark(
     mark_id: i64,
     db: State<'_, Arc<Mutex<Database>>>,
 ) -> Result<(), String> {
     let db = db.lock().await;
     let pool = db.pool();
-    let now = Utc::now();
 
     sqlx::query!(
         r#"
-        UPDATE cloze_notes
-        SET status = 'buried',
-            last_seen_at = ?,
-            session_count = session_count + 1,
-            updated_at = ?
+        DELETE FROM cloze_notes
         WHERE id = ?
         "#,
-        now,
-        now,
         mark_id
     )
     .execute(pool)
     .await
-    .map_err(|e| format!("Failed to bury mark: {}", e))?;
+    .map_err(|e| format!("Failed to delete mark: {}", e))?;
 
     Ok(())
 }
@@ -464,18 +456,6 @@ pub async fn get_hub_stats(
     .fetch_one(pool)
     .await
     .map_err(|e| format!("Failed to count skipped marks: {}", e))?;
-
-    // Get buried marks count
-    let buried_result = sqlx::query!(
-        r#"
-        SELECT COUNT(*) as count
-        FROM cloze_notes
-        WHERE status = 'buried'
-        "#
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(|e| format!("Failed to count buried marks: {}", e))?;
 
     // Get converted marks count
     let converted_result = sqlx::query!(
@@ -518,7 +498,6 @@ pub async fn get_hub_stats(
     Ok(HubStats {
         pending: pending_result.count,
         skipped: skipped_result.count,
-        buried: buried_result.count,
         converted: converted_result.count,
         today_count: today_result.count,
         week_count: week_result.count,

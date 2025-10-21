@@ -72,7 +72,7 @@ pub fn run() {
             commands::flashcards::get_marks_for_text,
             commands::flashcard_hub::get_hub_marks,
             commands::flashcard_hub::skip_mark,
-            commands::flashcard_hub::bury_mark,
+            commands::flashcard_hub::delete_mark,
             commands::flashcard_hub::get_hub_stats,
             commands::flashcard_hub::create_card_from_mark,
             commands::review::get_due_cards,

@@ -18,14 +18,13 @@ export function CreateCardsPage() {
   const marks = useCardCreationStore((state) => state.marks);
   const currentMarkIndex = useCardCreationStore((state) => state.currentMarkIndex);
   const createdCards = useCardCreationStore((state) => state.createdCards);
-  const buriedMarkIds = useCardCreationStore((state) => state.buriedMarkIds);
   const isLoading = useCardCreationStore((state) => state.isLoading);
   const error = useCardCreationStore((state) => state.error);
   const loadMarks = useCardCreationStore((state) => state.loadMarks);
   const createCard = useCardCreationStore((state) => state.createCard);
   const nextMark = useCardCreationStore((state) => state.nextMark);
   const prevMark = useCardCreationStore((state) => state.prevMark);
-  const buryMark = useCardCreationStore((state) => state.buryMark);
+  const deleteMark = useCardCreationStore((state) => state.deleteMark);
   const deleteCard = useCardCreationStore((state) => state.deleteCard);
   const reset = useCardCreationStore((state) => state.reset);
 
@@ -70,11 +69,11 @@ export function CreateCardsPage() {
     }
   };
 
-  const handleBuryMark = async () => {
+  const handleDeleteMark = async () => {
     try {
-      await buryMark();
+      await deleteMark();
     } catch (error) {
-      console.error('Failed to bury mark:', error);
+      console.error('Failed to delete mark:', error);
     }
   };
 
@@ -236,8 +235,7 @@ export function CreateCardsPage() {
                 mark={currentMark}
                 currentIndex={currentMarkIndex}
                 totalMarks={marks.length}
-                isBuried={buriedMarkIds.has(currentMark.id)}
-                onBury={handleBuryMark}
+                onDelete={handleDeleteMark}
                 onPrevious={prevMark}
                 onNext={nextMark}
               />
@@ -314,8 +312,8 @@ export function CreateCardsPage() {
                     </div>
                   </div>
                   <div className="flex justify-between items-center py-1">
-                    <span className="text-sm">Bury mark (permanent, 0-card)</span>
-                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Shift+B</kbd>
+                    <span className="text-sm">Delete mark (permanent)</span>
+                    <kbd className="px-2 py-1 text-xs font-mono bg-muted rounded">Shift+D</kbd>
                   </div>
                 </div>
               </div>

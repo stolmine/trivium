@@ -80,13 +80,13 @@ export function LibrarySearchBar() {
     : `${textCount}`
 
   return (
-    <div className="flex items-center gap-1 border-b border-neutral-200 px-2 py-2 bg-white">
+    <div className="flex items-center gap-1 border-b border-border px-2 py-2 bg-background">
       <div className="flex items-center flex-1 gap-1.5 min-w-0">
         <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <input
           ref={inputRef}
           type="text"
-          className="flex-1 min-w-0 h-7 px-2 py-1 border border-input rounded-md text-sm bg-transparent shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="flex-1 min-w-0 h-7 px-2 py-1 border border-input rounded-md text-sm bg-transparent text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           placeholder="Search..."
           value={localQuery}
           onChange={(e) => setLocalQuery(e.target.value)}
@@ -95,7 +95,7 @@ export function LibrarySearchBar() {
         />
       </div>
 
-      <span className="text-xs text-neutral-500 min-w-[40px] text-right font-mono whitespace-nowrap flex-shrink-0">
+      <span className="text-xs text-muted-foreground min-w-[40px] text-right font-mono whitespace-nowrap flex-shrink-0">
         {matchCountText}
       </span>
 

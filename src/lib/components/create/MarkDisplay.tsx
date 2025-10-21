@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Archive } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn, formatDueDate } from '../../utils';
 import type { MarkWithContext } from '../../types';
@@ -8,8 +8,7 @@ interface MarkDisplayProps {
   mark: MarkWithContext;
   currentIndex: number;
   totalMarks: number;
-  isBuried: boolean;
-  onBury: () => void;
+  onDelete: () => void;
   onPrevious: () => void;
   onNext: () => void;
   className?: string;
@@ -19,8 +18,7 @@ export function MarkDisplay({
   mark,
   currentIndex,
   totalMarks,
-  isBuried,
-  onBury,
+  onDelete,
   onPrevious,
   onNext,
   className
@@ -44,15 +42,15 @@ export function MarkDisplay({
         if (!isLastMark) {
           onNext();
         }
-      } else if (e.shiftKey && e.key === 'B') {
+      } else if (e.shiftKey && e.key === 'D') {
         e.preventDefault();
-        onBury();
+        onDelete();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFirstMark, isLastMark, onPrevious, onNext, onBury]);
+  }, [isFirstMark, isLastMark, onPrevious, onNext, onDelete]);
 
   const contextBefore = mark.beforeContext.slice(-200);
   const contextAfter = mark.afterContext.slice(0, 200);
@@ -103,24 +101,18 @@ export function MarkDisplay({
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-
-            {isBuried && (
-              <span className="text-xs px-2 py-1 rounded-md bg-muted text-muted-foreground border border-border">
-                Buried
-              </span>
-            )}
           </div>
 
           <div className="flex items-center justify-end gap-2">
             <Button
               variant="ghost"
               size="sm"
-              onClick={onBury}
-              className="flex items-center gap-2"
+              onClick={onDelete}
+              className="flex items-center gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
             >
-              <Archive className="h-4 w-4" />
-              <span className="hidden sm:inline">Bury</span>
-              <span className="text-xs text-muted-foreground hidden md:inline">(Shift+B)</span>
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Delete</span>
+              <span className="text-xs text-muted-foreground hidden md:inline">(Shift+D)</span>
             </Button>
           </div>
         </div>

@@ -8,14 +8,13 @@ export interface CardCreationState {
   marks: MarkWithContext[];
   currentMarkIndex: number;
   createdCards: CreatedCard[];
-  buriedMarkIds: Set<number>;
   isLoading: boolean;
   error: string | null;
   setScope: (scope: HubScope, selectedId?: string | null) => void;
   loadMarks: () => Promise<void>;
   nextMark: () => void;
   prevMark: () => void;
-  buryMark: () => Promise<void>;
+  deleteMark: () => Promise<void>;
   createCard: (selectedText: string, clozeText: string) => Promise<void>;
   deleteCard: (id: number) => void;
   editCard: (id: number, question: string, answer: string) => Promise<void>;
@@ -28,7 +27,6 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
   marks: [],
   currentMarkIndex: 0,
   createdCards: [],
-  buriedMarkIds: new Set(),
   isLoading: false,
   error: null,
 
@@ -83,20 +81,24 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
     }
   },
 
-  buryMark: async () => {
-    const { marks, currentMarkIndex, buriedMarkIds } = get();
+  deleteMark: async () => {
+    const { marks, currentMarkIndex } = get();
     const currentMark = marks[currentMarkIndex];
     if (currentMark) {
       try {
-        await api.hub.buryMark(currentMark.id);
-        const newBuriedIds = new Set(buriedMarkIds);
-        newBuriedIds.add(currentMark.id);
-        set({ buriedMarkIds: newBuriedIds });
-        get().nextMark();
-      } catch (error) {
-        console.error('Failed to bury mark:', error);
+        await api.hub.deleteMark(currentMark.id);
+        // Remove the mark from the list
+        const newMarks = marks.filter((_, index) => index !== currentMarkIndex);
+        // Adjust current index if needed
+        const newIndex = currentMarkIndex >= newMarks.length ? newMarks.length - 1 : currentMarkIndex;
         set({
-          error: error instanceof Error ? error.message : 'Failed to bury mark'
+          marks: newMarks,
+          currentMarkIndex: Math.max(0, newIndex)
+        });
+      } catch (error) {
+        console.error('Failed to delete mark:', error);
+        set({
+          error: error instanceof Error ? error.message : 'Failed to delete mark'
         });
       }
     }
@@ -167,7 +169,6 @@ export const useCardCreationStore = create<CardCreationState>((set, get) => ({
       marks: [],
       currentMarkIndex: 0,
       createdCards: [],
-      buriedMarkIds: new Set(),
       isLoading: false,
       error: null
     });

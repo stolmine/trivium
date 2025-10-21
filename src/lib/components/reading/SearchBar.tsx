@@ -72,11 +72,11 @@ export function SearchBar({ onClose }: SearchBarProps) {
   const matchCountText = hasMatches ? `${currentIndex + 1}/${matches.length}` : '0/0'
 
   return (
-    <div className="sticky top-0 z-50 flex items-center gap-2 bg-white border-b border-neutral-200 px-4 py-2 shadow-sm">
+    <div className="sticky top-0 z-50 flex items-center gap-2 bg-background border-b border-border px-4 py-2 shadow-sm">
       <input
         ref={inputRef}
         type="text"
-        className="flex-1 h-8 px-3 py-1.5 border border-input rounded-md text-sm bg-transparent shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        className="flex-1 h-8 px-3 py-1.5 border border-input rounded-md text-sm bg-transparent text-foreground shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         placeholder="Find in page..."
         value={localQuery}
         onChange={(e) => setLocalQuery(e.target.value)}
@@ -84,7 +84,7 @@ export function SearchBar({ onClose }: SearchBarProps) {
         onFocus={(e) => e.target.select()}
       />
 
-      <span className="text-xs text-neutral-500 min-w-[50px] text-center font-mono">
+      <span className="text-xs text-muted-foreground min-w-[50px] text-center font-mono">
         {matchCountText}
       </span>
 

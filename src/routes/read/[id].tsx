@@ -30,7 +30,7 @@ import { FlashcardSidebar } from '../../lib/components/flashcard/FlashcardSideba
 import { detectEditRegion } from '../../lib/utils/markdownEdit'
 import { updateMarkPositions } from '../../lib/utils/markPositions'
 import { useReadingHistoryStore } from '../../lib/stores/readingHistory'
-import { MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle, Link2, Zap } from 'lucide-react'
+import { MoreVertical, Edit2, Trash2, Link, Search, Check, RotateCcw, CheckCircle, Link2, Zap, CircleDot } from 'lucide-react'
 import { SearchBar } from '../../lib/components/reading/SearchBar'
 import { cn } from '../../lib/utils'
 import { useSearchStore } from '../../lib/stores/search'
@@ -1107,7 +1107,7 @@ export function ReadPage() {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => setIsTypewriterMode(true)}>
-                      <Zap className="mr-2 h-4 w-4" />
+                      <CircleDot className="mr-2 h-4 w-4" />
                       Focus Mode
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
