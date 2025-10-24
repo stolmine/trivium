@@ -23,7 +23,7 @@ export interface ReviewState {
   };
   isLoading: boolean;
   error: string | null;
-  loadDueCards: (filter?: ReviewFilter, limit?: number) => Promise<void>;
+  loadDueCards: (filter?: ReviewFilter, limit?: number, order?: string) => Promise<void>;
   gradeCard: (rating: ReviewQuality) => Promise<void>;
   buryCard: () => Promise<void>;
   undoLastReview: () => Promise<void>;
