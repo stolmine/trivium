@@ -193,7 +193,7 @@ export function ReviewHubPage() {
                 onValueChange={([value]) => setLocalLimit(value)}
                 onValueCommit={([value]) => setSessionLimit(value)}
                 min={10}
-                max={100}
+                max={1000}
                 step={5}
                 className="mt-2"
               />

@@ -63,7 +63,7 @@ pub async fn get_due_cards(
     let pool = db.pool();
     let now = Utc::now();
 
-    let clamped_limit = limit.unwrap_or(20).clamp(1, 100);
+    let clamped_limit = limit.unwrap_or(20).clamp(1, 1000);
 
     let flashcards = match order.as_deref() {
         Some("creation") => {
@@ -456,7 +456,7 @@ pub async fn get_due_cards_filtered(
     let user_id = 1i64;
     let today = now.format("%Y-%m-%d").to_string();
 
-    let clamped_limit = limit.unwrap_or(20).clamp(1, 100);
+    let clamped_limit = limit.unwrap_or(20).clamp(1, 1000);
 
     // Get study limits for this scope
     let study_limits_row = sqlx::query!(
