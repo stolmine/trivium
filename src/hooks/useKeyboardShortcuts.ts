@@ -269,6 +269,20 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       description: 'Grade card: Easy',
       category: 'review',
     },
+    {
+      key: 'z',
+      ctrlKey: true,
+      action: () => {},
+      description: 'Undo last review',
+      category: 'review',
+    },
+    {
+      key: 'B',
+      shiftKey: true,
+      action: () => {},
+      description: 'Bury card until tomorrow',
+      category: 'review',
+    },
   ];
 
   useKeyboardShortcuts({ shortcuts: globalShortcuts });

@@ -9,6 +9,7 @@ import { Button } from '../../lib/components/ui'
 import { ChevronLeft, RotateCcw, Archive } from 'lucide-react'
 import type { ReviewFilter } from '../../lib/types'
 import { api } from '../../lib/utils/tauri'
+import { getModifierSymbol } from '../../lib/utils/platform'
 
 export function ReviewSessionPage() {
   const navigate = useNavigate()
@@ -170,7 +171,7 @@ export function ReviewSessionPage() {
                 disabled={!canUndo}
               >
                 <RotateCcw className="h-4 w-4 mr-2" />
-                Undo (Ctrl+Z)
+                Undo ({getModifierSymbol()}+Z)
               </Button>
               <div className="text-sm font-medium">
                 Reviewing: {filterDisplayName}

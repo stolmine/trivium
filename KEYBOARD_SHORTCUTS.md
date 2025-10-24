@@ -115,7 +115,7 @@ These shortcuts control the UI appearance and help system.
 | Action | Windows/Linux | macOS | Description |
 |--------|---------------|-------|-------------|
 | Undo Review | `Ctrl + Z` | `⌘ + Z` | Undo last card grading, restore previous state |
-| Bury Card | `B` | `B` | Hide card until tomorrow (4 AM) |
+| Bury Card | `Shift + B` | `Shift + B` | Hide card until tomorrow (4 AM) |
 
 ---
 
@@ -291,7 +291,7 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 - Added "Card Management" section to Review Session
 - New keyboard shortcuts:
   - Ctrl+Z / Cmd+Z: Undo last review (restore previous card state)
-  - B: Bury card until tomorrow (4 AM)
+  - Shift+B: Bury card until tomorrow (4 AM)
 - Enables error correction during flashcard review
 - Allows temporary hiding of contextually inappropriate cards
 
