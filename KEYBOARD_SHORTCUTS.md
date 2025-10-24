@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-10-21 (Phase 23: Delete Mark Shortcut Change)
+Last Updated: 2025-10-24 (Phase 25: Review System Improvements - Undo and Bury)
 
 ---
 
@@ -109,6 +109,13 @@ These shortcuts control the UI appearance and help system.
 | Grade: Hard | `2` | Difficult to recall |
 | Grade: Good | `3` | Recalled correctly |
 | Grade: Easy | `4` | Recalled easily |
+
+### Card Management
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Undo Review | `Ctrl + Z` | `⌘ + Z` | Undo last card grading, restore previous state |
+| Bury Card | `B` | `B` | Hide card until tomorrow (4 AM) |
 
 ---
 
@@ -279,6 +286,14 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-10-24 (Phase 25 - Review System Improvements)
+- Added "Card Management" section to Review Session
+- New keyboard shortcuts:
+  - Ctrl+Z / Cmd+Z: Undo last review (restore previous card state)
+  - B: Bury card until tomorrow (4 AM)
+- Enables error correction during flashcard review
+- Allows temporary hiding of contextually inappropriate cards
 
 ### 2025-10-21 (Phase 23 - Delete Mark Shortcut Change)
 - Changed "Bury Mark" to "Delete Mark" in Create Cards section

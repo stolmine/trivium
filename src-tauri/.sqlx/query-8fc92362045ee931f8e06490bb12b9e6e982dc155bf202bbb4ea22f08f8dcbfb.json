@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        DELETE FROM review_history\n        WHERE id = (\n            SELECT id FROM review_history\n            WHERE flashcard_id = ?\n            ORDER BY reviewed_at DESC\n            LIMIT 1\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "8fc92362045ee931f8e06490bb12b9e6e982dc155bf202bbb4ea22f08f8dcbfb"
+}

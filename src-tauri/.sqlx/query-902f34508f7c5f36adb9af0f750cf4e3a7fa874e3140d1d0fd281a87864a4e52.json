@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        UPDATE flashcards\n        SET buried_until = ?\n        WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "902f34508f7c5f36adb9af0f750cf4e3a7fa874e3140d1d0fd281a87864a4e52"
+}

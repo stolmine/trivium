@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useReviewStore } from '../../lib/stores/review'
+import { useReviewConfig } from '../../lib/stores/reviewConfig'
 import { ReviewCard } from '../../lib/components/review/ReviewCard'
 import { ReviewGrading } from '../../lib/components/review/ReviewGrading'
 import { SessionComplete } from '../../lib/components/review/SessionComplete'
 import { Button } from '../../lib/components/ui'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, RotateCcw, Archive } from 'lucide-react'
 import type { ReviewFilter } from '../../lib/types'
 import { api } from '../../lib/utils/tauri'
 
@@ -13,6 +14,7 @@ export function ReviewSessionPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [filterDisplayName, setFilterDisplayName] = useState<string>('All Cards')
+  const { config } = useReviewConfig()
   const {
     currentCard,
     showAnswer,
@@ -20,8 +22,11 @@ export function ReviewSessionPage() {
     error,
     queue,
     currentIndex,
+    canUndo,
     loadDueCards,
     gradeCard,
+    buryCard,
+    undoLastReview,
     toggleAnswer,
   } = useReviewStore()
 
@@ -34,7 +39,7 @@ export function ReviewSessionPage() {
       : undefined
     const limit = limitParam ? parseInt(limitParam) : 20
 
-    loadDueCards(filter, limit)
+    loadDueCards(filter, limit, config.reviewOrder)
 
     const loadFilterName = async () => {
       if (filter?.type === 'text') {
@@ -52,10 +57,38 @@ export function ReviewSessionPage() {
     }
 
     loadFilterName()
-  }, [loadDueCards, searchParams])
+  }, [loadDueCards, searchParams, config.reviewOrder])
+
+  const handleUndo = async () => {
+    try {
+      await undoLastReview()
+    } catch (error) {
+      console.error('Failed to undo review:', error)
+    }
+  }
+
+  const handleBuryCard = async () => {
+    try {
+      await buryCard()
+    } catch (error) {
+      console.error('Failed to bury card:', error)
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && canUndo) {
+        e.preventDefault()
+        handleUndo()
+        return
+      }
+
+      if (e.shiftKey && e.key === 'B') {
+        e.preventDefault()
+        handleBuryCard()
+        return
+      }
+
       if (e.key === ' ') {
         e.preventDefault()
         toggleAnswer()
@@ -83,7 +116,7 @@ export function ReviewSessionPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showAnswer, toggleAnswer, gradeCard])
+  }, [showAnswer, toggleAnswer, gradeCard, canUndo])
 
   if (isLoading && !currentCard) {
     return (
@@ -120,8 +153,28 @@ export function ReviewSessionPage() {
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to Review Setup
             </Button>
-            <div className="text-sm font-medium">
-              Reviewing: {filterDisplayName}
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBuryCard}
+                disabled={!currentCard}
+              >
+                <Archive className="h-4 w-4 mr-2" />
+                Bury (Shift+B)
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleUndo}
+                disabled={!canUndo}
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Undo (Ctrl+Z)
+              </Button>
+              <div className="text-sm font-medium">
+                Reviewing: {filterDisplayName}
+              </div>
             </div>
             <span className="text-sm text-muted-foreground" aria-live="polite">
               {currentIndex + 1} / {queue.length}

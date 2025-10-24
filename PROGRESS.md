@@ -1,9 +1,193 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 24 Complete ✅ - Card Hub Improvements
+## Current Status: Phase 25 Complete ✅ - Review System Improvements
 
-**Branch**: `24_randomFixes`
-**Last Updated**: 2025-10-21
+**Branch**: `25_reviewFixes`
+**Last Updated**: 2025-10-24
+
+---
+
+## Phase 25: Review System Improvements - Undo, Bury, and Random Order
+
+### Overview
+**Branch**: `25_reviewFixes`
+**Date**: 2025-10-24
+**Status**: Complete ✅
+
+Comprehensive enhancements to the review system including undo functionality, card burying, random card ordering, and proper buried card filtering.
+
+### Changes
+
+#### 1. Database Migration - Buried Until Column
+**Purpose**: Support temporary card hiding via "bury" functionality.
+
+**Migration** (`src-tauri/migrations/20251021000000_add_buried_until.sql`):
+- Added `buried_until` column to `flashcards` table (type: `TEXT`, nullable)
+- Stores ISO-8601 timestamp for when card should be un-buried
+- NULL means card is not buried
+
+**Use Case**: Cards buried during review remain hidden until the timestamp expires (typically next day at 4 AM).
+
+---
+
+#### 2. Backend - Review Commands Enhancement
+
+**Files Modified**: `src-tauri/src/commands/review.rs`, `src-tauri/src/lib.rs`
+
+**Critical Bug Fix - SQLx Query Parameter Mismatch**:
+- **Problem**: All review queries (get_due_cards, get_new_cards, get_learning_cards, get_review_cards) were missing the `now` parameter for `buried_until` timestamp comparison
+- **Solution**: Added `now` parameter binding to all queries: `query_as!(...).bind(now).fetch_all(db).await`
+- **Impact**: Queries now properly exclude buried cards based on current timestamp
+
+**New Commands**:
+
+1. **`undo_review`** - Restore previous card state
+   - Accepts `card_id: String`
+   - Retrieves last review from `review_history` table
+   - Restores card's FSRS state (stability, difficulty, state, due_date, etc.)
+   - Returns updated `Flashcard` to frontend
+   - Enables single-level undo for review mistakes
+
+2. **`bury_card`** - Hide card until tomorrow
+   - Accepts `card_id: String`
+   - Sets `buried_until` to tomorrow at 4 AM local time
+   - Removes card from current review session
+   - Returns success boolean
+   - Useful for cards that are contextually inappropriate or temporarily confusing
+
+**Modified Query Logic**:
+- Added `order` parameter to `get_due_cards` command (values: "creation" or "random")
+- All due card queries now filter: `WHERE buried_until IS NULL OR buried_until <= ?`
+- Ensures buried cards don't appear in review until timestamp expires
+
+**Dependency Addition** (`Cargo.toml`):
+- Added `rand = "0.8"` crate for random card shuffling
+- Used in random ordering mode
+
+**SQLx Query Cache**:
+- Updated 100+ .sqlx query cache files reflecting buried_until changes
+- All queries now include proper parameter bindings
+
+---
+
+#### 3. Frontend - Review Session Enhancements
+
+**Types** (`src/lib/types/review.ts`, `src/lib/types/index.ts`):
+- Added `order?: 'creation' | 'random'` to `ReviewConfig` interface
+- Updated `Flashcard` type to include `buried_until?: string`
+
+**Review Store** (`src/lib/stores/review.ts`):
+- New `undoReview()` method:
+  - Calls backend `undo_review` command
+  - Updates current card state
+  - Handles errors gracefully with error messages
+- New `buryCard()` method:
+  - Calls backend `bury_card` command
+  - Removes card from current session
+  - Advances to next card automatically
+- Modified `startReview()` to pass `order` parameter to backend
+
+**Review Config Store** (`src/lib/stores/reviewConfig.ts`):
+- Added `order` field with default "creation"
+- Persists order preference across sessions
+
+**Tauri API** (`src/lib/utils/tauri.ts`):
+- Added `undoReview(cardId: string): Promise<Flashcard>`
+- Added `buryCard(cardId: string): Promise<boolean>`
+- Updated `getDueCards` signature to accept `order` parameter
+
+---
+
+#### 4. UI - Review Session Controls
+
+**Review Setup Page** (`src/routes/review/index.tsx`):
+- New "Order" radio button group:
+  - Creation order (chronological)
+  - Random order (shuffled)
+- Visual styling matches existing filter controls
+- State synced with reviewConfig store
+
+**Review Session Page** (`src/routes/review/session.tsx`):
+- New **Undo** button with Undo2 icon (lucide-react)
+  - Appears after grading a card
+  - Restores previous card state
+  - Visual feedback on success/error
+- New **Bury** button with EyeOff icon (lucide-react)
+  - Hides card until tomorrow
+  - Immediately advances to next card
+  - Confirmation via visual state change
+- New keyboard shortcuts:
+  - **Ctrl+Z / Cmd+Z**: Undo last review
+  - **B**: Bury current card
+- Button layout: Undo and Bury positioned below answer buttons
+- Disabled states when no card or already at first card
+
+---
+
+### Technical Implementation Details
+
+**Random Ordering Algorithm**:
+```rust
+use rand::seq::SliceRandom;
+let mut rng = rand::thread_rng();
+cards.shuffle(&mut rng);
+```
+
+**Bury Timestamp Calculation**:
+```rust
+let tomorrow_4am = Local::now()
+    .date_naive()
+    .and_hms_opt(4, 0, 0)
+    .unwrap()
+    + chrono::Duration::days(1);
+let buried_until = DateTime::<Local>::from_naive_utc_and_offset(
+    tomorrow_4am, *Local::now().offset()
+).to_rfc3339();
+```
+
+**Undo Logic**:
+- Queries `review_history` table for most recent review of card
+- Restores ALL FSRS state fields (stability, difficulty, elapsed_days, scheduled_days, reps, lapses, state, last_review, due_date)
+- Does NOT delete the review history entry (preserves audit trail)
+
+---
+
+### Testing
+- ✅ Cards buried during review do not reappear in current session
+- ✅ Buried cards reappear after buried_until timestamp expires
+- ✅ Undo restores correct previous card state
+- ✅ Undo only works after grading (not before first grade)
+- ✅ Random order shuffles cards differently each session
+- ✅ Creation order maintains chronological sequence
+- ✅ Ctrl+Z keyboard shortcut triggers undo
+- ✅ B keyboard shortcut buries card
+- ✅ All review queries properly filter buried cards
+- ✅ Migration applies cleanly to existing databases
+- ✅ SQLx compile-time verification passes
+
+### Files Modified
+**Backend**:
+- `src-tauri/Cargo.toml` - Added rand dependency
+- `src-tauri/src/commands/review.rs` - Fixed query bugs, added undo_review and bury_card commands
+- `src-tauri/src/lib.rs` - Registered new commands
+- `src-tauri/migrations/20251021000000_add_buried_until.sql` - Database schema update
+- `.sqlx/query-*.json` - 100+ query cache files updated
+
+**Frontend**:
+- `src/lib/stores/review.ts` - Added undo and bury methods
+- `src/lib/stores/reviewConfig.ts` - Added order preference
+- `src/lib/types/index.ts` - Updated Flashcard type
+- `src/lib/types/review.ts` - Updated ReviewConfig type
+- `src/lib/utils/tauri.ts` - Added undo/bury API wrappers
+- `src/routes/review/index.tsx` - Added order selector UI
+- `src/routes/review/session.tsx` - Added undo/bury buttons and keyboard shortcuts
+
+### Impact
+- **User Experience**: Mistakes during review can now be corrected immediately
+- **Workflow Flexibility**: Cards can be temporarily hidden when contextually inappropriate
+- **Study Variety**: Random ordering reduces predictability and improves memory retention
+- **Data Integrity**: Buried cards properly excluded from all review queries
+- **Error Prevention**: Critical SQLx parameter bug fixed preventing buried card filtering
 
 ---
 

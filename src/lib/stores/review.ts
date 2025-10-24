@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Flashcard, ReviewQuality, ReviewFilter } from '../types';
+import type { Flashcard, ReviewQuality, ReviewFilter, ReviewHistoryEntry } from '../types';
 import { api } from '../utils/tauri';
 
 export interface ReviewState {
@@ -10,6 +10,8 @@ export interface ReviewState {
   currentFilter: ReviewFilter | null;
   sessionId: string | null;
   cardStartTime: number | null;
+  lastReviewedCard: ReviewHistoryEntry | null;
+  canUndo: boolean;
   sessionStats: {
     totalReviews: number;
     uniqueCards: number;
@@ -23,6 +25,8 @@ export interface ReviewState {
   error: string | null;
   loadDueCards: (filter?: ReviewFilter, limit?: number) => Promise<void>;
   gradeCard: (rating: ReviewQuality) => Promise<void>;
+  buryCard: () => Promise<void>;
+  undoLastReview: () => Promise<void>;
   toggleAnswer: () => void;
   nextCard: () => void;
   resetSession: () => void;
@@ -37,6 +41,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   currentFilter: null,
   sessionId: null,
   cardStartTime: null,
+  lastReviewedCard: null,
+  canUndo: false,
   isLoading: false,
   error: null,
   sessionStats: {
@@ -49,12 +55,12 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     startTime: new Date(),
   },
 
-  loadDueCards: async (filter, limit = 20) => {
+  loadDueCards: async (filter, limit = 20, order?: string) => {
     set({ isLoading: true, error: null });
     try {
       const cards = filter
-        ? await api.review.getDueCardsFiltered({ filter, limit })
-        : await api.review.getDueCards(limit);
+        ? await api.review.getDueCardsFiltered({ filter, limit, order })
+        : await api.review.getDueCards(limit, order);
       set({
         queue: cards,
         currentIndex: 0,
@@ -62,6 +68,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         currentFilter: filter || null,
         sessionId: crypto.randomUUID(),
         cardStartTime: null,
+        lastReviewedCard: null,
+        canUndo: false,
         isLoading: false,
         sessionStats: {
           totalReviews: 0,
@@ -86,6 +94,18 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     const { currentCard, sessionStats, queue, currentFilter, sessionId, cardStartTime } = get();
     if (!currentCard) return;
 
+    const previousState = {
+      state: currentCard.state,
+      stability: currentCard.stability,
+      difficulty: currentCard.difficulty,
+      elapsedDays: currentCard.elapsedDays,
+      scheduledDays: currentCard.scheduledDays,
+      reps: currentCard.reps,
+      lapses: currentCard.lapses,
+      lastReview: currentCard.lastReview,
+      due: currentCard.due,
+    };
+
     const reviewDurationMs = cardStartTime ? Date.now() - cardStartTime : null;
 
     set({ isLoading: true });
@@ -103,14 +123,18 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         sessionStats: {
           ...sessionStats,
           totalReviews: sessionStats.totalReviews + 1,
-          // Only count as unique card if rating is not "Again" (0)
           uniqueCards: rating !== 0 ? sessionStats.uniqueCards + 1 : sessionStats.uniqueCards,
           [statKey]: sessionStats[statKey as 'againCount' | 'hardCount' | 'goodCount' | 'easyCount'] + 1,
         },
         cardStartTime: null,
+        lastReviewedCard: {
+          cardId: currentCard.id,
+          previousState,
+          card: currentCard,
+        },
+        canUndo: true,
       });
 
-      // If rating is "Again" (0), re-queue the card
       if (rating === 0) {
         const updatedQueue = [...queue];
         updatedQueue.push(currentCard);
@@ -124,6 +148,66 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to grade card',
         isLoading: false
       });
+    }
+  },
+
+  buryCard: async () => {
+    const { currentCard, queue, currentIndex } = get();
+    if (!currentCard) return;
+
+    try {
+      await api.review.buryCard(currentCard.id);
+
+      const newQueue = queue.filter(c => c.id !== currentCard.id);
+
+      const newIndex = Math.min(currentIndex, newQueue.length - 1);
+      const newCurrentCard = newQueue[newIndex] || null;
+
+      set({
+        queue: newQueue,
+        currentIndex: newIndex,
+        currentCard: newCurrentCard,
+        showAnswer: false,
+      });
+    } catch (error) {
+      console.error('Failed to bury card:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to bury card',
+      });
+      throw error;
+    }
+  },
+
+  undoLastReview: async () => {
+    const { lastReviewedCard, queue, currentIndex, sessionStats } = get();
+    if (!lastReviewedCard) return;
+
+    try {
+      await api.review.undoReview(
+        lastReviewedCard.cardId,
+        lastReviewedCard.previousState
+      );
+
+      const newQueue = [...queue];
+      newQueue.splice(currentIndex, 0, lastReviewedCard.card);
+
+      set({
+        queue: newQueue,
+        currentCard: lastReviewedCard.card,
+        lastReviewedCard: null,
+        canUndo: false,
+        showAnswer: false,
+        sessionStats: {
+          ...sessionStats,
+          totalReviews: Math.max(0, sessionStats.totalReviews - 1),
+        },
+      });
+    } catch (error) {
+      console.error('Failed to undo review:', error);
+      set({
+        error: error instanceof Error ? error.message : 'Failed to undo review',
+      });
+      throw error;
     }
   },
 
@@ -165,6 +249,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       currentFilter: null,
       sessionId: null,
       cardStartTime: null,
+      lastReviewedCard: null,
+      canUndo: false,
       isLoading: false,
       error: null,
       sessionStats: {
@@ -188,6 +274,8 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       currentFilter: null,
       sessionId: null,
       cardStartTime: null,
+      lastReviewedCard: null,
+      canUndo: false,
       isLoading: false,
       error: null,
       sessionStats: {

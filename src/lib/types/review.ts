@@ -13,3 +13,19 @@ export interface ReviewStats {
   learningCount: number;
   reviewCount: number;
 }
+
+export interface ReviewHistoryEntry {
+  cardId: number;
+  previousState: {
+    state: number;
+    stability: number;
+    difficulty: number;
+    elapsedDays: number;
+    scheduledDays: number;
+    reps: number;
+    lapses: number;
+    lastReview: string | null;
+    due: string;
+  };
+  card: import('./flashcard').Flashcard;
+}

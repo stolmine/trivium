@@ -6,6 +6,7 @@ interface ReviewConfig {
   folderId?: string;
   textId?: number;
   sessionLimit: number;
+  reviewOrder: 'random' | 'creation';
 }
 
 interface ReviewConfigState {
@@ -14,6 +15,7 @@ interface ReviewConfigState {
   setFolder: (id: string) => void;
   setText: (id: number) => void;
   setSessionLimit: (limit: number) => void;
+  setReviewOrder: (order: 'random' | 'creation') => void;
 }
 
 export const useReviewConfig = create<ReviewConfigState>()(
@@ -22,6 +24,7 @@ export const useReviewConfig = create<ReviewConfigState>()(
       config: {
         filterType: 'all',
         sessionLimit: 20,
+        reviewOrder: 'random',
       },
       setFilterType: (type) => set((state) => ({
         config: { ...state.config, filterType: type }
@@ -34,6 +37,9 @@ export const useReviewConfig = create<ReviewConfigState>()(
       })),
       setSessionLimit: (limit) => set((state) => ({
         config: { ...state.config, sessionLimit: limit }
+      })),
+      setReviewOrder: (order) => set((state) => ({
+        config: { ...state.config, reviewOrder: order }
       })),
     }),
     { name: 'review-config' }

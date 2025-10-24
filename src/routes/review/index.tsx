@@ -14,7 +14,7 @@ import type { ReviewFilter, Text } from '@/lib/types';
 
 export function ReviewHubPage() {
   const navigate = useNavigate();
-  const { config, setFilterType, setFolder, setText, setSessionLimit } = useReviewConfig();
+  const { config, setFilterType, setFolder, setText, setSessionLimit, setReviewOrder } = useReviewConfig();
   const { folderTree, loadFolderTree } = useFolderStore();
   const [stats, setStats] = useState({ dueCount: 0, newCount: 0 });
   const [loading, setLoading] = useState(false);
@@ -197,6 +197,18 @@ export function ReviewHubPage() {
                 step={5}
                 className="mt-2"
               />
+            </div>
+            <div>
+              <Label>Review Order</Label>
+              <Select value={config.reviewOrder} onValueChange={(value) => setReviewOrder(value as 'random' | 'creation')}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="random">Random</SelectItem>
+                  <SelectItem value="creation">Creation Order (Oldest First)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <p className="text-xs text-muted-foreground">
               Limits apply only to this session

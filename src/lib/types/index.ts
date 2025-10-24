@@ -12,7 +12,7 @@ export type {
 } from './flashcard';
 export type { DailyProgress, ReadingStats, UserProgress } from './progress';
 export type { ReadRange, Paragraph, ExcludedRange } from './reading';
-export type { LimitStatus, ReviewStats } from './review';
+export type { LimitStatus, ReviewStats, ReviewHistoryEntry } from './review';
 export type { WikipediaArticle } from './wikipedia';
 export type {
   HubScope,

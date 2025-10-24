@@ -200,7 +200,12 @@
       "Bash(git fetch origin)",
       "Bash(npx vue-tsc --noEmit)",
       "Bash(git -C /Users/why/repos/trivium diff --stat)",
-      "Bash(git -C /Users/why/repos/trivium diff HEAD --name-only)"
+      "Bash(git -C /Users/why/repos/trivium diff HEAD --name-only)",
+      "Bash(DATABASE_URL=sqlite:trivium_dev.db sqlx database create:*)",
+      "Bash(DATABASE_URL=sqlite:trivium_dev.db sqlx migrate run:*)",
+      "Bash(DATABASE_URL=\"sqlite:../trivium_dev.db\" cargo build:*)",
+      "Bash(python3:*)",
+      "Bash(cargo add:*)"
     ],
     "deny": [],
     "ask": []

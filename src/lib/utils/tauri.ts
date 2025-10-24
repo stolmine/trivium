@@ -188,8 +188,8 @@ export const api = {
     },
   },
   review: {
-    getDueCards: async (limit: number): Promise<Flashcard[]> => {
-      return await invoke('get_due_cards', { limit: limit });
+    getDueCards: async (limit: number, order?: string): Promise<Flashcard[]> => {
+      return await invoke('get_due_cards', { limit: limit, order: order || null });
     },
     gradeCard: async (
       flashcardId: number,
@@ -206,12 +206,26 @@ export const api = {
         sessionId: sessionId !== undefined ? sessionId : null
       });
     },
+    undoReview: async (cardId: number, previousState: {
+      state: number;
+      stability: number;
+      difficulty: number;
+      elapsedDays: number;
+      scheduledDays: number;
+      reps: number;
+      lapses: number;
+      lastReview: string | null;
+      due: string;
+    }): Promise<Flashcard> => {
+      return await invoke('undo_review', { cardId, previousState });
+    },
     getStats: async (): Promise<{ due_count: number; new_count: number; learning_count: number; review_count: number }> => {
       return await invoke('get_review_stats');
     },
     getDueCardsFiltered: async (params: {
       filter?: ReviewFilter,
-      limit?: number
+      limit?: number,
+      order?: string
     }): Promise<Flashcard[]> => {
       return await invoke('get_due_cards_filtered', params);
     },
@@ -220,6 +234,9 @@ export const api = {
     },
     getLimitStatus: async (filter?: ReviewFilter): Promise<LimitStatus> => {
       return await invoke('get_limit_status', { filter });
+    },
+    buryCard: async (cardId: number): Promise<void> => {
+      return await invoke('bury_card', { cardId });
     },
   },
   dashboard: {

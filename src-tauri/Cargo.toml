@@ -49,3 +49,5 @@ uuid = { version = "1.10", features = ["v4", "serde"] }
 
 scraper = "0.20"
 
+rand = "0.8"
+
