@@ -191,6 +191,48 @@ let buried_until = DateTime::<Local>::from_naive_utc_and_offset(
 
 ---
 
+### Post-Phase 25 Improvements
+
+Following the initial Phase 25 implementation, several enhancements were made to improve capacity and cross-platform support:
+
+#### 1. Review Session Limit Increase (Commit 2502e3a)
+**Date**: 2025-10-24
+
+**Changes**:
+- Increased maximum cards per review session from 100 to 1000
+- Backend: Updated `clamp` limit in `get_due_cards()` and `get_due_cards_filtered()` functions
+- Frontend: Updated slider max value in review configuration UI (`src/routes/review/index.tsx`)
+- Default remains 20 cards, minimum remains 10 cards
+
+**Impact**: Power users can now review significantly larger batches in a single session, accommodating intensive study workflows.
+
+#### 2. Cross-Platform Hotkey Support (Commit fdaccae)
+**Date**: 2025-10-24
+
+**Changes**:
+- Review session: Updated undo button label to use `getModifierSymbol()` for platform-aware display
+  - Shows `⌘+Z` on macOS
+  - Shows `Ctrl+Z` on Windows/Linux
+- Keyboard shortcuts help modal: Added undo (Ctrl+Z / Cmd+Z) and bury (Shift+B) to documentation
+- Fixed documentation: Updated bury hotkey from `B` to `Shift+B` (accurate to implementation)
+
+**Files Modified**:
+- `src/routes/review/session.tsx` - Platform-aware button label
+- `src/hooks/useKeyboardShortcuts.ts` - Added shortcuts to help modal
+- `KEYBOARD_SHORTCUTS.md` - Documentation correction
+
+**Technical Details**:
+- Hotkey implementation was already cross-platform (using `e.ctrlKey || e.metaKey`)
+- This update ensures UI labels match the actual behavior
+- Uses existing `getModifierSymbol()` utility from `src/lib/utils/platform.ts`
+
+**Impact**:
+- Improved user experience with platform-appropriate labels
+- Better discoverability of undo and bury features via help modal
+- Consistent keyboard shortcut documentation across platforms
+
+---
+
 ## Phase 24: Card Hub Improvements - Pagination, Filters, and UX Polish
 
 ### Overview
