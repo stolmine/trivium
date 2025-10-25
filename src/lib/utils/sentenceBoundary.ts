@@ -153,6 +153,7 @@ function isAbbreviation(text: string, position: number): boolean {
   }
 
   const nextChar = text[position + 1];
+  // If no space after period, it's likely part of a number (e.g., "3.14") or URL
   if (!/\s/.test(nextChar)) {
     return true;
   }
@@ -166,18 +167,127 @@ function isAbbreviation(text: string, position: number): boolean {
     return false;
   }
 
+  // Check for single letter abbreviations (e.g., "a.", "U.", "I.")
+  // Exception: "I." at the start of a sentence is likely not an abbreviation
+  if (position >= 1) {
+    const beforePrev = position >= 2 ? text[position - 2] : '';
+
+    // Single letter followed by period
+    if (!beforePrev || /[\s\n]/.test(beforePrev)) {
+      const letter = text[position - 1];
+
+      // "I." at sentence start is typically "I." as a sentence, not abbreviation
+      // But allow it in middle of text or after punctuation
+      if (letter === 'I' || letter === 'i') {
+        // Check if this is at the start of a sentence
+        if (position >= 2) {
+          let checkPos = position - 2;
+          // Skip whitespace
+          while (checkPos >= 0 && /\s/.test(text[checkPos])) {
+            checkPos--;
+          }
+          // If we find sentence-ending punctuation or we're at the start, this is sentence start
+          if (checkPos < 0 || /[.!?]/.test(text[checkPos])) {
+            // "I." at sentence start is NOT an abbreviation
+            return false;
+          }
+        } else if (position === 1) {
+          // "I." at very beginning of text is NOT an abbreviation
+          return false;
+        }
+      }
+
+      // All other single letters are abbreviations
+      return true;
+    }
+  }
+
+  // Check for multi-letter acronyms (e.g., "U.S.", "U.K.", "P.S.")
+  // Look for pattern: Letter.Letter. or Letter.Letter.Letter. etc.
+  // This handles both the first period in "U." and second period in "U.S."
+
+  // Check if we're the second+ period in an acronym (e.g., the "S." in "U.S.")
+  if (position >= 3) {
+    const twoBack = text[position - 2];
+    const threeBack = text[position - 3];
+
+    if (twoBack === '.' && /[a-zA-Z]/.test(threeBack)) {
+      // We have X.Y. pattern - this is an acronym abbreviation
+      return true;
+    }
+  }
+
+  // Check if we're the first period in an acronym (e.g., the "U." in "U.S.")
+  // Look ahead for the pattern: current is "X." and next is "Y."
+  // Format can be "U.S." (no space) or "U. S." (with space)
+  if (position + 2 < text.length) {
+    const oneAhead = text[position + 1];
+    const twoAhead = text[position + 2];
+
+    // Pattern 1: X.Y. (no space, like "U.S.")
+    if (/[a-zA-Z]/.test(oneAhead) && twoAhead === '.') {
+      // Special case: Don't treat "I." as start of acronym at sentence start
+      const letter = text[position - 1];
+      if (letter === 'I' || letter === 'i') {
+        if (position === 1) {
+          return false;
+        }
+        if (position >= 2) {
+          let checkPos = position - 2;
+          while (checkPos >= 0 && /\s/.test(text[checkPos])) {
+            checkPos--;
+          }
+          if (checkPos < 0 || /[.!?]/.test(text[checkPos])) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    // Pattern 2: X. Y. (with space, less common but possible)
+    if (position + 3 < text.length) {
+      const threeAhead = text[position + 3];
+      if (/\s/.test(oneAhead) && /[a-zA-Z]/.test(twoAhead) && threeAhead === '.') {
+        const letter = text[position - 1];
+        if (letter === 'I' || letter === 'i') {
+          if (position === 1) {
+            return false;
+          }
+          if (position >= 2) {
+            let checkPos = position - 2;
+            while (checkPos >= 0 && /\s/.test(text[checkPos])) {
+              checkPos--;
+            }
+            if (checkPos < 0 || /[.!?]/.test(text[checkPos])) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+    }
+  }
+
+  // Check for common abbreviations by word match
   const wordStart = getWordStart(text, position - 1);
   const word = text.slice(wordStart, position + 1);
 
   const commonAbbreviations = [
-    'Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.', 'Sr.', 'Jr.',
-    'etc.', 'vs.', 'e.g.', 'i.e.', 'Ph.D.', 'M.D.',
+    'ca.', 'Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.', 'Sr.', 'Jr.',
+    'etc.', 'vs.', 'e.g.', 'i.e.', 'Ph.D.', 'M.D.', 'B.A.', 'M.A.',
     'St.', 'Ave.', 'Rd.', 'Blvd.',
-    'lit.', 'Fig.', 'Vol.', 'No.',
+    'lit.', 'Fig.', 'Vol.', 'No.', 'Nos.',
     'Jan.', 'Feb.', 'Mar.', 'Apr.', 'May.', 'Jun.',
     'Jul.', 'Aug.', 'Sep.', 'Sept.', 'Oct.', 'Nov.', 'Dec.',
-    'Corp.', 'Inc.', 'Ltd.', 'Co.',
-    'Approx.', 'Misc.', 'Dept.'
+    'Corp.', 'Inc.', 'Ltd.', 'Co.', 'LLC.',
+    'Approx.', 'Misc.', 'Dept.', 'Assn.', 'Bros.',
+    'Esq.', 'Rev.', 'Gov.', 'Sen.', 'Rep.', 'Gen.', 'Adm.',
+    'P.S.', 'P.P.S.', 'a.m.', 'p.m.', 'A.M.', 'P.M.',
+    'cf.', 'viz.', 'al.', 'ibid.', 'op.', 'loc.', 'et.',
+    'approx.', 'est.', 'max.', 'min.', 'misc.',
+    'Mt.', 'Mtn.', 'Ft.', 'Pt.', 'Sq.', 'Ln.',
+    'no.', 'nos.', 'vol.', 'pp.', 'ed.', 'eds.'
   ];
 
   return commonAbbreviations.some(abbr =>

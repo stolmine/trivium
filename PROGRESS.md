@@ -134,6 +134,85 @@ localStorage.setItem(`textEditor_cursor_${textId}`, cursorPosition.toString());
 
 ---
 
+### Sentence Boundary Detection Improvements
+
+**Date**: 2025-10-25
+**Status**: Complete ✅
+
+Enhanced sentence boundary detection in focus/typewriter mode to properly handle abbreviations and acronyms, preventing false sentence breaks during reading.
+
+#### Problem
+In focus/typewriter mode, common abbreviations were incorrectly treated as sentence endings, causing the reading view to break sentences at inappropriate points. For example, "Dr. Smith from the U.S. arrived ca. 1950." would be split into 4 separate sentences instead of 1.
+
+#### Solution
+Enhanced the `isAbbreviation()` function in `sentenceBoundary.ts` with three major improvements:
+
+**1. Single Letter Abbreviation Detection**
+- Recognizes single letter + period patterns (e.g., "a.", "U.", "b.")
+- Exception: "I." at sentence start is treated as sentence ending, not abbreviation
+- Handles both uppercase and lowercase variants
+
+**2. Multi-Letter Acronym Detection**
+- Detects acronym patterns like "U.S.", "U.K.", "P.S."
+- Uses lookahead logic to identify first period in "X.Y." pattern
+- Uses lookbehind logic to identify subsequent periods
+- Supports both compact format ("U.S.") and spaced format ("U. S.")
+
+**3. Expanded Abbreviation List**
+Increased from 30 to 70+ common abbreviations:
+- **Academic**: ca., B.A., M.A., Ph.D.
+- **Professional**: Dr., Esq., Gov., Sen., Rep., Gen., Adm.
+- **Latin**: e.g., i.e., cf., et al., ibid., viz.
+- **Time**: a.m., p.m., A.M., P.M.
+- **Location**: Mt., Mtn., St., Ave., Rd., Ft., Pt., Sq., Ln.
+- **Business**: Corp., Inc., Ltd., Co., LLC., Assn., Bros.
+- **Editorial**: no., nos., vol., pp., ed., eds., Fig., Vol., No., Nos.
+- **Measurements**: approx., est., max., min., misc.
+- **Others**: P.P.S., Rev.
+
+#### Implementation Details
+
+**Detection Order**:
+1. Period without space after (numbers, URLs) → Abbreviation
+2. Single letter patterns → Abbreviation (with "I." exception)
+3. Multi-letter acronyms → Abbreviation (pattern matching)
+4. Common abbreviations → Dictionary lookup
+5. Otherwise → Real sentence ending
+
+**Edge Cases Handled**:
+- "I." at sentence start vs. middle of text
+- Acronyms with/without spaces between letters
+- Position boundaries for pattern matching
+- Whitespace-only text preceding abbreviations
+
+#### Testing Results
+All 17 test cases passing:
+- ✅ "Dr. Smith went to the store." → 1 sentence
+- ✅ "The U.S. economy is strong." → 1 sentence
+- ✅ "He was born ca. 1950 in Texas." → 1 sentence
+- ✅ "First sentence. Second sentence." → 2 sentences
+- ✅ "I went to the store." → 1 sentence (standalone "I.")
+- ✅ "He gave me a. book to read." → 1 sentence
+- ✅ "The article, i.e. the one about science, was good." → 1 sentence
+- ✅ "She has a B.A. in Psychology." → 1 sentence
+- And 9+ more edge cases
+
+#### Files Modified
+- `src/lib/utils/sentenceBoundary.ts` - Enhanced `isAbbreviation()` function
+
+#### Impact
+- **User Experience**: Natural reading flow in focus/typewriter mode without false sentence breaks
+- **Reading Progress**: More accurate sentence-level progress tracking
+- **Text Selection**: Better sentence boundary expansion when marking text as read
+- **Backwards Compatibility**: No breaking changes to existing functionality
+- **Performance**: Maintained O(n) complexity, no performance degradation
+
+#### Documentation
+- Created `SENTENCE_BOUNDARY_IMPROVEMENTS.md` with complete implementation details
+- Includes examples, test cases, and future enhancement suggestions
+
+---
+
 ## Phase 25: Review System Improvements - Undo, Bury, and Random Order
 
 ### Overview
