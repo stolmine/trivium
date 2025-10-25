@@ -149,24 +149,12 @@ export function ReadPage() {
   }, [id, loadText, getReadRanges, getParagraphs, calculateProgress])
 
   useEffect(() => {
-    const timestamp = new Date().toISOString()
-    console.group(`[ReadPage ${timestamp}] CURRENT TEXT CHANGED`)
-    console.log('currentText:', currentText ? {
-      id: currentText.id,
-      title: currentText.title,
-      contentLength: currentText.content.length
-    } : null)
-
     if (currentText) {
       const { excludedRanges } = parseExcludedRanges(currentText.content)
       setExcludedRanges(excludedRanges)
       setRenameTextTitle(currentText.title)
-
-      console.log('Extracting links from content...')
       extractLinks(currentText.content)
-      console.log('Links extraction triggered')
     }
-    console.groupEnd()
   }, [currentText, setExcludedRanges, extractLinks])
 
   useEffect(() => {
@@ -174,18 +162,15 @@ export function ReadPage() {
       const historyStore = useReadingHistoryStore.getState()
 
       if (historyStore.currentTextId !== currentText.id) {
-        console.log('[ReadPage] Resetting history for new text:', currentText.id)
         historyStore.resetForText(currentText.id)
       }
     }
   }, [currentText?.id])
 
   useEffect(() => {
-    console.log('[ReadPage] Component mounted - setting isOnReadingPage to true')
     setOnReadingPage(true)
 
     return () => {
-      console.log('[ReadPage] Component unmounting - setting isOnReadingPage to false')
       setOnReadingPage(false)
     }
   }, [])
@@ -282,8 +267,6 @@ export function ReadPage() {
     if (state?.restoreScrollPosition !== undefined && scrollContainerRef.current && currentText && !isLoading) {
       const scrollPosition = state.restoreScrollPosition
 
-      console.log('[ReadPage] Preparing to restore scroll position:', scrollPosition)
-
       // Use triple RAF to ensure DOM is fully rendered including highlights and marks
       // Single RAF = paint scheduled, Double RAF = paint complete, Triple RAF = layout stable
       requestAnimationFrame(() => {
@@ -291,7 +274,6 @@ export function ReadPage() {
           requestAnimationFrame(() => {
             if (scrollContainerRef.current) {
               scrollContainerRef.current.scrollTop = scrollPosition
-              console.log('[ReadPage] Successfully restored scroll position to:', scrollPosition)
 
               // Only clear the state AFTER successfully restoring scroll
               navigate(location.pathname, { replace: true, state: {} })
@@ -308,17 +290,11 @@ export function ReadPage() {
       return
     }
 
-    console.log('[Search Performance] Executing search for query:', query)
-    const startTime = performance.now()
-
     const { renderedContent } = parseExcludedRanges(currentText.content)
     const searchMatches = findMatches(renderedContent, query, {
       caseSensitive,
       wholeWord
     })
-
-    const endTime = performance.now()
-    console.log('[Search Performance] Search completed in', (endTime - startTime).toFixed(2), 'ms. Found', searchMatches.length, 'matches')
 
     setMatches(searchMatches)
   }, [query, caseSensitive, wholeWord, currentText?.content, setMatches])
@@ -365,24 +341,13 @@ export function ReadPage() {
   }
 
   const handleSaveInlineEdit = async () => {
-    console.log('[ReadPage] handleSaveInlineEdit called', {
-      hasCurrentText: !!currentText,
-      editingContentLength: editingContent.length,
-      currentTextContentLength: currentText?.content.length,
-      areEqual: editingContent === currentText?.content
-    });
-
     if (!currentText || editingContent === currentText.content) {
-      console.log('[ReadPage] No changes, just deactivating');
       setInlineEditActive(false)
       return
     }
 
     try {
-      console.log('[ReadPage] Changes detected, processing...');
-
       const editRegion = detectEditRegion(currentText.content, editingContent);
-      console.log('[ReadPage] Edit region detected:', editRegion);
 
       const marksBeforeEdit = [...marks];
 
@@ -395,21 +360,14 @@ export function ReadPage() {
         },
         editRegion.insertedText
       );
-      console.log('[ReadPage] Marks updated:', {
-        before: marksBeforeEdit.length,
-        after: marksAfterEdit.length
-      });
 
-      console.log('[ReadPage] Saving content update...');
       await api.texts.updateContent(currentText.id, editingContent)
 
-      console.log('[ReadPage] Reloading text and marks...');
       await loadText(currentText.id)
       await loadMarks(currentText.id)
 
       const historyStore = useReadingHistoryStore.getState();
       if (!historyStore.isUndoRedoInProgress) {
-        console.log('[ReadPage] Recording text edit in history');
         historyStore.recordTextEdit({
           editRegion: { start: editRegion.start, end: editRegion.end },
           previousContent: currentText.content,
@@ -421,7 +379,6 @@ export function ReadPage() {
         });
       }
 
-      console.log('[ReadPage] Deactivating inline edit');
       setInlineEditActive(false)
     } catch (error) {
       console.error('[ReadPage] Failed to save:', error)
@@ -432,7 +389,6 @@ export function ReadPage() {
   const handleEditButtonClick = () => {
     // Prevent rapid state changes from double-clicks or quick successive clicks
     if (isEditButtonProcessing) {
-      console.log('[ReadPage] Edit button click ignored - still processing previous click');
       return
     }
 
@@ -440,7 +396,6 @@ export function ReadPage() {
 
     // If canceling edit, revert content changes
     if (inlineEditActive) {
-      console.log('[ReadPage] Canceling inline edit - reverting content');
       setEditingContent(currentText?.content || '')
     }
 
@@ -532,18 +487,10 @@ export function ReadPage() {
 
     if (respectExact) {
       // User made intentional full selection, respect it exactly
-      console.log('[ReadPage] Respecting exact user selection:', {
-        length: cleanedEnd - cleanedStart,
-        text: cleanedContent.substring(cleanedStart, cleanedEnd).substring(0, 50) + '...'
-      })
       regionStart = cleanedStart
       regionEnd = cleanedEnd
     } else {
       // Small/partial selection, expand to smart boundaries
-      console.log('[ReadPage] Expanding partial selection to smart boundaries:', {
-        originalLength: cleanedEnd - cleanedStart,
-        text: cleanedContent.substring(cleanedStart, cleanedEnd)
-      })
       const expanded = expandToSmartBoundary(
         cleanedContent,
         cleanedStart,
@@ -551,11 +498,6 @@ export function ReadPage() {
       )
       regionStart = expanded.start
       regionEnd = expanded.end
-      console.log('[ReadPage] Expanded to:', {
-        boundaryType: expanded.boundaryType,
-        newLength: regionEnd - regionStart,
-        text: cleanedContent.substring(regionStart, regionEnd).substring(0, 50) + '...'
-      })
     }
 
     setInlineEditRegion({
@@ -566,7 +508,7 @@ export function ReadPage() {
     setSelectionInfo(null)
   }
 
-  const handleSaveSelectionEdit = async (newText: string, updatedMarks: ClozeNote[]) => {
+  const handleSaveSelectionEdit = async (newText: string) => {
     if (!currentText || !editRegion) return
 
     try {
@@ -585,8 +527,6 @@ export function ReadPage() {
       await loadMarks(currentText.id)
 
       setEditRegion(null)
-
-      console.log(`Text updated. ${updatedMarks.length} marks affected.`)
     } catch (error) {
       console.error('[ReadPage] Failed to save selection edit:', error)
       alert('Failed to save changes: ' + (error instanceof Error ? error.message : String(error)))
@@ -596,21 +536,15 @@ export function ReadPage() {
   const handleMarkSelectionRead = async () => {
     if (!selectionInfo || !currentText) return
 
-    console.log('[ReadPage] handleMarkSelectionRead - selectionInfo:', selectionInfo);
-    console.log('[ReadPage] Current readRanges:', readRanges);
-
     try {
       // Toggle logic: check if range is already read
       const isAlreadyRead = isRangeRead(selectionInfo.start, selectionInfo.end);
-      console.log('[ReadPage] Is range already read?', isAlreadyRead);
 
       if (isAlreadyRead) {
         // Unmark as read
-        console.log('[ReadPage] Unmarking range:', selectionInfo.start, '->', selectionInfo.end);
         await unmarkRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
       } else {
         // Mark as read for progress tracking
-        console.log('[ReadPage] Marking range:', selectionInfo.start, '->', selectionInfo.end);
         await markRangeAsRead(currentText.id, selectionInfo.start, selectionInfo.end)
 
         // Also create a mark for the Create Cards hub with position information
@@ -621,14 +555,12 @@ export function ReadPage() {
             selectionInfo.start,
             selectionInfo.end
           )
-          console.log('[ReadPage] Created mark for Create Cards hub');
         } catch (error) {
           console.error('[ReadPage] Failed to create mark:', error)
           // Don't block the read marking if mark creation fails
         }
       }
 
-      console.log('[ReadPage] After marking, new readRanges:', readRanges);
       setSelectionInfo(null)
     } catch (error) {
       console.error('[ReadPage] Failed to toggle read status:', error)
@@ -642,7 +574,6 @@ export function ReadPage() {
     // Capture current scroll position from the scrollable container (not window)
     const scrollY = scrollContainerRef.current?.scrollTop ?? 0
 
-    console.log('[ReadPage] Undo requested')
     setIsUndoing(true)
 
     try {
@@ -651,8 +582,6 @@ export function ReadPage() {
       const actionToUndo = historyStore.past[historyStore.past.length - 1]
 
       await undo()
-
-      console.log('[ReadPage] Reloading state after undo for action type:', actionToUndo?.type)
 
       // Only reload what actually changed based on action type
       if (actionToUndo?.type === 'text_edit') {
@@ -677,8 +606,6 @@ export function ReadPage() {
           }
         })
       })
-
-      console.log('[ReadPage] Undo complete')
     } catch (error) {
       console.error('[ReadPage] Undo failed:', error)
       alert('Failed to undo: ' + (error instanceof Error ? error.message : String(error)))
@@ -693,7 +620,6 @@ export function ReadPage() {
     // Capture current scroll position from the scrollable container (not window)
     const scrollY = scrollContainerRef.current?.scrollTop ?? 0
 
-    console.log('[ReadPage] Redo requested')
     setIsRedoing(true)
 
     try {
@@ -702,8 +628,6 @@ export function ReadPage() {
       const actionToRedo = historyStore.future[historyStore.future.length - 1]
 
       await redo()
-
-      console.log('[ReadPage] Reloading state after redo for action type:', actionToRedo?.type)
 
       // Only reload what actually changed based on action type
       if (actionToRedo?.type === 'text_edit') {
@@ -728,8 +652,6 @@ export function ReadPage() {
           }
         })
       })
-
-      console.log('[ReadPage] Redo complete')
     } catch (error) {
       console.error('[ReadPage] Redo failed:', error)
       alert('Failed to redo: ' + (error instanceof Error ? error.message : String(error)))
@@ -739,26 +661,13 @@ export function ReadPage() {
   }
 
   const handleNavigateToIngest = (url: string) => {
-    const timestamp = new Date().toISOString()
-    console.group(`[ReadPage ${timestamp}] NAVIGATE TO INGEST`)
-    console.log('URL:', url)
-
     try {
       new URL(url)
     } catch {
-      console.warn('[ReadPage] Invalid URL:', url)
-      console.groupEnd()
       return
     }
 
     const currentScrollPosition = scrollContainerRef.current?.scrollTop ?? 0
-    console.log('Current scroll position:', currentScrollPosition)
-    console.log('Current text ID:', currentText?.id)
-    console.log('Navigation state:', {
-      path: location.pathname,
-      scrollPosition: currentScrollPosition,
-      textId: currentText?.id
-    })
 
     navigate('/ingest', {
       state: {
@@ -770,8 +679,6 @@ export function ReadPage() {
         }
       }
     })
-    console.log('Navigation initiated to /ingest')
-    console.groupEnd()
   }
 
   useEffect(() => {
@@ -779,42 +686,35 @@ export function ReadPage() {
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'z' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
         e.preventDefault()
         if (canUndo() && !isUndoing) {
-          console.log('[ReadPage] Ctrl+Z pressed - undoing')
           handleUndo()
         }
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
         e.preventDefault()
         if (canRedo() && !isRedoing) {
-          console.log('[ReadPage] Ctrl+Shift+Z pressed - redoing')
           handleRedo()
         }
       }
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key === 'e' && !isEditMode && !inlineEditActive && !editRegion && !inlineEditRegion) {
         e.preventDefault()
         if (selectionInfo) {
-          console.log('[ReadPage] Ctrl+E pressed with selection - activating inline region edit');
           handleActivateInlineEdit()
         } else {
-          console.log('[ReadPage] Ctrl+E pressed without selection - activating inline edit');
           setEditingContent(currentText?.content || '')
           setInlineEditActive(true)
         }
       }
       if (e.key === 'Escape' && inlineEditActive) {
         e.preventDefault()
-        console.log('[ReadPage] Escape pressed - canceling inline edit, reverting content');
         setInlineEditActive(false)
         setEditingContent(currentText?.content || '')
       }
       if (e.key === 'Escape' && editRegion) {
         e.preventDefault()
-        console.log('[ReadPage] Escape pressed - canceling selection edit');
         setEditRegion(null)
       }
       if (e.key === 'Escape' && inlineEditRegion) {
         e.preventDefault()
-        console.log('[ReadPage] Escape pressed - canceling inline region edit');
         setInlineEditRegion(null)
 
         requestAnimationFrame(() => {
@@ -826,12 +726,10 @@ export function ReadPage() {
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 's' && inlineEditActive) {
         e.preventDefault()
-        console.log('[ReadPage] Ctrl+S pressed - saving inline edit');
         handleSaveInlineEdit()
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'd' && selectionInfo && !editRegion) {
         e.preventDefault()
-        console.log('[ReadPage] Ctrl+D pressed - marking selection as read');
         handleMarkSelectionRead()
       }
       if (!e.shiftKey && (e.ctrlKey || e.metaKey) && e.key === 'f') {
@@ -1200,11 +1098,8 @@ export function ReadPage() {
                   onNavigateToIngest={handleNavigateToIngest}
                   onSave={async (mergedContent: string, deletedMarks?: ClozeNote[]) => {
                     try {
-                      console.log('[ReadPage] InlineRegionEditor save - detecting changes...');
-
                       // Detect what was edited
                       const editRegion = detectEditRegion(currentText.content, mergedContent);
-                      console.log('[ReadPage] Edit region detected:', editRegion);
 
                       const marksBeforeEdit = [...marks];
 
@@ -1218,10 +1113,6 @@ export function ReadPage() {
                         },
                         editRegion.insertedText
                       );
-                      console.log('[ReadPage] Marks updated:', {
-                        before: marksBeforeEdit.length,
-                        after: marksAfterEdit.length
-                      });
 
                       // Save the updated content
                       await api.texts.updateContent(currentText.id, mergedContent)
@@ -1232,7 +1123,6 @@ export function ReadPage() {
                       // Record in history
                       const historyStore = useReadingHistoryStore.getState();
                       if (!historyStore.isUndoRedoInProgress) {
-                        console.log('[ReadPage] Recording inline region edit in history');
                         historyStore.recordTextEdit({
                           editRegion: { start: editRegion.start, end: editRegion.end },
                           previousContent: currentText.content,

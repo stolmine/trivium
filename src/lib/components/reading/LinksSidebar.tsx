@@ -2,7 +2,7 @@ import { X, Link2, ChevronDown, ChevronRight, ArrowUpDown, Search } from 'lucide
 import { useLinksSidebarStore, type ParsedLink } from '@/lib/stores/linksSidebar'
 import { LinkItem } from './LinkItem'
 import { Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Input } from '../ui'
-import { useMemo, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { useMemo, useRef, useLayoutEffect, useCallback } from 'react'
 
 interface LinksSidebarProps {
   onNavigateToIngest: (url: string) => void
@@ -23,27 +23,6 @@ export function LinksSidebar({ onNavigateToIngest }: LinksSidebarProps) {
   // Instead, read it directly from store when needed (in ref callback and layout effect)
   const { isOpen, links, setOpen, showNonWikipedia, setShowNonWikipedia, showWikipedia, setShowWikipedia, sortMode, setSortMode, searchQuery, setSearchQuery, setScrollPosition } = useLinksSidebarStore()
 
-  // Component lifecycle logging
-  useEffect(() => {
-    const timestamp = new Date().toISOString()
-    console.log(`[LinksSidebar ${timestamp}] COMPONENT MOUNTED`)
-    return () => {
-      console.log(`[LinksSidebar ${timestamp}] COMPONENT UNMOUNTING`)
-    }
-  }, [])
-
-  useEffect(() => {
-    const timestamp = new Date().toISOString()
-    console.log(`[LinksSidebar ${timestamp}] RENDER STATE:`, {
-      isOpen,
-      linksCount: links.length,
-      showWikipedia,
-      showNonWikipedia,
-      sortMode,
-      searchQuery
-    })
-  }, [isOpen, links, showWikipedia, showNonWikipedia, sortMode, searchQuery])
-
   // Scroll position preservation
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isRestoringRef = useRef<boolean>(false)
@@ -52,15 +31,8 @@ export function LinksSidebar({ onNavigateToIngest }: LinksSidebarProps) {
 
   // Ref callback: Apply scroll position synchronously on mount to avoid visual jump
   const scrollContainerCallback = useCallback((node: HTMLDivElement | null) => {
-    const timestamp = new Date().toISOString()
     // Read scroll position directly from store (no subscription = no re-render)
     const scrollPosition = useLinksSidebarStore.getState().scrollPosition
-
-    console.log(`[LinksSidebar ${timestamp}] REF CALLBACK INVOKED:`, {
-      nodeAttached: !!node,
-      savedPosition: scrollPosition,
-      hasInitiallyRestored: hasInitiallyRestoredRef.current
-    })
 
     scrollContainerRef.current = node
 
@@ -70,43 +42,18 @@ export function LinksSidebar({ onNavigateToIngest }: LinksSidebarProps) {
       node.scrollTop = scrollPosition
       hasInitiallyRestoredRef.current = true
 
-      console.log(`[LinksSidebar ${timestamp}] INITIAL SCROLL SET SYNCHRONOUSLY:`, {
-        targetPosition: scrollPosition,
-        actualPosition: node.scrollTop,
-        success: node.scrollTop === scrollPosition
-      })
-
       // Reset restoration flag after a brief delay
       setTimeout(() => {
         isRestoringRef.current = false
-        console.log(`[LinksSidebar ${timestamp}] Initial restore flag reset`)
       }, 50)
     }
   }, [])
 
-  // Track when the ref gets attached/detached
-  useEffect(() => {
-    const timestamp = new Date().toISOString()
-    const scrollPosition = useLinksSidebarStore.getState().scrollPosition
-    console.log(`[LinksSidebar ${timestamp}] SCROLL CONTAINER REF STATUS:`, {
-      attached: !!scrollContainerRef.current,
-      scrollTop: scrollContainerRef.current?.scrollTop,
-      savedPosition: scrollPosition
-    })
-  }, [scrollContainerRef.current])
-
   // Save scroll position whenever user scrolls (but not during restoration)
   const saveScrollPosition = () => {
     if (scrollContainerRef.current && !isRestoringRef.current) {
-      const timestamp = new Date().toISOString()
       const savedPosition = scrollContainerRef.current.scrollTop
       setScrollPosition(savedPosition)
-      console.log(`[LinksSidebar ${timestamp}] SCROLL POSITION SAVED:`, {
-        position: savedPosition,
-        scrollHeight: scrollContainerRef.current.scrollHeight,
-        clientHeight: scrollContainerRef.current.clientHeight,
-        isRestoring: isRestoringRef.current
-      })
     }
   }
 
@@ -144,36 +91,14 @@ export function LinksSidebar({ onNavigateToIngest }: LinksSidebarProps) {
   // Restore scroll position after UI changes (using useLayoutEffect for pre-paint execution)
   // This handles cases where links CHANGE (e.g., after ingest) - different from initial mount
   useLayoutEffect(() => {
-    const timestamp = new Date().toISOString()
     const linksChanged = previousLinksLengthRef.current !== links.length
     previousLinksLengthRef.current = links.length
 
     // Read scroll position directly from store (no subscription = no re-render)
     const scrollPosition = useLinksSidebarStore.getState().scrollPosition
 
-    console.group(`[LinksSidebar ${timestamp}] RESTORE LAYOUT EFFECT TRIGGERED`)
-    console.log('Dependencies:', {
-      linksCount: links.length,
-      linksChanged,
-      filteredWikipediaCount: filteredWikipediaLinks.length,
-      filteredOtherCount: filteredOtherLinks.length,
-      showWikipedia,
-      showNonWikipedia,
-      hasInitiallyRestored: hasInitiallyRestoredRef.current
-    })
-    console.log('State before restoration:', {
-      hasContainer: !!scrollContainerRef.current,
-      savedPosition: scrollPosition,
-      containerScrollTop: scrollContainerRef.current?.scrollTop,
-      containerScrollHeight: scrollContainerRef.current?.scrollHeight,
-      containerClientHeight: scrollContainerRef.current?.clientHeight,
-      isRestoring: isRestoringRef.current
-    })
-
     // Skip if already handled by ref callback (initial mount)
     if (!hasInitiallyRestoredRef.current) {
-      console.log('SKIP RESTORE: Not yet initially restored (ref callback will handle)')
-      console.groupEnd()
       return
     }
 
@@ -184,83 +109,37 @@ export function LinksSidebar({ onNavigateToIngest }: LinksSidebarProps) {
       // If links changed (e.g., after ingest), use triple RAF for DOM stability
       // Otherwise (filter/sort/expand), use single RAF for speed
       if (linksChanged) {
-        console.log('WILL RESTORE (LINKS CHANGED) - Starting triple RAF sequence to position:', scrollPosition)
-
         requestAnimationFrame(() => {
-          console.log('RAF 1/3 - Frame scheduled')
           requestAnimationFrame(() => {
-            console.log('RAF 2/3 - Paint complete')
             requestAnimationFrame(() => {
-              console.log('RAF 3/3 - Layout stable')
               if (scrollContainerRef.current) {
-                const beforeScroll = scrollContainerRef.current.scrollTop
                 scrollContainerRef.current.scrollTop = scrollPosition
-                const afterScroll = scrollContainerRef.current.scrollTop
-                console.log('SCROLL RESTORED (triple RAF):', {
-                  targetPosition: scrollPosition,
-                  beforeScroll,
-                  afterScroll,
-                  success: afterScroll === scrollPosition,
-                  scrollHeight: scrollContainerRef.current.scrollHeight,
-                  clientHeight: scrollContainerRef.current.clientHeight
-                })
                 setTimeout(() => {
                   isRestoringRef.current = false
-                  console.log('Restore flag reset - can save scroll again')
                 }, 50)
-              } else {
-                console.warn('Container lost during RAF sequence!')
               }
-              console.groupEnd()
             })
           })
         })
       } else {
-        console.log('WILL RESTORE (FILTER/SORT/EXPAND) - Using single RAF to position:', scrollPosition)
-
         requestAnimationFrame(() => {
-          console.log('RAF 1/1 - Applying scroll')
           if (scrollContainerRef.current) {
-            const beforeScroll = scrollContainerRef.current.scrollTop
             scrollContainerRef.current.scrollTop = scrollPosition
-            const afterScroll = scrollContainerRef.current.scrollTop
-            console.log('SCROLL RESTORED (single RAF):', {
-              targetPosition: scrollPosition,
-              beforeScroll,
-              afterScroll,
-              success: afterScroll === scrollPosition,
-              scrollHeight: scrollContainerRef.current.scrollHeight,
-              clientHeight: scrollContainerRef.current.clientHeight
-            })
             setTimeout(() => {
               isRestoringRef.current = false
-              console.log('Restore flag reset - can save scroll again')
             }, 50)
-          } else {
-            console.warn('Container lost during RAF!')
           }
-          console.groupEnd()
         })
       }
     } else {
       isRestoringRef.current = false
-      console.log('SKIP RESTORE:', {
-        reason: !scrollContainerRef.current ? 'no container' : 'no saved position',
-        savedPosition: scrollPosition
-      })
-      console.groupEnd()
     }
   }, [links, filteredWikipediaLinks, filteredOtherLinks, showWikipedia, showNonWikipedia])
 
   // Early return AFTER all hooks
   if (!isOpen) {
-    const timestamp = new Date().toISOString()
-    console.log(`[LinksSidebar ${timestamp}] NOT RENDERING (isOpen: false)`)
     return null
   }
-
-  const timestamp = new Date().toISOString()
-  console.log(`[LinksSidebar ${timestamp}] RENDERING SIDEBAR UI`)
 
   return (
     <aside className="w-96 border-l border-border bg-muted flex flex-col animate-slideInRight">

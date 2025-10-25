@@ -41,21 +41,8 @@ export const useLinksSidebarStore = create<LinksSidebarState>((set) => ({
   setOpen: (open) => set({ isOpen: open }),
 
   extractLinks: (content: string) => {
-    const timestamp = new Date().toISOString()
-    console.group(`[LinksSidebarStore ${timestamp}] EXTRACT LINKS`)
-    console.log('Content length:', content.length)
-
     const links = extractAndDeduplicateLinks(content)
-
-    console.log('Links extracted:', {
-      count: links.length,
-      wikipedia: links.filter(l => l.baseUrl.includes('wikipedia.org')).length,
-      other: links.filter(l => !l.baseUrl.includes('wikipedia.org')).length
-    })
-
     set({ links })
-    console.log('Store state updated with new links')
-    console.groupEnd()
   },
 
   setShowNonWikipedia: (show) => set({ showNonWikipedia: show }),

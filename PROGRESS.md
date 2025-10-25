@@ -233,10 +233,30 @@ const saveScrollPosition = () => {
 
 ### Future Enhancements
 
-- Remove debug logging for production
+- ~~Remove debug logging for production~~ ✅ **COMPLETE** (Post-Phase Cleanup - 2025-10-25)
 - Add scroll position persistence to localStorage for session recovery
 - Consider per-article scroll positions (currently global)
 - Investigate reducing RAF count based on performance metrics
+
+### Post-Phase 27 Cleanup: Debug Logging Removal
+
+**Date**: 2025-10-25
+**Status**: Complete ✅
+
+Removed ~225 lines of debug console.log statements added during Phase 27 development. The extensive logging was essential for diagnosing scroll preservation issues but is unnecessary for production.
+
+**Cleaned Files**:
+- `src/lib/components/reading/LinksSidebar.tsx` - Removed component lifecycle, ref callback, and restoration logs (~150 lines)
+- `src/routes/read/[id].tsx` - Removed navigation, edit mode, and scroll logs (~50 lines)
+- `src/lib/stores/linksSidebar.ts` - Removed link extraction and processing logs (~25 lines)
+
+**Impact**:
+- Cleaner console output for development and production
+- Reduced bundle size (minimal but measurable)
+- No functional changes - all features preserved
+- Code is now production-ready
+
+**Files Modified**: 3 (all frontend)
 
 ---
 
