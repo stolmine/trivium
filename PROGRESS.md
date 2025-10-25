@@ -1,9 +1,136 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 25 Complete ✅ - Review System Improvements
+## Current Status: Phase 26 Complete ✅ - Reading Refinements
 
-**Branch**: `25_reviewFixes`
-**Last Updated**: 2025-10-24
+**Branch**: `26_readingRefined`
+**Last Updated**: 2025-10-25
+
+---
+
+## Phase 26: Reading Refinements - Cursor Preservation in Global Edit Mode
+
+### Overview
+**Branch**: `26_readingRefined`
+**Date**: 2025-10-25
+**Status**: Complete ✅
+
+Critical bug fix for cursor jumping in global edit mode, affecting both contentEditable-based InlineEditor and textarea-based TextEditor components.
+
+### Problem
+When typing in global edit mode (Ctrl+E / Cmd+E), the cursor would jump to the beginning or end of the text after each keystroke. This occurred because React re-renders reset the cursor position to default locations, making inline editing essentially unusable.
+
+### Root Cause
+- React state updates trigger re-renders that recreate DOM nodes
+- Browser's natural cursor position is lost during re-render
+- No mechanism existed to preserve and restore cursor position across state changes
+
+### Solution
+
+#### InlineEditor.tsx (ContentEditable - Global Edit Mode)
+Implemented comprehensive cursor preservation using the Selection API:
+
+**Cursor Tracking**:
+- Added three refs for tracking cursor state:
+  - `cursorNodeRef`: Stores reference to the DOM node containing cursor
+  - `cursorOffsetRef`: Stores character offset within that node
+  - `shouldRestoreCursorRef`: Flag to distinguish user input from external updates
+
+**Cursor Capture** (before state update):
+- In `handleInput`, capture cursor position using `window.getSelection()`
+- Extract `range.startContainer` and `range.startOffset`
+- Set `shouldRestoreCursorRef` to true for user-initiated changes
+
+**Cursor Restoration** (after re-render):
+- New `useEffect` hook triggered on content changes
+- Validates cursor node still exists in DOM tree
+- Uses Selection API to recreate cursor position:
+  - `document.createRange()`
+  - `range.setStart(cursorNode, offset)`
+  - `selection.removeAllRanges()` and `selection.addRange(range)`
+- Clamps offset to valid range (handles text length changes)
+- Wrapped in try-catch for edge cases (invalid nodes, out-of-bounds offsets)
+
+**Edge Case Handling**:
+- External content updates (initialContent changes) skip restoration
+- Node validation prevents errors when DOM structure changes
+- Offset clamping handles emoji/surrogate pairs correctly
+- Distinguishes text node offsets from element child node offsets
+
+#### TextEditor.tsx (Textarea - Unused but Fixed)
+Similar cursor preservation pattern adapted for textarea:
+
+**Implementation**:
+- Uses `textareaRef.current.selectionStart/selectionEnd` (simpler than Selection API)
+- `cursorPosRef` stores position before state updates
+- Restoration via `setSelectionRange(position, position)`
+- LocalStorage persistence for cursor position across sessions
+- Cleanup on save/cancel to prevent stale positions
+
+**Additional Features**:
+- Persists cursor position to localStorage with text-specific keys
+- Restores cursor on component mount if position exists
+- Tracks cursor movement via `onClick` and `onKeyUp` handlers
+- Cleanup on unmount to prevent localStorage bloat
+
+### Technical Details
+
+**Selection API Usage** (InlineEditor):
+```typescript
+const selection = window.getSelection();
+if (selection && selection.rangeCount > 0) {
+  const range = selection.getRangeAt(0);
+  cursorNodeRef.current = range.startContainer;
+  cursorOffsetRef.current = range.startOffset;
+}
+```
+
+**Restoration Logic** (InlineEditor):
+```typescript
+const range = document.createRange();
+const maxOffset = cursorNodeRef.current.nodeType === Node.TEXT_NODE
+  ? (cursorNodeRef.current.textContent?.length || 0)
+  : cursorNodeRef.current.childNodes.length;
+const clampedOffset = Math.min(cursorOffsetRef.current, maxOffset);
+range.setStart(cursorNodeRef.current, clampedOffset);
+range.collapse(true);
+selection.removeAllRanges();
+selection.addRange(range);
+```
+
+**Textarea Cursor** (TextEditor):
+```typescript
+const cursorPosition = e.target.selectionStart;
+cursorPosRef.current = cursorPosition;
+localStorage.setItem(`textEditor_cursor_${textId}`, cursorPosition.toString());
+```
+
+### Files Modified
+**Frontend**:
+- `src/lib/components/reading/InlineEditor.tsx` - Added cursor preservation for contentEditable
+- `src/lib/components/reading/TextEditor.tsx` - Added cursor preservation for textarea + localStorage
+
+### Testing
+- ✅ Cursor remains stable while typing in global edit mode (InlineEditor)
+- ✅ Cursor position preserved when inserting text mid-sentence
+- ✅ Cursor position preserved when deleting text
+- ✅ External content updates (initialContent changes) do not restore cursor
+- ✅ Edge case: Invalid cursor nodes handled gracefully
+- ✅ Edge case: Offset clamping prevents out-of-bounds errors
+- ✅ Emoji and multi-byte characters don't break cursor positioning
+- ✅ TextEditor cursor persistence works across component remounts
+- ✅ LocalStorage cleanup prevents memory leaks
+
+### Impact
+- **User Experience**: Global edit mode is now fully usable for text editing
+- **Data Integrity**: Cursor preservation works with existing UTF-16 position tracking
+- **Robustness**: Error handling prevents crashes from edge cases
+- **Completeness**: Both editor components fixed (even unused TextEditor)
+- **Future-Proof**: LocalStorage persistence provides foundation for session recovery
+
+### Known Limitations
+- Single cursor position only (no support for multi-cursor editing)
+- Selection ranges not preserved (only cursor position)
+- TextEditor.tsx is currently unused in production but maintained for completeness
 
 ---
 

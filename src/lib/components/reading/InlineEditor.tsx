@@ -23,19 +23,63 @@ export function InlineEditor({
   const divRef = useRef<HTMLDivElement>(null);
   const [content, setContent] = useState(initialContent);
 
+  // Refs to track cursor position for restoration after re-render
+  const cursorNodeRef = useRef<Node | null>(null);
+  const cursorOffsetRef = useRef<number>(0);
+  const shouldRestoreCursorRef = useRef(false);
+
   useEffect(() => {
     if (isActive && divRef.current) {
       divRef.current.focus();
     }
   }, [isActive]);
 
-  // Sync content when initialContent changes
+  // Sync content when initialContent changes (external update)
   useEffect(() => {
     setContent(initialContent);
+    // Don't restore cursor on external content changes
+    shouldRestoreCursorRef.current = false;
   }, [initialContent]);
+
+  // Restore cursor position after content updates from user input
+  useEffect(() => {
+    if (shouldRestoreCursorRef.current && cursorNodeRef.current && divRef.current?.contains(cursorNodeRef.current)) {
+      try {
+        const selection = window.getSelection();
+        if (selection) {
+          const range = document.createRange();
+
+          // Clamp offset to valid range for the node
+          const maxOffset = cursorNodeRef.current.nodeType === Node.TEXT_NODE
+            ? (cursorNodeRef.current.textContent?.length || 0)
+            : cursorNodeRef.current.childNodes.length;
+          const clampedOffset = Math.min(cursorOffsetRef.current, maxOffset);
+
+          range.setStart(cursorNodeRef.current, clampedOffset);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } catch (e) {
+        // Cursor position may be invalid after content change
+        console.warn('Could not restore cursor position', e);
+      }
+      shouldRestoreCursorRef.current = false;
+    }
+  }, [content]);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
     const newText = e.currentTarget.textContent || '';
+
+    // Save cursor position before state update
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      cursorNodeRef.current = range.startContainer;
+      cursorOffsetRef.current = range.startOffset;
+      shouldRestoreCursorRef.current = true;
+    }
+
     setContent(newText);
     onContentChange(newText);
   };

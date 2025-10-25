@@ -11,6 +11,7 @@ interface TextEditorProps {
 }
 
 export function TextEditor({
+  textId,
   initialContent,
   onSave,
   onCancel,
@@ -20,14 +21,45 @@ export function TextEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const cursorPosRef = useRef<number | null>(null);
+  const isRestoringCursorRef = useRef(false);
 
   useEffect(() => {
-    textareaRef.current?.focus();
-  }, []);
+    // Focus and restore persisted cursor position on mount
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+
+      // Try to restore cursor position from localStorage
+      const storageKey = `textEditor_cursor_${textId}`;
+      const savedPosition = localStorage.getItem(storageKey);
+
+      if (savedPosition !== null) {
+        const position = parseInt(savedPosition, 10);
+        if (!isNaN(position) && position >= 0 && position <= content.length) {
+          cursorPosRef.current = position;
+          isRestoringCursorRef.current = true;
+          requestAnimationFrame(() => {
+            if (textareaRef.current && cursorPosRef.current !== null) {
+              textareaRef.current.setSelectionRange(cursorPosRef.current, cursorPosRef.current);
+              isRestoringCursorRef.current = false;
+            }
+          });
+        }
+      }
+    }
+  }, [textId, content.length]);
 
   useEffect(() => {
     setHasUnsavedChanges(content !== initialContent);
   }, [content, initialContent]);
+
+  // Restore cursor position after content updates (to fix cursor jump bug)
+  useEffect(() => {
+    if (cursorPosRef.current !== null && textareaRef.current && !isRestoringCursorRef.current) {
+      const position = Math.min(cursorPosRef.current, content.length);
+      textareaRef.current.setSelectionRange(position, position);
+    }
+  }, [content]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -51,6 +83,9 @@ export function TextEditor({
     setIsSaving(true);
     try {
       await onSave(content);
+      // Clear saved cursor position after successful save
+      const storageKey = `textEditor_cursor_${textId}`;
+      localStorage.removeItem(storageKey);
     } catch (error) {
       console.error('Failed to save text:', error);
     } finally {
@@ -61,12 +96,51 @@ export function TextEditor({
   const handleCancel = () => {
     if (hasUnsavedChanges) {
       if (confirm('Discard unsaved changes?')) {
+        // Clear saved cursor position on cancel
+        const storageKey = `textEditor_cursor_${textId}`;
+        localStorage.removeItem(storageKey);
         onCancel();
       }
     } else {
+      // Clear saved cursor position on cancel
+      const storageKey = `textEditor_cursor_${textId}`;
+      localStorage.removeItem(storageKey);
       onCancel();
     }
   };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    const cursorPosition = e.target.selectionStart;
+
+    // Save cursor position before state update
+    cursorPosRef.current = cursorPosition;
+
+    // Persist cursor position to localStorage
+    const storageKey = `textEditor_cursor_${textId}`;
+    localStorage.setItem(storageKey, cursorPosition.toString());
+
+    setContent(newContent);
+  };
+
+  const handleCursorMove = () => {
+    if (textareaRef.current) {
+      const cursorPosition = textareaRef.current.selectionStart;
+      cursorPosRef.current = cursorPosition;
+
+      // Persist cursor position to localStorage
+      const storageKey = `textEditor_cursor_${textId}`;
+      localStorage.setItem(storageKey, cursorPosition.toString());
+    }
+  };
+
+  // Clean up localStorage when component unmounts or saves
+  useEffect(() => {
+    return () => {
+      const storageKey = `textEditor_cursor_${textId}`;
+      localStorage.removeItem(storageKey);
+    };
+  }, [textId]);
 
   const charCount = content.length;
 
@@ -85,7 +159,9 @@ export function TextEditor({
         <textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleContentChange}
+          onClick={handleCursorMove}
+          onKeyUp={handleCursorMove}
           className="w-full h-full p-4 bg-background border border-border rounded-md resize-none font-serif focus:outline-none focus:ring-2 focus:ring-primary"
           style={{ fontSize: `${fontSize}px`, lineHeight: 1.7 }}
           disabled={isSaving}
