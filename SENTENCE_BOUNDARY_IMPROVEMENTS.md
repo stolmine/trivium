@@ -133,6 +133,56 @@ const end = findSentenceEnd(text, 0);
 // Previously would have stopped at position 2 (after "Dr.")
 ```
 
+## Parenthetical Abbreviation Fix (2025-10-25)
+
+### Problem
+Parenthetical abbreviations commonly used in historical and legal texts were causing false sentence breaks. Patterns like "(r. 1066)" (reigned), "(b. 1950)" (born), "(d. 2020)" (died), "(c. 1800)" (circa), and "(fl. 1600)" (flourished) were being split at the period.
+
+**Example issue:**
+```
+"William the Conqueror (r. 1066-1087) invaded England."
+```
+Before the fix, this would incorrectly break into two sentences at "r."
+
+### Solution
+Added five common parenthetical abbreviations to the abbreviation dictionary:
+- `r.` - reigned
+- `b.` - born
+- `d.` - died
+- `c.` - circa
+- `fl.` - flourished (floruit)
+
+These abbreviations are now recognized by the `isAbbreviation()` function's dictionary lookup, preventing false sentence breaks.
+
+### Supported Patterns
+
+**Historical dates:**
+```
+"King Henry VIII (r. 1509-1547) had six wives."
+"Shakespeare (b. 1564, d. 1616) wrote Hamlet."
+"Marcus Aurelius (fl. 161-180 AD) was a philosopher."
+```
+
+**Biographical information:**
+```
+"Jane Doe (b. 1980) is an author."
+"The artist (c. 1400-1450) created this work."
+```
+
+### Impact
+- Historical texts with reign dates now flow naturally in typewriter mode
+- Biographical entries with birth/death dates no longer cause sentence breaks
+- Legal and academic documents with circa dates are properly handled
+
+### Implementation
+Location: `/Users/why/repos/trivium/src/lib/utils/sentenceBoundary.ts`
+Method: Added to common abbreviations dictionary (lines 191-196)
+
+### Test Coverage
+Existing test suite passes with new abbreviations. All typewriter mode scenarios work correctly with parenthetical abbreviations.
+
+---
+
 ## Future Enhancements
 
 Possible additions if needed:
@@ -140,3 +190,4 @@ Possible additions if needed:
 - User-customizable abbreviation list
 - Machine learning-based sentence detection
 - Support for more complex patterns (e.g., "Ph.D.M.D.")
+- Additional parenthetical abbreviations (m., s., succ., etc.)

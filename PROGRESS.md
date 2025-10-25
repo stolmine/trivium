@@ -258,6 +258,28 @@ Removed ~225 lines of debug console.log statements added during Phase 27 develop
 
 **Files Modified**: 3 (all frontend)
 
+### Parenthetical Abbreviation Fix
+
+**Date**: 2025-10-25
+**Status**: Complete ✅
+
+Added support for common parenthetical abbreviations used in historical and legal texts to prevent false sentence breaks in typewriter/focus mode.
+
+**New Abbreviations Supported**:
+- `r.` - reigned (e.g., "William the Conqueror (r. 1066-1087)")
+- `b.` - born (e.g., "Shakespeare (b. 1564)")
+- `d.` - died (e.g., "Shakespeare (d. 1616)")
+- `c.` - circa (e.g., "built (c. 1800)")
+- `fl.` - flourished (e.g., "Marcus Aurelius (fl. 161-180 AD)")
+
+**Impact**:
+- Historical texts with reign dates now flow naturally in typewriter mode
+- Biographical entries with birth/death dates no longer cause unwanted sentence breaks
+- Legal and academic documents with circa dates are properly handled
+
+**Files Modified**: 1 (`src/lib/utils/sentenceBoundary.ts`)
+**Documentation Updated**: SENTENCE_BOUNDARY_IMPROVEMENTS.md, DOCUMENTATION_INDEX.md
+
 ---
 
 ## Phase 26: Reading Refinements - Cursor Preservation in Global Edit Mode

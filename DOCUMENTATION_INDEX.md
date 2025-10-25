@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-25 (Phase 27 Links Sidebar Scroll Preservation Fix - Post-phase debug logging cleanup complete)
+Last Updated: 2025-10-25 (Phase 27 + Parenthetical Abbreviation Fix)
 
 ---
 
@@ -175,11 +175,11 @@ Last Updated: 2025-10-25 (Phase 27 Links Sidebar Scroll Preservation Fix - Post-
 **Last Updated**: 2025-10-17
 
 #### `/Users/why/repos/trivium/src/lib/utils/sentenceBoundary.ts`
-**Description**: Sentence boundary detection utilities for text editing and context extraction. Enhanced `isAbbreviation()` function with single-letter abbreviation detection, multi-letter acronym support (U.S., U.K., P.S.), and 70+ common abbreviations. Functions for finding sentence starts/ends, detecting punctuation, and extracting complete sentences around selections. Used for focus/typewriter mode, mark context display, and smart editing
+**Description**: Sentence boundary detection utilities for text editing and context extraction. Enhanced `isAbbreviation()` function with single-letter abbreviation detection, multi-letter acronym support (U.S., U.K., P.S.), 70+ common abbreviations, and parenthetical abbreviation support (r., b., d., c., fl.). Functions for finding sentence starts/ends, detecting punctuation, and extracting complete sentences around selections. Used for focus/typewriter mode, mark context display, and smart editing
 **Last Updated**: 2025-10-25
 
 #### `/Users/why/repos/trivium/SENTENCE_BOUNDARY_IMPROVEMENTS.md`
-**Description**: Complete implementation documentation for sentence boundary detection improvements (Phase 26). Covers the problem (false breaks at abbreviations), three major enhancements (single-letter abbreviations, multi-letter acronyms, expanded abbreviation list from 30 to 70+ entries), implementation details with detection order, test results (17/17 passing), and impact on focus/typewriter mode
+**Description**: Complete implementation documentation for sentence boundary detection improvements (Phase 26 + parenthetical abbreviation fix). Covers the problem (false breaks at abbreviations), three major enhancements (single-letter abbreviations, multi-letter acronyms, expanded abbreviation list from 30 to 70+ entries), parenthetical abbreviation support (r., b., d., c., fl.), implementation details with detection order, test results (17/17 passing), and impact on focus/typewriter mode
 **Last Updated**: 2025-10-25
 
 #### `/Users/why/repos/trivium/src/lib/utils/platform.ts`
