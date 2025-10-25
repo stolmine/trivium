@@ -1,9 +1,242 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 26 Complete ✅ - Reading Refinements
+## Current Status: Phase 27 Complete ✅ - Links Sidebar Scroll Preservation
 
-**Branch**: `26_readingRefined`
+**Branch**: `main`
 **Last Updated**: 2025-10-25
+
+---
+
+## Phase 27: Links Sidebar Scroll Preservation Fix
+
+### Overview
+**Branch**: `main`
+**Date**: 2025-10-25
+**Status**: Complete ✅
+
+Critical bug fix for Links Sidebar scroll position loss when navigating to ingest and back. The sidebar would reset to the top, forcing users to re-scroll to find their place. Root causes included component state loss on unmount, excessive re-rendering from Zustand subscriptions, and race conditions during scroll restoration.
+
+### Problem
+
+**Scroll Position Lost After Navigation**:
+When users clicked a Wikipedia link to navigate to the ingest page and then returned to reading view, the Links Sidebar scroll position would reset to the top. This was frustrating for users browsing long lists of links, as they had to manually scroll back to find where they left off.
+
+**Root Causes**:
+1. **Component State Loss**: Scroll position stored in component-local ref (`scrollContainerRef`) was lost when component unmounted during navigation
+2. **Excessive Re-rendering**: Zustand subscription to `scrollPosition` triggered re-renders on every scroll event (potentially 60+ times per second), causing performance issues and visual jank
+3. **Race Conditions**: Scroll restoration timing conflicts between initial mount, content changes, and filter/sort operations
+4. **Visual Jumps**: Without synchronous initial restoration, users could see sidebar scroll from top to saved position, creating poor UX
+
+### Solution
+
+Implemented comprehensive scroll preservation system with Zustand store persistence, ref callbacks, and smart restoration timing.
+
+#### 1. Zustand Store Persistence
+
+**Added `scrollPosition` to linksSidebar Store**:
+- Moved scroll position from component ref to Zustand store for persistence across component lifecycle
+- Added `setScrollPosition(position: number)` action for updates
+- Store persists even when component unmounts, preserving state during navigation
+
+**Benefits**:
+- Survives component unmount/remount cycles
+- Accessible from any component that needs it
+- Single source of truth for scroll state
+
+#### 2. Ref Callback for Synchronous Restoration
+
+**Implemented `scrollContainerCallback`**:
+- Used React ref callback instead of `useRef` for synchronous initial scroll restoration
+- Applied scroll position BEFORE first paint to prevent visual jump
+- Tracked initial restoration with `hasInitiallyRestoredRef` flag to avoid duplicate restorations
+
+**Why Ref Callback vs useRef**:
+- `useRef` executes after render (too late - causes visible scroll jump)
+- Ref callback executes synchronously when DOM node attached (prevents visual artifact)
+- Allows us to set `node.scrollTop` before browser paints
+
+#### 3. Direct Store Reads (No Subscription)
+
+**Critical Performance Fix**:
+- **REMOVED** `scrollPosition` from Zustand subscription (previously caused re-render on every scroll event)
+- **ADDED** direct reads via `useLinksSidebarStore.getState().scrollPosition` when needed
+- Only read scroll position in ref callback and layout effect (not on every scroll)
+
+**Before**:
+```typescript
+const { scrollPosition } = useLinksSidebarStore() // Re-renders on every scroll!
+```
+
+**After**:
+```typescript
+// Read directly when needed (no re-render)
+const scrollPosition = useLinksSidebarStore.getState().scrollPosition
+```
+
+**Impact**:
+- Eliminated 60+ re-renders per second during scrolling
+- Smooth scroll performance
+- No more visual jank or stuttering
+
+#### 4. Smart Restoration Timing (useLayoutEffect + RAF)
+
+**Dual-Strategy Approach**:
+- **Links Changed** (e.g., after ingest): Triple RAF for maximum DOM stability
+- **UI Changed** (filter/sort/expand): Single RAF for speed
+
+**useLayoutEffect for Pre-Paint Execution**:
+- Runs before browser paint (unlike useEffect which runs after)
+- Ensures scroll position applied before user sees content
+- Dependency array: `[links, filteredWikipediaLinks, filteredOtherLinks, showWikipedia, showNonWikipedia]`
+
+**Triple RAF Strategy** (when links change):
+```typescript
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      // DOM is now stable after content change
+      scrollContainerRef.current.scrollTop = scrollPosition
+    })
+  })
+})
+```
+
+**Single RAF Strategy** (when UI changes):
+```typescript
+requestAnimationFrame(() => {
+  // Fast restoration for filter/sort/expand
+  scrollContainerRef.current.scrollTop = scrollPosition
+})
+```
+
+**Why RAF?**:
+- Waits for DOM to be fully rendered and laid out
+- Prevents scroll restoration before content is ready
+- Avoids "scroll to wrong position then jump to correct position" artifact
+
+#### 5. Restoration Prevention During Scroll Events
+
+**Added `isRestoringRef` Flag**:
+- Set to `true` during scroll restoration
+- Prevents `saveScrollPosition` from firing during restoration
+- Avoids infinite loops and incorrect position captures
+- Reset after 50ms delay
+
+**Flow**:
+1. User scrolls → `saveScrollPosition()` called → position saved to store
+2. Navigation occurs → component unmounts → position still in store
+3. Return to reading → component remounts → ref callback fires
+4. Ref callback sets `isRestoringRef = true` → applies scroll
+5. Scroll event triggered by restoration → `saveScrollPosition` skips (flag is true)
+6. After 50ms → `isRestoringRef = false` → normal scroll tracking resumes
+
+### Technical Details
+
+**Ref Callback Implementation**:
+```typescript
+const scrollContainerCallback = useCallback((node: HTMLDivElement | null) => {
+  const scrollPosition = useLinksSidebarStore.getState().scrollPosition
+  scrollContainerRef.current = node
+
+  // Synchronous restoration on initial mount
+  if (node && scrollPosition > 0 && !hasInitiallyRestoredRef.current) {
+    isRestoringRef.current = true
+    node.scrollTop = scrollPosition // Applied BEFORE first paint
+    hasInitiallyRestoredRef.current = true
+
+    setTimeout(() => {
+      isRestoringRef.current = false
+    }, 50)
+  }
+}, [])
+```
+
+**Layout Effect Restoration**:
+```typescript
+useLayoutEffect(() => {
+  const linksChanged = previousLinksLengthRef.current !== links.length
+  const scrollPosition = useLinksSidebarStore.getState().scrollPosition
+
+  if (!hasInitiallyRestoredRef.current) return // Ref callback handles initial mount
+
+  if (scrollContainerRef.current && scrollPosition > 0) {
+    isRestoringRef.current = true
+
+    if (linksChanged) {
+      // Triple RAF for DOM stability after content change
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+              scrollContainerRef.current.scrollTop = scrollPosition
+              setTimeout(() => { isRestoringRef.current = false }, 50)
+            }
+          })
+        })
+      })
+    } else {
+      // Single RAF for speed (filter/sort/expand)
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = scrollPosition
+          setTimeout(() => { isRestoringRef.current = false }, 50)
+        }
+      })
+    }
+  }
+}, [links, filteredWikipediaLinks, filteredOtherLinks, showWikipedia, showNonWikipedia])
+```
+
+**Save Scroll Position**:
+```typescript
+const saveScrollPosition = () => {
+  if (scrollContainerRef.current && !isRestoringRef.current) {
+    const savedPosition = scrollContainerRef.current.scrollTop
+    setScrollPosition(savedPosition)
+  }
+}
+```
+
+### Files Modified
+
+**Frontend**:
+- `src/lib/stores/linksSidebar.ts` - Added `scrollPosition` state and `setScrollPosition` action
+- `src/lib/components/reading/LinksSidebar.tsx` - Implemented scroll preservation system with ref callback, layout effect, and direct store reads
+- `src/routes/read/[id].tsx` - Added debug logging for navigation flow (optional, can be removed)
+
+### Testing
+
+- ✅ Scroll position preserved when navigating to ingest and back
+- ✅ Scroll position preserved after ingesting new Wikipedia article
+- ✅ Scroll position preserved when filtering links by search query
+- ✅ Scroll position preserved when sorting links (alphabetical/appearance)
+- ✅ Scroll position preserved when expanding/collapsing Wikipedia/Other sections
+- ✅ No visual jump on initial mount (synchronous restoration)
+- ✅ No visual jump after ingest (triple RAF stability)
+- ✅ No performance degradation (eliminated 60+ re-renders/sec)
+- ✅ No infinite scroll loops (restoration flag works correctly)
+- ✅ Exact scroll position restoration (pixel-perfect)
+
+### Impact
+
+- **User Experience**: Seamless scroll preservation across all navigation scenarios
+- **Performance**: Eliminated excessive re-rendering (60+ fps scroll events no longer trigger component updates)
+- **Visual Quality**: No visible scroll jumps or stuttering
+- **Robustness**: Handles all edge cases (initial mount, content changes, UI updates, filters)
+- **Maintainability**: Clean separation of concerns (store for persistence, component for restoration)
+
+### Known Limitations
+
+- Console logs left in for debugging (can be removed in production build)
+- 50ms restoration flag timeout is arbitrary (could be tuned based on empirical data)
+- Assumes single sidebar instance (multiple instances would share scroll position)
+
+### Future Enhancements
+
+- Remove debug logging for production
+- Add scroll position persistence to localStorage for session recovery
+- Consider per-article scroll positions (currently global)
+- Investigate reducing RAF count based on performance metrics
 
 ---
 

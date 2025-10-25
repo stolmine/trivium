@@ -149,12 +149,24 @@ export function ReadPage() {
   }, [id, loadText, getReadRanges, getParagraphs, calculateProgress])
 
   useEffect(() => {
+    const timestamp = new Date().toISOString()
+    console.group(`[ReadPage ${timestamp}] CURRENT TEXT CHANGED`)
+    console.log('currentText:', currentText ? {
+      id: currentText.id,
+      title: currentText.title,
+      contentLength: currentText.content.length
+    } : null)
+
     if (currentText) {
       const { excludedRanges } = parseExcludedRanges(currentText.content)
       setExcludedRanges(excludedRanges)
       setRenameTextTitle(currentText.title)
+
+      console.log('Extracting links from content...')
       extractLinks(currentText.content)
+      console.log('Links extraction triggered')
     }
+    console.groupEnd()
   }, [currentText, setExcludedRanges, extractLinks])
 
   useEffect(() => {
@@ -727,14 +739,26 @@ export function ReadPage() {
   }
 
   const handleNavigateToIngest = (url: string) => {
+    const timestamp = new Date().toISOString()
+    console.group(`[ReadPage ${timestamp}] NAVIGATE TO INGEST`)
+    console.log('URL:', url)
+
     try {
       new URL(url)
     } catch {
       console.warn('[ReadPage] Invalid URL:', url)
+      console.groupEnd()
       return
     }
 
     const currentScrollPosition = scrollContainerRef.current?.scrollTop ?? 0
+    console.log('Current scroll position:', currentScrollPosition)
+    console.log('Current text ID:', currentText?.id)
+    console.log('Navigation state:', {
+      path: location.pathname,
+      scrollPosition: currentScrollPosition,
+      textId: currentText?.id
+    })
 
     navigate('/ingest', {
       state: {
@@ -746,6 +770,8 @@ export function ReadPage() {
         }
       }
     })
+    console.log('Navigation initiated to /ingest')
+    console.groupEnd()
   }
 
   useEffect(() => {

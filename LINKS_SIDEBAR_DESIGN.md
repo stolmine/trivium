@@ -1,8 +1,12 @@
 # Links Sidebar Feature - Complete Design Document
 
-**Last Updated**: 2025-10-20
-**Status**: DESIGN PHASE - Ready for Implementation
+**Last Updated**: 2025-10-25 (Phase 27 Scroll Preservation Fix)
+**Status**: Implemented (Phase 21) + Scroll Preservation Fix (Phase 27)
 **Author**: UI/UX Design Architect
+
+**Post-Implementation Notes**:
+- Phase 21 (2025-10-20): Initial implementation of Links Sidebar with deduplication and sorting
+- Phase 27 (2025-10-25): Critical bug fix for scroll position preservation (see PROGRESS.md for details)
 
 ---
 

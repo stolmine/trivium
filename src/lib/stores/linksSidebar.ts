@@ -18,6 +18,7 @@ interface LinksSidebarState {
   showWikipedia: boolean
   sortMode: SortMode
   searchQuery: string
+  scrollPosition: number
 
   setOpen: (open: boolean) => void
   extractLinks: (content: string) => void
@@ -25,6 +26,7 @@ interface LinksSidebarState {
   setShowWikipedia: (show: boolean) => void
   setSortMode: (mode: SortMode) => void
   setSearchQuery: (query: string) => void
+  setScrollPosition: (position: number) => void
 }
 
 export const useLinksSidebarStore = create<LinksSidebarState>((set) => ({
@@ -34,18 +36,33 @@ export const useLinksSidebarStore = create<LinksSidebarState>((set) => ({
   showWikipedia: true,
   sortMode: 'appearance',
   searchQuery: '',
+  scrollPosition: 0,
 
   setOpen: (open) => set({ isOpen: open }),
 
   extractLinks: (content: string) => {
+    const timestamp = new Date().toISOString()
+    console.group(`[LinksSidebarStore ${timestamp}] EXTRACT LINKS`)
+    console.log('Content length:', content.length)
+
     const links = extractAndDeduplicateLinks(content)
+
+    console.log('Links extracted:', {
+      count: links.length,
+      wikipedia: links.filter(l => l.baseUrl.includes('wikipedia.org')).length,
+      other: links.filter(l => !l.baseUrl.includes('wikipedia.org')).length
+    })
+
     set({ links })
+    console.log('Store state updated with new links')
+    console.groupEnd()
   },
 
   setShowNonWikipedia: (show) => set({ showNonWikipedia: show }),
   setShowWikipedia: (show) => set({ showWikipedia: show }),
   setSortMode: (mode) => set({ sortMode: mode }),
-  setSearchQuery: (query) => set({ searchQuery: query })
+  setSearchQuery: (query) => set({ searchQuery: query }),
+  setScrollPosition: (position) => set({ scrollPosition: position })
 }))
 
 function extractAndDeduplicateLinks(content: string): ParsedLink[] {

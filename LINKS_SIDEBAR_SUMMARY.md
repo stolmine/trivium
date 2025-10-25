@@ -1,8 +1,9 @@
 # Links Sidebar Feature - Executive Summary
 
 **Date**: 2025-10-20
-**Status**: Design Complete, Ready for Implementation
+**Status**: Implemented (Phase 21) + Scroll Preservation Fix (Phase 27, 2025-10-25)
 **Estimated Effort**: Phase 1 MVP (8-12 hours) + Phase 2 Polish (4-6 hours)
+**Post-Implementation Fix**: Phase 27 - Scroll position preservation system (see PROGRESS.md)
 
 ---
 
