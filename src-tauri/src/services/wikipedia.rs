@@ -199,6 +199,30 @@ fn extract_text_recursive(
                 }
             }
         }
+        "blockquote" => {
+            let mut quote_parts = Vec::new();
+            for child in node.children() {
+                if let Some(elem) = scraper::ElementRef::wrap(child) {
+                    extract_text_recursive(elem, &mut quote_parts, unwanted_selectors);
+                }
+            }
+
+            if !quote_parts.is_empty() {
+                let quote_text = quote_parts.join("\n");
+                let trimmed = quote_text.trim();
+                if !trimmed.is_empty() {
+                    for line in trimmed.lines() {
+                        let trimmed_line = line.trim();
+                        if !trimmed_line.is_empty() {
+                            result.push(format!("> {}", trimmed_line));
+                        } else {
+                            result.push(">".to_string());
+                        }
+                    }
+                    result.push("".to_string());
+                }
+            }
+        }
         _ => {}
     }
 }
@@ -581,5 +605,41 @@ mod tests {
         let result = get_text_with_links(p_elem);
         assert!(!result.contains("[]("));
         assert!(result.contains("[text](https://example.com/other)"));
+    }
+
+    #[test]
+    fn test_blockquote_basic() {
+        let html = r#"<blockquote><p>This is a quote.</p></blockquote>"#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(result.contains("> This is a quote."));
+    }
+
+    #[test]
+    fn test_blockquote_with_link() {
+        let html = r#"<blockquote><p>Quote with <a href="/wiki/Test">link</a>.</p></blockquote>"#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(result.contains("> Quote with [link]"));
+    }
+
+    #[test]
+    fn test_blockquote_multiline() {
+        let html = r#"<blockquote><p>Line one.</p><p>Line two.</p></blockquote>"#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(result.contains("> Line one."));
+        assert!(result.contains("> Line two."));
+    }
+
+    #[test]
+    fn test_blockquote_empty() {
+        let html = r#"<blockquote></blockquote>"#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(!result.contains(">"));
+    }
+
+    #[test]
+    fn test_blockquote_whitespace_only() {
+        let html = r#"<blockquote><p>   </p></blockquote>"#;
+        let result = html_to_plain_text(html).unwrap();
+        assert!(!result.contains(">"));
     }
 }

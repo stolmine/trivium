@@ -1,5 +1,5 @@
 import { useMemo, memo, useRef, useLayoutEffect } from 'react'
-import type { Root, RootContent, Paragraph, Text, Link, PhrasingContent } from 'mdast'
+import type { Root, RootContent, Paragraph, Text, Link, PhrasingContent, Blockquote } from 'mdast'
 import type { ClozeNote } from '../../types'
 import { EditableLink } from './EditableLink'
 import { updateLinkText, replaceTextAtPosition } from '../../utils/markdownEdit'
@@ -215,6 +215,47 @@ function renderParagraphNode(
   )
 }
 
+function renderBlockquoteNode(
+  node: Blockquote,
+  editableRange: { start: number; end: number } | undefined,
+  marks: ClozeNote[] | undefined,
+  markdown: string,
+  onTextEdit: (newMarkdown: string) => void,
+  key: string,
+  cursorPosRef: React.MutableRefObject<number | null>,
+  containerRef: React.MutableRefObject<HTMLDivElement | null>,
+  suppressMarkHighlighting?: boolean,
+  onNavigateToIngest?: (url: string) => void
+) {
+  return (
+    <blockquote
+      key={key}
+      className="border-l-4 border-gray-400 dark:border-gray-600 pl-4 my-4 italic text-gray-700 dark:text-gray-300"
+    >
+      {node.children.map((child: RootContent, idx: number) => {
+        const childKey = `${key}-child-${idx}`;
+
+        if (child.type === 'paragraph') {
+          return renderParagraphNode(
+            child,
+            editableRange,
+            marks,
+            markdown,
+            onTextEdit,
+            childKey,
+            cursorPosRef,
+            containerRef,
+            suppressMarkHighlighting,
+            onNavigateToIngest
+          );
+        }
+
+        return <div key={childKey}>[unsupported in blockquote: {child.type}]</div>;
+      })}
+    </blockquote>
+  );
+}
+
 const MarkdownRendererComponent = ({
   ast,
   markdown,
@@ -246,6 +287,21 @@ const MarkdownRendererComponent = ({
       if (node.type === 'paragraph') {
         return renderParagraphNode(
           node,
+          editableRange,
+          marks,
+          markdown,
+          onTextEdit,
+          nodeKey,
+          cursorPosRef,
+          containerRef,
+          suppressMarkHighlighting,
+          onNavigateToIngest
+        )
+      }
+
+      if (node.type === 'blockquote') {
+        return renderBlockquoteNode(
+          node as Blockquote,
           editableRange,
           marks,
           markdown,

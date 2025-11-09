@@ -1,4 +1,4 @@
-import { useMemo, memo } from 'react'
+import { useMemo, memo, useEffect, useRef } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import type { ReadRange, ExcludedRange } from '../../types'
 
@@ -40,6 +40,85 @@ function formatWikipediaHeaders(text: string): string {
   })
 
   return formattedLines.join('\n')
+}
+
+function formatBlockquotes(text: string): string {
+  const lines = text.split('\n')
+  const result: string[] = []
+  let inBlockquote = false
+  let blockquoteLines: string[] = []
+
+  console.log('formatBlockquotes input:', text.substring(0, 200))
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmedLine = line.trim()
+
+    // Check if line starts with >
+    if (trimmedLine.startsWith('>')) {
+      // Extract content after >
+      const content = trimmedLine.slice(1).trim()
+
+      if (!inBlockquote) {
+        inBlockquote = true
+        blockquoteLines = []
+      }
+
+      blockquoteLines.push(content)
+    } else {
+      // Not a blockquote line
+      if (inBlockquote) {
+        // Close the previous blockquote
+        const blockquoteContent = blockquoteLines.join('<br>')
+        // Add blank line before blockquote for consistent spacing (unless at start)
+        if (result.length > 0) {
+          result.push('')
+        }
+        // Removed hardcoded text colors to allow parent read styling to apply
+        result.push(`<blockquote class="border-l-4 border-gray-400 dark:border-gray-600 pl-4 italic blockquote-text">${blockquoteContent}</blockquote>`)
+        // Add blank line after blockquote for consistent spacing
+        result.push('')
+        inBlockquote = false
+        blockquoteLines = []
+      }
+
+      // Skip empty lines immediately before a blockquote or after a blockquote
+      // This prevents double-spacing when markdown already has blank lines
+      if (trimmedLine === '') {
+        // Check if next line is a blockquote
+        const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : ''
+        if (nextLine.startsWith('>')) {
+          // Skip this empty line, we'll add our own spacing
+          continue
+        }
+
+        // Check if we just closed a blockquote (last item in result is empty string after blockquote)
+        if (result.length >= 2 && result[result.length - 1] === '') {
+          // Skip this empty line, we already added spacing after the blockquote
+          continue
+        }
+      }
+
+      result.push(line)
+    }
+  }
+
+  // Handle case where text ends with a blockquote
+  if (inBlockquote && blockquoteLines.length > 0) {
+    const blockquoteContent = blockquoteLines.join('<br>')
+    // Add blank line before blockquote (unless at start)
+    if (result.length > 0) {
+      result.push('')
+    }
+    // Removed hardcoded text colors to allow parent read styling to apply
+    result.push(`<blockquote class="border-l-4 border-gray-400 dark:border-gray-600 pl-4 italic blockquote-text">${blockquoteContent}</blockquote>`)
+    // Add blank line after blockquote
+    result.push('')
+  }
+
+  const output = result.join('\n')
+  console.log('formatBlockquotes output:', output.substring(0, 200))
+  return output
 }
 
 function parseMarkdownLink(text: string, startIndex: number): { linkText: string; url: string; endIndex: number } | null {
@@ -102,8 +181,49 @@ function parseMarkdownLink(text: string, startIndex: number): { linkText: string
   return { linkText, url, endIndex: i }
 }
 
-function renderTextWithLinks(text: string, linksEnabled: boolean): string {
+// NOTE: renderTextWithLinks is no longer used - replaced by renderTextSegmentWithoutBlockquoteFormatting
+// which processes links/headers WITHOUT formatting blockquotes (done globally instead)
+
+function stripMarkdownLinks(text: string): string {
+  // Remove empty markdown links
+  let stripped = text.replace(/\[\]\([^\)]+\)/g, '')
+
+  // Remove markdown link syntax but keep link text, using the parser
+  let result = ''
+  let i = 0
+  while (i < stripped.length) {
+    const linkInfo = parseMarkdownLink(stripped, i)
+    if (linkInfo) {
+      result += linkInfo.linkText
+      i = linkInfo.endIndex
+    } else {
+      result += stripped[i]
+      i++
+    }
+  }
+
+  // Remove header syntax === Text === → Text to match DOM textContent
+  // This must match what formatWikipediaHeaders does (removes === markers, keeps text)
+  result = result.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
+
+  // Remove blockquote syntax > Text → Text to match DOM textContent
+  // This must match what formatBlockquotes does (removes > markers, keeps text)
+  result = result.replace(/^>\s*/gm, '')
+
+  return result
+}
+
+/**
+ * Render text segments WITH format preservation
+ * Key: Don't call formatBlockquotes() per segment - blockquotes already formatted globally
+ * Just render links and apply read/excluded styling
+ */
+function renderTextSegmentWithoutBlockquoteFormatting(text: string, linksEnabled: boolean): string {
+  // Format headers (if any)
   const formattedText = formatWikipediaHeaders(text)
+
+  // DON'T format blockquotes - they're already formatted globally
+  // Just remove empty links and process markdown links
 
   // Remove empty markdown links: [](...)
   let textWithoutEmptyLinks = formattedText.replace(/\[\]\([^\)]+\)/g, '')
@@ -155,30 +275,6 @@ function renderTextWithLinks(text: string, linksEnabled: boolean): string {
   })
 
   return processed
-}
-
-function stripMarkdownLinks(text: string): string {
-  // Remove empty markdown links
-  let stripped = text.replace(/\[\]\([^\)]+\)/g, '')
-
-  // Remove markdown link syntax but keep link text, using the parser
-  let result = ''
-  let i = 0
-  while (i < stripped.length) {
-    const linkInfo = parseMarkdownLink(stripped, i)
-    if (linkInfo) {
-      result += linkInfo.linkText
-      i = linkInfo.endIndex
-    } else {
-      result += stripped[i]
-      i++
-    }
-  }
-
-  // Remove header syntax === Text === → Text to match DOM textContent
-  // This must match what formatWikipediaHeaders does (removes === markers, keeps text)
-  result = result.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
-  return result
 }
 
 /**
@@ -247,6 +343,18 @@ export function cleanedPosToRenderedPos(cleanedPos: number, cleanedContent: stri
         }
       }
       continue
+    }
+
+    // Check if we're at a blockquote line start (after newline or at start of content)
+    const isLineStart = cleanedIdx === 0 || cleanedContent[cleanedIdx - 1] === '\n'
+    if (isLineStart) {
+      const blockquoteMatch = cleanedContent.substring(cleanedIdx).match(/^>\s*/)
+      if (blockquoteMatch) {
+        // Skip the > and any following spaces in cleaned content
+        // They don't appear in rendered content
+        cleanedIdx += blockquoteMatch[0].length
+        continue
+      }
     }
 
     renderedIdx++
@@ -328,6 +436,18 @@ export function renderedPosToCleanedPos(renderedPos: number, cleanedContent: str
         return cleanedIdx + leadingLength + offsetInHeader
       }
       continue
+    }
+
+    // Check if we're at a blockquote line start (after newline or at start of content)
+    const isLineStart = cleanedIdx === 0 || cleanedContent[cleanedIdx - 1] === '\n'
+    if (isLineStart) {
+      const blockquoteMatch = cleanedContent.substring(cleanedIdx).match(/^>\s*/)
+      if (blockquoteMatch) {
+        // Skip the > and any following spaces in cleaned content
+        // They don't appear in rendered content, so we don't advance renderedIdx
+        cleanedIdx += blockquoteMatch[0].length
+        continue
+      }
     }
 
     // Regular character - advance both pointers
@@ -421,6 +541,9 @@ function isPositionInHeader(position: number, headerRanges: HeaderRange[]): bool
   )
 }
 
+// Note: Blockquote detection and boundary adjustment are no longer needed
+// since we now format blockquotes once on the full content before segmentation
+
 const ReadHighlighterComponent = ({
   content,
   readRanges,
@@ -429,6 +552,8 @@ const ReadHighlighterComponent = ({
   searchMatches = [],
   activeSearchIndex = -1
 }: ReadHighlighterProps) => {
+  const containerRef = useRef<HTMLDivElement>(null)
+
   const segments = useMemo(() => {
     const { cleanedContent, excludedRanges } = parseExcludedRanges(content)
     const headerRanges = detectHeaderRanges(cleanedContent)
@@ -450,8 +575,13 @@ const ReadHighlighterComponent = ({
       endPosition: renderedPosToCleanedPos(r.endPosition, cleanedContent)
     }))
 
-    const sortedReadRanges = [...convertedReadRanges].sort((a, b) => a.startPosition - b.startPosition)
-    const sortedExcludedRanges = [...convertedExcludedRanges].sort((a, b) => a.startPosition - b.startPosition)
+    // Don't adjust read ranges - allow users to mark partial blockquotes
+    // Each segment handles its own blockquote formatting independently
+    const adjustedReadRanges = convertedReadRanges
+    const adjustedExcludedRanges = convertedExcludedRanges
+
+    const sortedReadRanges = [...adjustedReadRanges].sort((a, b) => a.startPosition - b.startPosition)
+    const sortedExcludedRanges = [...adjustedExcludedRanges].sort((a, b) => a.startPosition - b.startPosition)
 
     const mergedReadRanges: Array<{ start: number; end: number; isAutoCompleted: boolean }> = []
     for (const range of sortedReadRanges) {
@@ -624,49 +754,63 @@ const ReadHighlighterComponent = ({
     return result
   }, [segments, convertedSearchMatches, activeSearchIndex])
 
+  // NEW: Render using formatted HTML with blockquotes already processed
+  const finalHtml = useMemo(() => {
+    // Build HTML from segments, applying styling but NOT reformatting blockquotes
+    let result = ''
+
+    for (const segment of renderableSegments) {
+      // Render segment content (links, headers) but NOT blockquotes
+      const segmentHtml = renderTextSegmentWithoutBlockquoteFormatting(segment.text, linksEnabled)
+
+      // Apply styling wrappers
+      if (segment.isExcluded) {
+        result += `<span class="excluded-text">${segmentHtml}</span>`
+      } else if (segment.isRead && segment.isHeader) {
+        result += `<span class="read-header">${segmentHtml}</span>`
+      } else if (segment.isRead) {
+        const markClass = segment.isAutoCompleted ? 'read-range-auto' : 'read-range'
+        let style = ''
+        if (segment.isActiveSearchMatch) {
+          style = ' style="background-color: #fed7aa; color: black;"'
+        } else if (segment.isSearchMatch) {
+          style = ' style="background-color: #fef08a; color: black;"'
+        }
+        result += `<mark class="${markClass}"${style}>${segmentHtml}</mark>`
+      } else {
+        result += segmentHtml
+      }
+    }
+
+    // NOW format blockquotes on the entire result
+    // This ensures blockquotes stay together even when segments are highlighted
+    return formatBlockquotes(result)
+  }, [renderableSegments, linksEnabled])
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const blockquotes = containerRef.current.querySelectorAll('blockquote')
+      console.log('Rendered blockquotes:', {
+        count: blockquotes.length,
+        structures: Array.from(blockquotes).map(bq => ({
+          innerHTML: bq.innerHTML.substring(0, 50),
+          classes: bq.className,
+          parentClasses: bq.parentElement?.className,
+          computedBg: window.getComputedStyle(bq).backgroundColor,
+          computedColor: window.getComputedStyle(bq).color
+        }))
+      })
+    }
+  }, [content, readRanges])
+
   return (
     <div
+      ref={containerRef}
       id="article-content"
       className={`whitespace-pre-wrap not-prose ${className || ''}`}
       onClick={handleClick}
-    >
-      {renderableSegments.map((segment) => {
-        const classNames: string[] = []
-        let style: React.CSSProperties = {}
-
-        // Apply base styling (read/excluded/header)
-        if (segment.isExcluded) {
-          classNames.push('excluded-text')
-        } else if (segment.isRead && segment.isHeader) {
-          classNames.push('read-header')
-        } else if (segment.isRead) {
-          if (segment.isAutoCompleted) {
-            // Auto-completed ranges use lighter/dimmer styling to indicate user may not have read it
-            classNames.push('bg-gray-400', 'text-gray-700', 'dark:bg-gray-600', 'dark:text-gray-300', 'inline', 'opacity-70')
-          } else {
-            // Manual marks use solid black/white styling
-            classNames.push('bg-black', 'text-white', 'dark:bg-gray-700', 'dark:text-gray-100', 'inline')
-          }
-        }
-
-        // Apply search highlighting - overrides base styling for matched text only
-        if (segment.isActiveSearchMatch) {
-          style = { backgroundColor: '#fed7aa', color: 'black' }
-        } else if (segment.isSearchMatch) {
-          style = { backgroundColor: '#fef08a', color: 'black' }
-        }
-
-        return (
-          <span
-            key={segment.key}
-            className={classNames.join(' ')}
-            style={Object.keys(style).length > 0 ? style : undefined}
-            data-search-index={segment.isActiveSearchMatch ? activeSearchIndex : undefined}
-            dangerouslySetInnerHTML={{ __html: renderTextWithLinks(segment.text, linksEnabled) }}
-          />
-        )
-      })}
-    </div>
+      dangerouslySetInnerHTML={{ __html: finalHtml }}
+    />
   )
 }
 

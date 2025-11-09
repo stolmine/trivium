@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-10-25 (Phase 27 + Parenthetical Abbreviation Fix)
+Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
 
 ---
 
@@ -292,6 +292,22 @@ Last Updated: 2025-10-25 (Phase 27 + Parenthetical Abbreviation Fix)
 
 ---
 
+### Blockquote Formatting & Read Highlighting
+
+#### `/Users/why/repos/trivium/BLOCKQUOTE_READ_HIGHLIGHTING_FIX.md`
+**Description**: Complete implementation documentation for blockquote formatting with read highlighting support. Covers the problem (multi-line blockquotes breaking into separate blocks when marked as read), solution approach (global formatting with `<mark>` tags instead of per-segment `<span>` wrappers), implementation details, and benefits. Documents the refactor of ReadHighlighter.tsx to format blockquotes once on concatenated segments, CSS styling for `mark.read-range` and `mark.read-range-auto`, and testing procedures
+**Last Updated**: 2025-11-08
+
+#### `/Users/why/repos/trivium/BLOCKQUOTE_DEBUG_SUMMARY.md`
+**Description**: Debugging instrumentation guide for blockquote read formatting issues. Documents comprehensive debug points added to ReadHighlighter.tsx (formatBlockquotes function, renderTextWithLinks function, segment rendering detection, rendered DOM structure) and CSS debug rules (red outline for read blockquotes, underline for all blockquote text). Includes testing instructions, common issues diagnosis, and troubleshooting workflow
+**Last Updated**: 2025-11-08
+
+#### `/Users/why/repos/trivium/TEST_BLOCKQUOTE.md`
+**Description**: Test document for blockquote rendering and read highlighting functionality. Provides test cases and verification steps for multi-line blockquotes with partial read highlighting
+**Last Updated**: 2025-11-08
+
+---
+
 ## User Reference
 
 ### `/Users/why/repos/trivium/KEYBOARD_SHORTCUTS.md`
@@ -354,14 +370,14 @@ Last Updated: 2025-10-25 (Phase 27 + Parenthetical Abbreviation Fix)
 
 ## Statistics
 
-**Total Documentation Files**: 60 markdown files
-**Total Lines of Documentation**: ~53,800+ lines
+**Total Documentation Files**: 63 markdown files
+**Total Lines of Documentation**: ~54,200+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 11 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + Phase 20 statistics + settings quick reference)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 30 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 2 Phase 21 links sidebar docs + 1 history store implementation)
+- Feature-Specific: 33 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 2 Phase 21 links sidebar docs + 3 blockquote formatting docs + 1 history store implementation)
 - User Reference: 1 file
 - Design System: 1 file
 - Debugging: 4 files (includes triple-click debugging)

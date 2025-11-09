@@ -1,9 +1,90 @@
 # Trivium - Development Progress
 
-## Current Status: Phase 27 Complete ✅ - Links Sidebar Scroll Preservation
+## Current Status: Blockquote Formatting Complete ✅
 
-**Branch**: `main`
-**Last Updated**: 2025-10-25
+**Branch**: `28_variousFixes`
+**Last Updated**: 2025-11-08
+
+---
+
+## Blockquote Formatting & Read Highlighting Fix
+
+### Overview
+**Branch**: `28_variousFixes`
+**Date**: 2025-11-08
+**Status**: Complete ✅
+
+Added support for rendering Wikipedia/markdown blockquotes (`> text` syntax) with proper visual styling and fixed integration with mark-as-read highlighting using `<mark>` tags instead of `<span>` wrappers.
+
+### Problem
+
+When marking a partial segment of a multi-line blockquote as read, that segment got removed from the blockquote visual structure. The blockquote would break into multiple separate blockquotes instead of maintaining continuous visual structure.
+
+**Root Cause**:
+Each segment independently called `formatBlockquotes()` which converts `> text` to `<blockquote>text</blockquote>`. When a multi-line blockquote was split across read/unread segments, this created separate blockquote elements instead of one continuous blockquote.
+
+### Solution
+
+**Approach: Format Blockquotes ONCE, Then Apply Highlighting**
+
+Instead of formatting blockquotes per segment:
+1. **Render each segment** with links and headers processed, but NOT blockquotes
+2. **Concatenate all segments** with read/excluded styling applied via `<mark>` tags
+3. **Format blockquotes ONCE** on the complete result
+
+This ensures blockquote markdown (`> text`) is converted to HTML as a single unit, maintaining continuous visual structure.
+
+### Implementation
+
+**Backend Changes**:
+- **Added blockquote HTML-to-markdown conversion** in `src-tauri/src/services/wikipedia.rs`
+- Converts `<blockquote>` tags from Wikipedia HTML to markdown `> text` format
+- Added 5 comprehensive tests for blockquote conversion
+
+**Frontend Changes**:
+- **Refactored ReadHighlighter.tsx** to use `<mark>` tags instead of `<span>` wrappers
+  - Removed `renderTextWithLinks()` that formatted blockquotes per segment
+  - Added `renderTextSegmentWithoutBlockquoteFormatting()` function
+  - Updated `finalHtml` useMemo to format blockquotes once on concatenated segments
+- **Added `renderBlockquoteNode()` function** in MarkdownRenderer.tsx for blockquote rendering
+- **Added CSS styling** in index.css:
+  - `mark.read-range` - Solid black background / white text for manual read ranges
+  - `mark.read-range-auto` - Gray styling for auto-completed ranges
+  - Dark mode support for blockquotes
+  - Debug styling (red outline, underline) for troubleshooting
+
+### Benefits
+
+1. **Blockquote visual continuity** - Multi-line blockquotes remain as single visual blocks
+2. **Read highlighting works** - `<mark>` tags are inline and don't break block structure
+3. **Performance** - `formatBlockquotes()` runs once instead of per-segment
+4. **Cleaner HTML** - Single blockquote element instead of fragmented ones
+
+### Files Modified
+
+**Backend**:
+- `src-tauri/src/services/wikipedia.rs` - Blockquote HTML-to-markdown conversion with tests
+
+**Frontend**:
+- `src/lib/components/reading/ReadHighlighter.tsx` - Global formatting with `<mark>` tags
+- `src/lib/components/reading/MarkdownRenderer.tsx` - Blockquote rendering function
+- `src/index.css` - Blockquote styling, read range styling, dark mode support
+
+**Documentation**:
+- `BLOCKQUOTE_READ_HIGHLIGHTING_FIX.md` - Complete implementation documentation
+- `TEST_BLOCKQUOTE.md` - Test document for blockquote rendering
+- `BLOCKQUOTE_DEBUG_SUMMARY.md` - Debugging instrumentation guide
+
+### Testing
+
+Test case verified:
+1. Create multi-line blockquote (`> Line 1\n> Line 2\n> Line 3`)
+2. Mark only Line 2 as read
+3. Verify:
+   - All three lines appear as ONE blockquote
+   - Line 2 has black background / white text
+   - Lines 1 and 3 have normal blockquote styling
+   - Border-left is continuous (not broken)
 
 ---
 
