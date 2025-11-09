@@ -319,8 +319,8 @@
 }
 
 .dark .read-text {
-  background-color: var(--muted);
-  color: white;
+  background-color: rgb(229 231 235); /* gray-200 - light background for dark theme */
+  color: rgb(17 24 39); /* gray-900 - dark text for dark theme */
 }
 
 .read-header {
@@ -333,8 +333,8 @@
 }
 
 .dark .read-header {
-  background-color: var(--muted);
-  color: var(--muted-foreground);
+  background-color: rgb(229 231 235); /* gray-200 - light background for dark theme */
+  color: rgb(31 41 55); /* gray-800 - dark text for dark theme */
   padding: 0 4px;
   border-radius: 4px;
   font-style: italic;
@@ -411,10 +411,10 @@ mark.read-range {
   padding: 0 2px;
 }
 
-/* Dark mode variant for read ranges - gray background with white text */
+/* Dark mode variant for read ranges - light background with dark text */
 .dark mark.read-range {
-  background-color: var(--muted);
-  color: white;
+  background-color: rgb(229 231 235); /* gray-200 - light background for dark theme */
+  color: rgb(17 24 39); /* gray-900 - dark text for dark theme */
 }
 
 /* Auto-completed read range - lighter gray styling */
@@ -427,8 +427,8 @@ mark.read-range-auto {
 }
 
 .dark mark.read-range-auto {
-  background-color: rgb(107 114 128); /* gray-500 - slightly lighter gray for dark mode */
-  color: white;
+  background-color: rgb(243 244 246); /* gray-100 - lighter background for auto-completed ranges */
+  color: rgb(31 41 55); /* gray-800 - dark text for dark theme */
 }
 
 /* Search match highlighting - overrides read-text styling */
