@@ -227,7 +227,7 @@
 
   .focus-ring {
     outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--ring)), 0 0 0 4px hsl(var(--background));
+    box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
   }
 
   @keyframes slideInTop {
@@ -285,24 +285,24 @@
 
 .cloze-hidden {
   background-color: transparent;
-  color: hsl(var(--primary));
+  color: var(--primary);
   font-weight: 700;
   user-select: none;
   padding: 0 2px;
 }
 
 .cloze-visible {
-  background-color: hsl(var(--primary) / 0.2);
-  color: hsl(var(--foreground));
+  background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+  color: var(--foreground);
   border-radius: 4px;
   padding: 0 4px;
   font-weight: 600;
 }
 
 .excluded-text {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
-  border-left: 3px solid hsl(var(--border));
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  border-left: 3px solid var(--border);
   padding-left: 0.5rem;
   padding-right: 0.25rem;
   padding-top: 0.0625rem;
@@ -319,13 +319,13 @@
 }
 
 .dark .read-text {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--foreground));
+  background-color: var(--muted);
+  color: white;
 }
 
 .read-header {
   background-color: rgba(128, 128, 128, 0.2);
-  color: hsl(var(--muted-foreground));
+  color: var(--muted-foreground);
   padding: 0 4px;
   border-radius: 4px;
   font-style: italic;
@@ -333,8 +333,8 @@
 }
 
 .dark .read-header {
-  background-color: hsl(var(--muted));
-  color: hsl(var(--muted-foreground));
+  background-color: var(--muted);
+  color: var(--muted-foreground);
   padding: 0 4px;
   border-radius: 4px;
   font-style: italic;
@@ -372,39 +372,38 @@
 
 /* Blockquote styling */
 blockquote {
-  background-color: hsl(var(--muted) / 0.3);
+  background-color: color-mix(in oklab, var(--muted) 30%, transparent);
   border-radius: 0.25rem;
   padding: 0.75rem 1rem;
+  display: block; /* Ensure blockquotes are block-level for proper rendering */
 }
 
-/* Black background when inside read segments (not transparent!) */
-[class*="bg-black"] blockquote {
-  background-color: black;
-  outline: 3px solid red !important; /* Debug: should see red outline */
+/* Ensure br tags inside blockquotes don't inherit unwanted styling */
+blockquote br {
+  display: block;
+  content: "";
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
 }
 
-/* Gray background for auto-completed read segments */
-.bg-gray-400 blockquote {
-  background-color: rgb(156 163 175); /* gray-400 */
-}
-
-/* Blockquote text color - default gray, override for read segments */
+/* Blockquote text color - default for unread */
 .blockquote-text {
-  color: rgb(55 65 81); /* text-gray-700 - default */
-  text-decoration: underline !important; /* Debug: should see underline */
+  color: rgb(55 65 81); /* text-gray-700 */
 }
 
 .dark .blockquote-text {
-  color: rgb(209 213 219); /* text-gray-300 - default dark mode */
+  color: rgb(209 213 219); /* text-gray-300 */
 }
 
-/* Override with inherit when inside read segments - more specific selector */
-[class*="bg-black"] .blockquote-text,
-.bg-gray-400 .blockquote-text {
-  color: inherit !important;
+/* Blockquote text inside read ranges inherits white color from mark */
+mark.read-range .blockquote-text,
+mark.read-range-auto .blockquote-text {
+  color: inherit;
 }
 
-/* Read range styling - black background with white text */
+/* Read range styling - black background with white text in light mode */
 mark.read-range {
   background-color: black;
   color: white;
@@ -412,18 +411,24 @@ mark.read-range {
   padding: 0 2px;
 }
 
-/* Auto-completed read range - lighter styling */
+/* Dark mode variant for read ranges - gray background with white text */
+.dark mark.read-range {
+  background-color: var(--muted);
+  color: white;
+}
+
+/* Auto-completed read range - lighter gray styling */
 mark.read-range-auto {
   background-color: rgb(156 163 175); /* gray-400 */
-  color: rgb(55 65 81); /* gray-700 */
+  color: white;
   border-radius: 2px;
   padding: 0 2px;
   opacity: 0.7;
 }
 
 .dark mark.read-range-auto {
-  background-color: rgb(75 85 99); /* gray-600 */
-  color: rgb(209 213 219); /* gray-300 */
+  background-color: rgb(107 114 128); /* gray-500 - slightly lighter gray for dark mode */
+  color: white;
 }
 
 /* Search match highlighting - overrides read-text styling */

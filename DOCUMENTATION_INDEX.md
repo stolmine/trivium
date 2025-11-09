@@ -295,8 +295,8 @@ Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
 ### Blockquote Formatting & Read Highlighting
 
 #### `/Users/why/repos/trivium/BLOCKQUOTE_READ_HIGHLIGHTING_FIX.md`
-**Description**: Complete implementation documentation for blockquote formatting with read highlighting support. Covers the problem (multi-line blockquotes breaking into separate blocks when marked as read), solution approach (global formatting with `<mark>` tags instead of per-segment `<span>` wrappers), implementation details, and benefits. Documents the refactor of ReadHighlighter.tsx to format blockquotes once on concatenated segments, CSS styling for `mark.read-range` and `mark.read-range-auto`, and testing procedures
-**Last Updated**: 2025-11-08
+**Description**: Complete implementation documentation for blockquote formatting with read highlighting support and theme-responsive styling. Covers three major issues: (1) multi-line blockquotes breaking into separate blocks when marked as read, (2) HTML tags breaking blockquote detection when `<mark>` tags are present, (3) incorrect CSS variable usage with hsl() wrappers. Documents the global formatting approach with `<mark>` tags, HTML tag-aware regex pattern for blockquote detection, CSS variable fixes, modern color-mix syntax for transparency, complete dark mode support with proper contrast, and removal of debug code. Includes comprehensive before/after code examples
+**Last Updated**: 2025-11-09
 
 #### `/Users/why/repos/trivium/BLOCKQUOTE_DEBUG_SUMMARY.md`
 **Description**: Debugging instrumentation guide for blockquote read formatting issues. Documents comprehensive debug points added to ReadHighlighter.tsx (formatBlockquotes function, renderTextWithLinks function, segment rendering detection, rendered DOM structure) and CSS debug rules (red outline for read blockquotes, underline for all blockquote text). Includes testing instructions, common issues diagnosis, and troubleshooting workflow

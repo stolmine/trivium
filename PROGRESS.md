@@ -1,31 +1,47 @@
 # Trivium - Development Progress
 
-## Current Status: Blockquote Formatting Complete ✅
+## Current Status: Blockquote + Theme Fixes Complete ✅
 
 **Branch**: `28_variousFixes`
-**Last Updated**: 2025-11-08
+**Last Updated**: 2025-11-09
 
 ---
 
-## Blockquote Formatting & Read Highlighting Fix
+## Phase 27+: Blockquote Formatting, Theme Fixes, and Read Highlighting Enhancement
 
 ### Overview
 **Branch**: `28_variousFixes`
-**Date**: 2025-11-08
+**Date**: 2025-11-09
 **Status**: Complete ✅
 
-Added support for rendering Wikipedia/markdown blockquotes (`> text` syntax) with proper visual styling and fixed integration with mark-as-read highlighting using `<mark>` tags instead of `<span>` wrappers.
+Comprehensive fixes for blockquote rendering with read highlighting, theme-responsive styling, and CSS variable usage. Addressed three major issues: partial blockquote breaking, HTML tag handling in blockquote detection, and incorrect CSS variable usage breaking dark mode.
 
-### Problem
+### Problems Identified
+
+#### Issue 1: Blockquote Breaking on Partial Read Marking
 
 When marking a partial segment of a multi-line blockquote as read, that segment got removed from the blockquote visual structure. The blockquote would break into multiple separate blockquotes instead of maintaining continuous visual structure.
 
 **Root Cause**:
 Each segment independently called `formatBlockquotes()` which converts `> text` to `<blockquote>text</blockquote>`. When a multi-line blockquote was split across read/unread segments, this created separate blockquote elements instead of one continuous blockquote.
 
-### Solution
+#### Issue 2: HTML Tags Breaking Blockquote Detection
 
-**Approach: Format Blockquotes ONCE, Then Apply Highlighting**
+When a blockquote line already contained HTML tags (like `<mark>` tags from read highlighting), the simple `trimmedLine.startsWith('>')` check would fail because the line started with `<mark>` instead of `>`.
+
+**Example**: `<mark class="read-range">> This is a quote</mark>`
+
+The `>` marker is present but hidden inside the `<mark>` tag, causing the detection to fail.
+
+#### Issue 3: Incorrect CSS Variable Usage
+
+The CSS was using incorrect `hsl()` wrappers around CSS variables that already contained complete color values in `hsl()` format. This caused colors to fail in certain contexts, especially in dark mode.
+
+**Example**: `color: hsl(var(--foreground))` where `var(--foreground)` already equals `"0 0% 98%"`
+
+### Solutions Implemented
+
+#### 1. Global Blockquote Formatting with Mark Tags
 
 Instead of formatting blockquotes per segment:
 1. **Render each segment** with links and headers processed, but NOT blockquotes
@@ -34,57 +50,112 @@ Instead of formatting blockquotes per segment:
 
 This ensures blockquote markdown (`> text`) is converted to HTML as a single unit, maintaining continuous visual structure.
 
-### Implementation
+#### 2. HTML Tag-Aware Blockquote Detection
 
-**Backend Changes**:
-- **Added blockquote HTML-to-markdown conversion** in `src-tauri/src/services/wikipedia.rs`
-- Converts `<blockquote>` tags from Wikipedia HTML to markdown `> text` format
-- Added 5 comprehensive tests for blockquote conversion
+Enhanced `formatBlockquotes()` function with regex-based detection:
+- **Strip HTML tags temporarily** to check for `>` marker: `contentWithoutTags.replace(/<[^>]+>/g, '')`
+- **Use regex to preserve HTML tags** while removing the `>` marker:
+  ```typescript
+  const blockquotePattern = /^((?:<[^>]+>)*)\s*>\s*(.*)$/
+  // Captures: (HTML tags)(>)(whitespace)(content)
+  // Result: (HTML tags)(content)
+  ```
+
+This allows blockquotes to work whether the entire blockquote is marked as read or just portions of it.
+
+#### 3. Fixed CSS Variable Usage Throughout
+
+**Direct variable usage** instead of `hsl(var(--color))`:
+```css
+/* Before */
+color: hsl(var(--foreground));
+background-color: hsl(var(--muted));
+
+/* After */
+color: var(--foreground);
+background-color: var(--muted);
+```
+
+**Modern color-mix** for transparency instead of hsl alpha syntax:
+```css
+/* Before */
+background-color: hsl(var(--primary) / 0.2);
+
+/* After */
+background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+```
+
+**Theme-specific overrides** for dark mode with proper white text contrast:
+```css
+.dark mark.read-range {
+  background-color: var(--muted);
+  color: white;  /* Explicit white for better contrast */
+}
+```
+
+### Implementation Details
 
 **Frontend Changes**:
-- **Refactored ReadHighlighter.tsx** to use `<mark>` tags instead of `<span>` wrappers
-  - Removed `renderTextWithLinks()` that formatted blockquotes per segment
-  - Added `renderTextSegmentWithoutBlockquoteFormatting()` function
-  - Updated `finalHtml` useMemo to format blockquotes once on concatenated segments
-- **Added `renderBlockquoteNode()` function** in MarkdownRenderer.tsx for blockquote rendering
-- **Added CSS styling** in index.css:
-  - `mark.read-range` - Solid black background / white text for manual read ranges
-  - `mark.read-range-auto` - Gray styling for auto-completed ranges
-  - Dark mode support for blockquotes
-  - Debug styling (red outline, underline) for troubleshooting
+
+1. **ReadHighlighter.tsx** - Major refactoring:
+   - Enhanced `formatBlockquotes()` with HTML tag-aware regex detection
+   - Removed `renderTextWithLinks()` that formatted blockquotes per segment
+   - Added `renderTextSegmentWithoutBlockquoteFormatting()` function
+   - Updated `finalHtml` useMemo to format blockquotes once on concatenated segments
+   - Changed inline styles to CSS classes for search match highlighting
+   - Removed debug logging and useEffect debugging code
+
+2. **index.css** - Comprehensive CSS fixes:
+   - Fixed CSS variable usage (removed incorrect `hsl()` wrappers in 10+ selectors)
+   - Added modern `color-mix()` syntax for transparency
+   - Complete dark mode support for read highlighting (`mark.read-range`, `mark.read-range-auto`)
+   - Proper blockquote BR tag handling
+   - Simplified blockquote text coloring with inheritance
+   - Removed debug CSS (red outlines, underlines)
 
 ### Benefits
 
 1. **Blockquote visual continuity** - Multi-line blockquotes remain as single visual blocks
 2. **Read highlighting works** - `<mark>` tags are inline and don't break block structure
-3. **Performance** - `formatBlockquotes()` runs once instead of per-segment
-4. **Cleaner HTML** - Single blockquote element instead of fragmented ones
+3. **HTML tag support** - Handles both whole and partial blockquote highlighting correctly
+4. **Theme-responsive** - Proper dark mode support with readable contrast ratios
+5. **Modern CSS** - Uses color-mix for transparency instead of deprecated HSL alpha syntax
+6. **Performance** - `formatBlockquotes()` runs once instead of per-segment
+7. **Cleaner HTML** - Single blockquote element instead of fragmented ones
+8. **Better maintainability** - CSS classes instead of inline styles for search highlighting
 
 ### Files Modified
 
-**Backend**:
-- `src-tauri/src/services/wikipedia.rs` - Blockquote HTML-to-markdown conversion with tests
-
 **Frontend**:
-- `src/lib/components/reading/ReadHighlighter.tsx` - Global formatting with `<mark>` tags
-- `src/lib/components/reading/MarkdownRenderer.tsx` - Blockquote rendering function
-- `src/index.css` - Blockquote styling, read range styling, dark mode support
+- `src/lib/components/reading/ReadHighlighter.tsx` - HTML tag-aware blockquote detection, global formatting, search classes
+- `src/index.css` - CSS variable fixes, dark mode support, modern color-mix syntax
 
 **Documentation**:
-- `BLOCKQUOTE_READ_HIGHLIGHTING_FIX.md` - Complete implementation documentation
-- `TEST_BLOCKQUOTE.md` - Test document for blockquote rendering
-- `BLOCKQUOTE_DEBUG_SUMMARY.md` - Debugging instrumentation guide
+- `BLOCKQUOTE_READ_HIGHLIGHTING_FIX.md` - Complete implementation documentation (expanded with all three issues)
+- `documentation_index.md` - Updated with new details
+- `progress.md` - This document
 
 ### Testing
 
-Test case verified:
-1. Create multi-line blockquote (`> Line 1\n> Line 2\n> Line 3`)
-2. Mark only Line 2 as read
-3. Verify:
-   - All three lines appear as ONE blockquote
-   - Line 2 has black background / white text
-   - Lines 1 and 3 have normal blockquote styling
-   - Border-left is continuous (not broken)
+Test cases verified:
+1. **Partial blockquote marking**:
+   - Create multi-line blockquote (`> Line 1\n> Line 2\n> Line 3`)
+   - Mark only Line 2 as read
+   - Verify: All three lines appear as ONE blockquote with Line 2 highlighted
+
+2. **Whole blockquote marking**:
+   - Create multi-line blockquote
+   - Mark entire blockquote as read
+   - Verify: Blockquote stays intact with proper styling
+
+3. **Dark mode**:
+   - Toggle between light and dark themes
+   - Verify: Read highlighting has proper contrast in both modes
+   - Verify: All CSS variables render correctly
+
+4. **Search highlighting**:
+   - Search for text in blockquotes
+   - Verify: Search highlighting applies correctly without breaking blockquote structure
 
 ---
 

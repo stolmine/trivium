@@ -1,4 +1,4 @@
-import { useMemo, memo, useEffect, useRef } from 'react'
+import { useMemo, memo, useRef } from 'react'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import type { ReadRange, ExcludedRange } from '../../types'
 
@@ -48,23 +48,37 @@ function formatBlockquotes(text: string): string {
   let inBlockquote = false
   let blockquoteLines: string[] = []
 
-  console.log('formatBlockquotes input:', text.substring(0, 200))
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
     const trimmedLine = line.trim()
 
-    // Check if line starts with >
-    if (trimmedLine.startsWith('>')) {
-      // Extract content after >
-      const content = trimmedLine.slice(1).trim()
+    // Extract content without HTML tags to check for blockquote marker
+    // This regex removes all HTML tags temporarily to find the > marker
+    const contentWithoutTags = trimmedLine.replace(/<[^>]+>/g, '')
+    const isBlockquoteLine = contentWithoutTags.trim().startsWith('>')
+
+    if (isBlockquoteLine) {
+      // This is a blockquote line - remove the > marker but preserve all HTML tags
+      // Strategy: Find the > that's NOT part of an HTML tag and remove it
+      let processedLine = trimmedLine
+
+      // Match the blockquote marker > that appears outside HTML tags
+      // This regex finds: (any HTML tags)>(whitespace)(rest of content)
+      // We want to remove the > and optional whitespace after it
+      const blockquotePattern = /^((?:<[^>]+>)*)\s*>\s*(.*)$/
+      const match = processedLine.match(blockquotePattern)
+
+      if (match) {
+        // Reconstruct the line with HTML tags but without the > marker
+        processedLine = match[1] + match[2]
+      }
 
       if (!inBlockquote) {
         inBlockquote = true
         blockquoteLines = []
       }
 
-      blockquoteLines.push(content)
+      blockquoteLines.push(processedLine)
     } else {
       // Not a blockquote line
       if (inBlockquote) {
@@ -85,9 +99,10 @@ function formatBlockquotes(text: string): string {
       // Skip empty lines immediately before a blockquote or after a blockquote
       // This prevents double-spacing when markdown already has blank lines
       if (trimmedLine === '') {
-        // Check if next line is a blockquote
+        // Check if next line is a blockquote (check content without HTML tags)
         const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : ''
-        if (nextLine.startsWith('>')) {
+        const nextContentWithoutTags = nextLine.replace(/<[^>]+>/g, '')
+        if (nextContentWithoutTags.trim().startsWith('>')) {
           // Skip this empty line, we'll add our own spacing
           continue
         }
@@ -116,9 +131,7 @@ function formatBlockquotes(text: string): string {
     result.push('')
   }
 
-  const output = result.join('\n')
-  console.log('formatBlockquotes output:', output.substring(0, 200))
-  return output
+  return result.join('\n')
 }
 
 function parseMarkdownLink(text: string, startIndex: number): { linkText: string; url: string; endIndex: number } | null {
@@ -181,49 +194,16 @@ function parseMarkdownLink(text: string, startIndex: number): { linkText: string
   return { linkText, url, endIndex: i }
 }
 
-// NOTE: renderTextWithLinks is no longer used - replaced by renderTextSegmentWithoutBlockquoteFormatting
-// which processes links/headers WITHOUT formatting blockquotes (done globally instead)
-
-function stripMarkdownLinks(text: string): string {
-  // Remove empty markdown links
-  let stripped = text.replace(/\[\]\([^\)]+\)/g, '')
-
-  // Remove markdown link syntax but keep link text, using the parser
-  let result = ''
-  let i = 0
-  while (i < stripped.length) {
-    const linkInfo = parseMarkdownLink(stripped, i)
-    if (linkInfo) {
-      result += linkInfo.linkText
-      i = linkInfo.endIndex
-    } else {
-      result += stripped[i]
-      i++
-    }
-  }
-
-  // Remove header syntax === Text === → Text to match DOM textContent
-  // This must match what formatWikipediaHeaders does (removes === markers, keeps text)
-  result = result.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
-
-  // Remove blockquote syntax > Text → Text to match DOM textContent
-  // This must match what formatBlockquotes does (removes > markers, keeps text)
-  result = result.replace(/^>\s*/gm, '')
-
-  return result
-}
-
 /**
- * Render text segments WITH format preservation
- * Key: Don't call formatBlockquotes() per segment - blockquotes already formatted globally
- * Just render links and apply read/excluded styling
+ * Render text segments WITHOUT blockquote formatting (headers and links only)
+ * Blockquotes will be formatted globally after all segments are concatenated
  */
 function renderTextSegmentWithoutBlockquoteFormatting(text: string, linksEnabled: boolean): string {
   // Format headers (if any)
   const formattedText = formatWikipediaHeaders(text)
 
-  // DON'T format blockquotes - they're already formatted globally
-  // Just remove empty links and process markdown links
+  // Do NOT format blockquotes here - preserve the > markdown syntax
+  // Blockquotes will be formatted once on the full concatenated result
 
   // Remove empty markdown links: [](...)
   let textWithoutEmptyLinks = formattedText.replace(/\[\]\([^\)]+\)/g, '')
@@ -276,6 +256,39 @@ function renderTextSegmentWithoutBlockquoteFormatting(text: string, linksEnabled
 
   return processed
 }
+
+// NOTE: renderTextWithLinks is no longer used - replaced by renderTextSegmentWithoutBlockquoteFormatting
+// which processes links/headers WITHOUT formatting blockquotes (done globally instead)
+
+function stripMarkdownLinks(text: string): string {
+  // Remove empty markdown links
+  let stripped = text.replace(/\[\]\([^\)]+\)/g, '')
+
+  // Remove markdown link syntax but keep link text, using the parser
+  let result = ''
+  let i = 0
+  while (i < stripped.length) {
+    const linkInfo = parseMarkdownLink(stripped, i)
+    if (linkInfo) {
+      result += linkInfo.linkText
+      i = linkInfo.endIndex
+    } else {
+      result += stripped[i]
+      i++
+    }
+  }
+
+  // Remove header syntax === Text === → Text to match DOM textContent
+  // This must match what formatWikipediaHeaders does (removes === markers, keeps text)
+  result = result.replace(/^={2,}\s*(.+?)\s*={2,}$/gm, '$1')
+
+  // Remove blockquote syntax > Text → Text to match DOM textContent
+  // This must match what formatBlockquotes does (removes > markers, keeps text)
+  result = result.replace(/^>\s*/gm, '')
+
+  return result
+}
+
 
 /**
  * Convert position from cleaned space to rendered space
@@ -754,13 +767,13 @@ const ReadHighlighterComponent = ({
     return result
   }, [segments, convertedSearchMatches, activeSearchIndex])
 
-  // NEW: Render using formatted HTML with blockquotes already processed
+  // Render HTML from segments with formatting applied, then format blockquotes globally
   const finalHtml = useMemo(() => {
-    // Build HTML from segments, applying styling but NOT reformatting blockquotes
+    // Build HTML from segments WITHOUT blockquote formatting (preserve > markdown)
     let result = ''
 
     for (const segment of renderableSegments) {
-      // Render segment content (links, headers) but NOT blockquotes
+      // Render segment content with links and headers, but NOT blockquotes
       const segmentHtml = renderTextSegmentWithoutBlockquoteFormatting(segment.text, linksEnabled)
 
       // Apply styling wrappers
@@ -770,38 +783,24 @@ const ReadHighlighterComponent = ({
         result += `<span class="read-header">${segmentHtml}</span>`
       } else if (segment.isRead) {
         const markClass = segment.isAutoCompleted ? 'read-range-auto' : 'read-range'
-        let style = ''
+        let searchClass = ''
         if (segment.isActiveSearchMatch) {
-          style = ' style="background-color: #fed7aa; color: black;"'
+          searchClass = ' search-match-active'
         } else if (segment.isSearchMatch) {
-          style = ' style="background-color: #fef08a; color: black;"'
+          searchClass = ' search-match'
         }
-        result += `<mark class="${markClass}"${style}>${segmentHtml}</mark>`
+        result += `<mark class="${markClass}${searchClass}">${segmentHtml}</mark>`
       } else {
         result += segmentHtml
       }
     }
 
-    // NOW format blockquotes on the entire result
-    // This ensures blockquotes stay together even when segments are highlighted
+    // Format blockquotes ONCE on the complete result
+    // This ensures multi-line blockquotes stay as single visual units
+    // even when parts are marked as read
     return formatBlockquotes(result)
   }, [renderableSegments, linksEnabled])
 
-  useEffect(() => {
-    if (containerRef.current) {
-      const blockquotes = containerRef.current.querySelectorAll('blockquote')
-      console.log('Rendered blockquotes:', {
-        count: blockquotes.length,
-        structures: Array.from(blockquotes).map(bq => ({
-          innerHTML: bq.innerHTML.substring(0, 50),
-          classes: bq.className,
-          parentClasses: bq.parentElement?.className,
-          computedBg: window.getComputedStyle(bq).backgroundColor,
-          computedColor: window.getComputedStyle(bq).color
-        }))
-      })
-    }
-  }, [content, readRanges])
 
   return (
     <div
