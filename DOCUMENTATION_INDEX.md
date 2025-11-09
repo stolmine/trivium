@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
+Last Updated: 2025-11-09 (Phase 28 + Link Parsing & Search Fixes)
 
 ---
 
@@ -53,8 +53,8 @@ Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
 ## Project Planning & Progress
 
 ### `/Users/why/repos/trivium/PROGRESS.md`
-**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝, **Phase 15: Unified Undo/Redo System** ↩️↪️, **Phase 16: Mark and Read Range Deletion on Edit** 🗑️✨, **Phase 17: Global UI Update** 🧭✨, **Phase 17+: Navigation & Layout Refinements** 🎨🧭, **Phase 17++: OS-Appropriate Tooltip Improvements** 💡🖥️, **Phase 18: UI Overhaul** 🎨, **Phase 19: Settings Menu** ⚙️, **Phase 20: Statistics & Analytics** 📊, **Phase 21: Links Sidebar + Reading View Touchups** 🔗📖, **Phase 22: Typewriter/Focus Mode** 📖✨, **Phase 23: UI Polish** 🎨, **Phase 24: Card Hub Improvements** 🎴✨, **Phase 25: Review System Improvements + Post-Phase Enhancements** ↩️🔀💯, **Phase 26: Reading Refinements - Cursor Preservation** ⌨️✨, **Phase 27: Links Sidebar Scroll Preservation** 📜✨), current capabilities (100+ user-facing features including Links Sidebar scroll preservation with Zustand store persistence and smart RAF restoration timing, cursor preservation in global edit mode using Selection API, review undo/redo with cross-platform hotkeys (Ctrl+Z/Cmd+Z), card burying (Shift+B), random/creation order, 1000-card review session capacity, card hub pagination with auto-load, doubled creation limits, review limit fixes with separated filters, mark coexistence fix with ReadHighlighter merge logic, reading header intelligent collapsing, typewriter/focus mode with sentence navigation, links sidebar with intelligent deduplication, and complete keyboard support with platform-aware labels), upcoming phases, detailed bug fix documentation including all phase improvements. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
-**Last Updated**: 2025-10-25
+**Description**: Comprehensive development progress tracker showing completed phases (Phase 0: Foundation, Phase 1: Core Reading, Phase 2: Flashcard Creation, Phase 3: Review System with FSRS-5, Phase 4: GUI Redesign, Phase 5/5.5: UI Touch-ups & Progress Tracking, Phase 6: Review Filtering & Settings, Phase 6.5: Wikipedia Article Parsing Integration + 11 Critical Bug Fixes, Phase 8: Polish & Unicode Bug Fixes - ALL 4 Unicode BUGS + 9 UX POLISH FIXES COMPLETE, **Phase 9: Text Search Feature** 🔍, **Phase 10: Library Search + Folder Selection in Ingest** 📚📁, **Phase 11: Sidebar UI Improvements + Validation Polish** ✨✅, **Phase 11.5: Quick Import Dashboard Tile** 🚀, **Phase 12: Flashcard Creation Hub + Post-Phase Improvements** 🎴🔧, **Phase 13: Selection-Based Inline Editing** 📝✨, **Phase 14: Truly Inline Text Editing** ✨📝, **Phase 15: Unified Undo/Redo System** ↩️↪️, **Phase 16: Mark and Read Range Deletion on Edit** 🗑️✨, **Phase 17: Global UI Update** 🧭✨, **Phase 17+: Navigation & Layout Refinements** 🎨🧭, **Phase 17++: OS-Appropriate Tooltip Improvements** 💡🖥️, **Phase 18: UI Overhaul** 🎨, **Phase 19: Settings Menu** ⚙️, **Phase 20: Statistics & Analytics** 📊, **Phase 21: Links Sidebar + Reading View Touchups** 🔗📖, **Phase 22: Typewriter/Focus Mode** 📖✨, **Phase 23: UI Polish** 🎨, **Phase 24: Card Hub Improvements** 🎴✨, **Phase 25: Review System Improvements + Post-Phase Enhancements** ↩️🔀💯, **Phase 26: Reading Refinements - Cursor Preservation** ⌨️✨, **Phase 27: Links Sidebar Scroll Preservation** 📜✨, **Phase 27+: Blockquote Formatting & Theme Fixes** 🎨📝, **Phase 28: Link Parsing & Text Search Fixes** 🔗🔍), current capabilities (100+ user-facing features including proper markdown link parsing with parenthesis support, text search scroll-to-match, blockquote read highlighting, Links Sidebar scroll preservation with Zustand store persistence and smart RAF restoration timing, cursor preservation in global edit mode using Selection API, review undo/redo with cross-platform hotkeys (Ctrl+Z/Cmd+Z), card burying (Shift+B), random/creation order, 1000-card review session capacity, card hub pagination with auto-load, doubled creation limits, review limit fixes with separated filters, mark coexistence fix with ReadHighlighter merge logic, reading header intelligent collapsing, typewriter/focus mode with sentence navigation, links sidebar with intelligent deduplication, and complete keyboard support with platform-aware labels), upcoming phases, detailed bug fix documentation including all phase improvements. **Backend uses UTF-16 code units throughout to match JavaScript behavior**
+**Last Updated**: 2025-11-09
 
 ### `/Users/why/repos/trivium/PHASE_9_TEXT_SEARCH.md`
 **Description**: Complete implementation documentation for Phase 9 text search feature. Covers real-time in-document search with match highlighting (yellow/orange), keyboard shortcuts (Ctrl+F, Enter, Shift+Enter), next/previous navigation with wraparound, case-sensitive and whole-word options, UTF-16 awareness for emoji/CJK support, smooth scrolling to matches, debounced input (300ms), auto-select on focus, sub-segment highlighting precision, and seamless integration with existing read/unread highlighting system. Includes architecture details, 4 files created, 2 files modified, performance optimizations (50-80% fewer searches, React.memo), 4 critical bug fixes (lag, scroll, highlighting, auto-select), position space handling, and comprehensive testing checklist. Implementation time: 2 hours with parallel agents
@@ -306,6 +306,10 @@ Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
 **Description**: Test document for blockquote rendering and read highlighting functionality. Provides test cases and verification steps for multi-line blockquotes with partial read highlighting
 **Last Updated**: 2025-11-08
 
+#### `/Users/why/repos/trivium/LINK_BUG_FIX_SUMMARY.md`
+**Description**: Complete implementation documentation for link parsing and text search bug fixes (Phase 28). Covers four major bugs: (1) text lost between links with parentheses in URLs, (2) bracket-only false link bug ([Helot] creating giant links), (3) Wikipedia citation markers appearing in content, (4) text search match index tracking for scroll-to-match. Documents the proper parser algorithm with parenthesis depth tracking, enhanced parser logic for bracket detection, Wikipedia scraper filtering, and search match rendering improvements. Includes 8 files changed (7 modified + 1 new test file), comprehensive verification checklist, and testing recommendations
+**Last Updated**: 2025-11-09
+
 ---
 
 ## User Reference
@@ -370,14 +374,14 @@ Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
 
 ## Statistics
 
-**Total Documentation Files**: 63 markdown files
-**Total Lines of Documentation**: ~54,200+ lines
+**Total Documentation Files**: 64 markdown files
+**Total Lines of Documentation**: ~54,400+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
 - Project Planning: 11 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + Phase 20 statistics + settings quick reference)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
-- Feature-Specific: 33 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 2 Phase 21 links sidebar docs + 3 blockquote formatting docs + 1 history store implementation)
+- Feature-Specific: 34 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 2 Phase 21 links sidebar docs + 3 blockquote formatting docs + 1 link parsing & search fixes doc + 1 history store implementation)
 - User Reference: 1 file
 - Design System: 1 file
 - Debugging: 4 files (includes triple-click debugging)
@@ -413,5 +417,5 @@ Last Updated: 2025-11-08 (Phase 27 + Blockquote Formatting)
 ---
 
 **Index Maintained By**: AI Agents and Contributors
-**Index Version**: 1.1
+**Index Version**: 1.2
 **Next Review**: 2025-11-15

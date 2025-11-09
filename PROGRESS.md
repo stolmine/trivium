@@ -1,9 +1,185 @@
 # Trivium - Development Progress
 
-## Current Status: Blockquote + Theme Fixes Complete ✅
+## Current Status: Link Parsing & Text Search Fixes Complete ✅
 
 **Branch**: `28_variousFixes`
 **Last Updated**: 2025-11-09
+
+---
+
+## Phase 28: Link Parsing and Text Search Bug Fixes
+
+### Overview
+**Branch**: `28_variousFixes`
+**Date**: 2025-11-09
+**Status**: Complete ✅
+
+Critical bug fixes for markdown link parsing and text search highlighting. Addressed four major issues: (1) text loss between links with parentheses in URLs, (2) bracket-only false link bug, (3) Wikipedia citation markers, and (4) text search match index tracking for scroll-to-match.
+
+### Problems Identified
+
+#### Bug #1: Text Lost Between Links with Parentheses in URLs
+
+**Problem**: The regex pattern `/\[([^\]]+)\]\(([^\)]+)\)/g` used throughout the codebase was fundamentally broken for URLs containing parentheses (common in Wikipedia disambiguation URLs like `https://en.wikipedia.org/wiki/Sparta_(city)`).
+
+**Why it failed**: The pattern `[^\)]+` means "match everything until the first `)` character". When a URL contains parentheses, the regex stops at the FIRST `)` it encounters, leaving the closing `)` of the URL orphaned in the text.
+
+**Example**:
+- Input: `[Sparta](https://en.wikipedia.org/wiki/Sparta_(city)) treatment`
+- Broken: URL matched as `https://en.wikipedia.org/wiki/Sparta_(city` (truncated)
+- Result: Stray `)` creating corrupted output `Sparta) treatment`
+
+#### Bug #2: Bracket-Only False Link Bug
+
+**Problem**: Text in brackets like `[Helot]` that wasn't a markdown link (no following `(url)` syntax) was incorrectly treated as the start of a link. The parser would continue scanning until it found the NEXT valid markdown link, creating a giant false link consuming all text between `[Helot]` and the next `[link](url)`.
+
+**Example**:
+- Input: `[Helot] treatment at [Sparta](url1)`
+- Broken: Parser treats `[Helot] treatment at [Sparta]` as link text with `url1` as URL
+- Result: Giant link covering text that shouldn't be linked
+
+**Why it failed**: The regex pattern didn't require the `](` sequence immediately after `]`. It would match any `[text]` and then search forward for any `(url)` pattern, incorrectly pairing them.
+
+#### Bug #3: Citation Markers in Wikipedia Content
+
+**Problem**: Wikipedia `[citation needed]` markers and similar annotations were appearing in scraped content when they should be filtered out.
+
+**Root cause**: The Wikipedia scraper's unwanted selectors didn't include `.noprint` and `sup.noprint` classes used by citation markers.
+
+#### Bug #4: Text Search Match Index Tracking
+
+**Problem**: Search highlighting wasn't properly storing match indices in the rendered HTML, making it impossible for the scroll-to-match feature to identify which match should be scrolled to. Additionally, search matches in non-read text weren't being highlighted at all.
+
+**Why it failed**: The code was setting `isSearchMatch` and `isActiveSearchMatch` flags but not storing the actual match index value. Without `data-search-index` attributes in the rendered HTML, the scroll feature couldn't find the active match.
+
+### Solutions Implemented
+
+#### 1. Proper Markdown Link Parser with Parenthesis Depth Tracking
+
+**Created** `src/lib/utils/markdownLinkParser.ts`:
+- Manual parser (not regex) that tracks parenthesis depth
+- Correctly handles URLs with nested parentheses
+- Exports: `parseMarkdownLink`, `findAllMarkdownLinks`, `stripMarkdownLinks`, `isPositionInLink`
+
+**Algorithm**:
+```typescript
+while parsing URL:
+  if char is '(':
+    depth++
+  else if char is ')':
+    if depth > 0:
+      depth--  // This ) is part of the URL
+    else:
+      break   // This ) closes the markdown link
+```
+
+**Enhanced bracket detection**:
+- If `](` follows `]`, it's a valid markdown link
+- If `]]` follows `]`, the first `]` is part of link text (for `[[text]]` patterns)
+- If anything else follows (space, letter, end), return null immediately - NOT a link
+
+#### 2. Wikipedia Scraper Filtering
+
+**Updated** `src-tauri/src/services/wikipedia.rs`:
+- Added `.noprint` and `sup.noprint` to unwanted selectors
+- Filters out citation needed markers and similar annotations at source
+
+#### 3. Search Match Index Rendering
+
+**Enhanced** `src/lib/components/reading/ReadHighlighter.tsx`:
+- Store `matchIdx` in `RenderableSegment` type definition
+- Add `data-search-index="${matchIdx}"` attributes to rendered HTML
+- Apply search highlighting to both read and non-read text
+- Use `<span>` wrappers with search classes for non-read matches
+
+#### 4. Comprehensive Parser Migration
+
+**Updated 5 files** to use new parser:
+- `src/lib/stores/linksSidebar.ts` - Extract links from content
+- `src/lib/utils/positionValidation.ts` - Check positions in links
+- `src/lib/utils/markdownEdit.ts` - Update link text
+- `src-tauri/src/commands/flashcard_hub.rs` - Strip links in Rust
+- `src/lib/components/reading/ReadHighlighter.tsx` - Inline link parsing
+
+### Files Changed
+
+**New Files** (1):
+- `src/lib/utils/markdownLinkParser.ts` - Shared parser utility
+- `src/lib/utils/__tests__/markdownLinkParser.test.ts` - 19 comprehensive tests
+
+**Modified Files** (7):
+1. `src/lib/stores/linksSidebar.ts` - Use proper parser for link extraction
+2. `src/lib/utils/positionValidation.ts` - Use proper parser for position checks
+3. `src/lib/utils/markdownEdit.ts` - Use proper parser for link updates
+4. `src-tauri/src/commands/flashcard_hub.rs` - Add Rust parser with depth tracking
+5. `src-tauri/src/services/wikipedia.rs` - Add `.noprint` filtering
+6. `src/lib/components/reading/ReadHighlighter.tsx` - Enhanced bracket detection + search indices
+7. `LINK_BUG_FIX_SUMMARY.md` - Complete documentation
+
+### Technical Details
+
+**TypeScript Parser** (`markdownLinkParser.ts`):
+- Handles `[text](url)` with parentheses in URL
+- Handles `[[text]]` patterns within link text
+- Detects bracket-only false links `[Helot]` and returns null
+- Tracks start/end positions for all operations
+
+**Rust Parser** (`flashcard_hub.rs`):
+- Byte-level parsing with UTF-8 awareness
+- Parenthesis depth tracking matching TypeScript version
+- Used in `strip_markdown_links()` for content processing
+- Replaces broken regex `r"\[([^\]]*)\]\([^\)]+\)"`
+
+**Search Match Rendering**:
+- `RenderableSegment` type includes `matchIdx?: number`
+- Both `<mark>` (read) and `<span>` (non-read) get search classes
+- `data-search-index` enables DOM querySelector for scroll-to-match
+- Active match uses `.search-match-active` class (orange highlight)
+
+### Verification
+
+- All TypeScript tests pass: ✓ 19/19 tests passing
+- TypeScript build succeeds: ✓ Built in 2.68s
+- Rust compilation succeeds: ✓ No errors
+- Handles Wikipedia URLs with disambiguation pages: ✓
+- Preserves text between links: ✓
+- No stray parentheses or brackets in output: ✓
+- Bracket-only text `[Helot]` doesn't create false links: ✓
+- Wikipedia citation markers filtered out: ✓
+- Text search scroll-to-match working with proper indices: ✓
+- Search highlighting visible in both read and non-read text: ✓
+
+### Impact
+
+**Fixes**:
+- Text corruption in Wikipedia articles with disambiguation links
+- False giant links created by bracket-only text like `[Helot]`
+- Link parsing failures in LinksSidebar
+- Position calculation errors in text selection
+- Flashcard content processing issues
+- Wikipedia citation markers appearing in scraped content
+- Text search scroll-to-match failures
+- Missing search highlighting in non-read text
+
+**Improves**:
+- All markdown link processing throughout the application
+- Data integrity for link-based features
+- User experience with Wikipedia article ingestion
+- Text search navigation reliability
+
+### Testing Recommendations
+
+When testing Wikipedia articles, verify:
+1. Disambiguation pages (URLs ending in `_(something)`)
+2. Multiple links close together
+3. Parenthetical dates like "(1974 and 1990)"
+4. Bracket-only text like `[Helot]` followed by links
+5. Citation needed markers don't appear
+6. LinksSidebar shows all links correctly
+7. Text selection works across links
+8. Text search Ctrl+F finds all matches
+9. Enter/Shift+Enter scrolls to correct match
+10. Search highlighting in both read/non-read text
 
 ---
 

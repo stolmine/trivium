@@ -330,21 +330,26 @@ function analyzeBoundaries(
  * Check if a position in cleaned content falls inside a markdown link
  */
 function isPositionInLink(pos: number, cleanedContent: string): boolean {
-  // Find all markdown links before and around this position
-  const linkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g
-  let match: RegExpExecArray | null
+  // Use the proper parser that handles parentheses in URLs
+  const { parseMarkdownLink } = require('./markdownLinkParser')
 
-  while ((match = linkRegex.exec(cleanedContent)) !== null) {
-    const linkStart = match.index
-    const linkEnd = linkStart + match[0].length
+  let i = 0
+  while (i < cleanedContent.length) {
+    const linkInfo = parseMarkdownLink(cleanedContent, i)
+    if (linkInfo) {
+      // Check if position is inside this link
+      if (pos > linkInfo.startIndex && pos < linkInfo.endIndex) {
+        return true
+      }
 
-    if (pos > linkStart && pos < linkEnd) {
-      return true
-    }
+      // Don't search beyond our position
+      if (linkInfo.startIndex > pos) {
+        break
+      }
 
-    // Don't search beyond our position
-    if (linkStart > pos) {
-      break
+      i = linkInfo.endIndex
+    } else {
+      i++
     }
   }
 
@@ -363,30 +368,36 @@ function expandToFullLinks(
   let expandedEnd = end
   let expanded = false
 
-  // Find all markdown links in the range
-  const linkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g
-  let match: RegExpExecArray | null
+  // Use the proper parser that handles parentheses in URLs
+  const { parseMarkdownLink } = require('./markdownLinkParser')
 
-  linkRegex.lastIndex = 0
-  while ((match = linkRegex.exec(cleanedContent)) !== null) {
-    const linkStart = match.index
-    const linkEnd = linkStart + match[0].length
+  let i = 0
+  while (i < cleanedContent.length) {
+    const linkInfo = parseMarkdownLink(cleanedContent, i)
+    if (linkInfo) {
+      const linkStart = linkInfo.startIndex
+      const linkEnd = linkInfo.endIndex
 
-    // If start position is inside a link, expand to include start of link
-    if (start > linkStart && start < linkEnd) {
-      expandedStart = linkStart
-      expanded = true
-    }
+      // If start position is inside a link, expand to include start of link
+      if (start > linkStart && start < linkEnd) {
+        expandedStart = linkStart
+        expanded = true
+      }
 
-    // If end position is inside a link, expand to include end of link
-    if (end > linkStart && end < linkEnd) {
-      expandedEnd = linkEnd
-      expanded = true
-    }
+      // If end position is inside a link, expand to include end of link
+      if (end > linkStart && end < linkEnd) {
+        expandedEnd = linkEnd
+        expanded = true
+      }
 
-    // Stop searching if we're past the end position
-    if (linkStart > end) {
-      break
+      // Stop searching if we're past the end position
+      if (linkStart > end) {
+        break
+      }
+
+      i = linkInfo.endIndex
+    } else {
+      i++
     }
   }
 

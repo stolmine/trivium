@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { parseMarkdownLink } from '../utils/markdownLinkParser'
 
 export type SortMode = 'appearance' | 'alphabetical'
 
@@ -56,22 +57,38 @@ function extractAndDeduplicateLinks(content: string): ParsedLink[] {
   const linkMap = new Map<string, ParsedLink>()
   let matchIndex = 0
 
-  const markdownLinkRegex = /\[([^\]]+)\]\(([^\)]+)\)/g
-
-  const bareUrlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/g
-
-  let match
-
-  while ((match = markdownLinkRegex.exec(content)) !== null) {
-    const [, text, url] = match
-    if (text.trim()) {
-      processLink(url, text, linkMap, matchIndex)
-      matchIndex++
+  // Parse markdown links using the proper parser that handles parentheses in URLs
+  let i = 0
+  while (i < content.length) {
+    const linkInfo = parseMarkdownLink(content, i)
+    if (linkInfo) {
+      if (linkInfo.linkText.trim()) {
+        processLink(linkInfo.url, linkInfo.linkText, linkMap, matchIndex)
+        matchIndex++
+      }
+      i = linkInfo.endIndex
+    } else {
+      i++
     }
   }
 
-  const withoutMarkdown = content.replace(markdownLinkRegex, '')
-  while ((match = bareUrlRegex.exec(withoutMarkdown)) !== null) {
+  // Find bare URLs (not already in markdown links)
+  // First, remove all markdown links from content to avoid double-counting
+  let contentWithoutMarkdown = ''
+  i = 0
+  while (i < content.length) {
+    const linkInfo = parseMarkdownLink(content, i)
+    if (linkInfo) {
+      i = linkInfo.endIndex
+    } else {
+      contentWithoutMarkdown += content[i]
+      i++
+    }
+  }
+
+  const bareUrlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/g
+  let match
+  while ((match = bareUrlRegex.exec(contentWithoutMarkdown)) !== null) {
     const url = match[0]
     processLink(url, url, linkMap, matchIndex)
     matchIndex++

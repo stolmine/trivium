@@ -5,12 +5,15 @@ export function updateLinkText(
 ): string {
   const linkText = markdown.substring(linkPosition.start, linkPosition.end)
 
-  const linkMatch = linkText.match(/\[([^\]]+)\]\(([^\)]+)\)/)
-  if (!linkMatch) {
+  // Use the proper parser that handles parentheses in URLs
+  const { parseMarkdownLink } = require('./markdownLinkParser')
+  const linkInfo = parseMarkdownLink(linkText, 0)
+
+  if (!linkInfo) {
     throw new Error('Invalid link syntax at specified position')
   }
 
-  const url = linkMatch[2]
+  const url = linkInfo.url
   const newLinkSyntax = `[${newText}](${url})`
 
   return (

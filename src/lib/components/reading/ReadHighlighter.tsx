@@ -148,15 +148,29 @@ function parseMarkdownLink(text: string, startIndex: number): { linkText: string
   let foundEnd = false
 
   while (i < text.length) {
-    if (text[i] === ']' && i + 1 < text.length && text[i + 1] === '(') {
-      // Found the end of link text: ](
-      // Note: We don't include this final ] in linkText - it's the closing bracket of the markdown syntax
-      foundEnd = true
-      i++ // skip the ]
-      break
+    if (text[i] === ']') {
+      // Check if this ] is followed by (
+      if (i + 1 < text.length && text[i + 1] === '(') {
+        // Found ](  - this is the end of link text
+        // Note: We don't include this final ] in linkText - it's the closing bracket of the markdown syntax
+        foundEnd = true
+        i++ // skip the ]
+        break
+      } else if (i + 1 < text.length && text[i + 1] === ']') {
+        // Found ]]  - the first ] is part of link text (for cases like [[text]])
+        // Add this ] to linkText and continue
+        linkText += text[i]
+        i++
+      } else {
+        // Found ] followed by something else (space, letter, end of string, etc.)
+        // This is NOT a markdown link - it's just bracketed text like [Helot]
+        // We must return null here to avoid treating text between [Helot] and the next [link](url) as a giant link
+        return null
+      }
+    } else {
+      linkText += text[i]
+      i++
     }
-    linkText += text[i]
-    i++
   }
 
   if (!foundEnd || i >= text.length || text[i] !== '(') return null
@@ -694,11 +708,18 @@ const ReadHighlighterComponent = ({
 
   // Split segments into sub-segments based on search matches
   const renderableSegments = useMemo(() => {
-    if (convertedSearchMatches.length === 0) {
-      return segments.map((seg, idx) => ({ ...seg, key: `seg-${idx}` }))
+    type RenderableSegment = TextSegment & {
+      key: string;
+      isSearchMatch?: boolean;
+      isActiveSearchMatch?: boolean;
+      matchIdx?: number
     }
 
-    const result: Array<TextSegment & { key: string; isSearchMatch?: boolean; isActiveSearchMatch?: boolean }> = []
+    if (convertedSearchMatches.length === 0) {
+      return segments.map((seg, idx) => ({ ...seg, key: `seg-${idx}` } as RenderableSegment))
+    }
+
+    const result: RenderableSegment[] = []
 
     segments.forEach((segment, segIdx) => {
       // Find search matches that overlap with this segment
@@ -743,7 +764,8 @@ const ReadHighlighterComponent = ({
           end: matchEnd,
           key: `seg-${segIdx}-match-${matchSubIdx}`,
           isSearchMatch: true,
-          isActiveSearchMatch: match.matchIdx === activeSearchIndex
+          isActiveSearchMatch: match.matchIdx === activeSearchIndex,
+          matchIdx: match.matchIdx  // Store the match index for data-search-index attribute
         })
 
         currentPos = matchEnd
@@ -784,12 +806,23 @@ const ReadHighlighterComponent = ({
       } else if (segment.isRead) {
         const markClass = segment.isAutoCompleted ? 'read-range-auto' : 'read-range'
         let searchClass = ''
-        if (segment.isActiveSearchMatch) {
+        let searchAttr = ''
+        if (segment.isActiveSearchMatch && segment.matchIdx !== undefined) {
           searchClass = ' search-match-active'
-        } else if (segment.isSearchMatch) {
+          searchAttr = ` data-search-index="${segment.matchIdx}"`
+        } else if (segment.isSearchMatch && segment.matchIdx !== undefined) {
           searchClass = ' search-match'
+          searchAttr = ` data-search-index="${segment.matchIdx}"`
         }
-        result += `<mark class="${markClass}${searchClass}">${segmentHtml}</mark>`
+        result += `<mark class="${markClass}${searchClass}"${searchAttr}>${segmentHtml}</mark>`
+      } else if (segment.isSearchMatch || segment.isActiveSearchMatch) {
+        // Non-read search matches need their own span wrapper with search styling
+        let searchClass = segment.isActiveSearchMatch ? 'search-match-active' : 'search-match'
+        let searchAttr = ''
+        if (segment.matchIdx !== undefined) {
+          searchAttr = ` data-search-index="${segment.matchIdx}"`
+        }
+        result += `<span class="${searchClass}"${searchAttr}>${segmentHtml}</span>`
       } else {
         result += segmentHtml
       }

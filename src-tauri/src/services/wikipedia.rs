@@ -127,6 +127,8 @@ fn html_to_plain_text(html: &str) -> Result<String> {
         ".geo-dms",
         ".geo-dec",
         ".geo",
+        ".noprint",
+        "sup.noprint",
     ];
 
     let mut result = Vec::new();
@@ -239,12 +241,42 @@ fn is_image_url(url: &str) -> bool {
     lower.ends_with(".ico")
 }
 
+fn should_skip_element(elem: scraper::element_ref::ElementRef) -> bool {
+    // Check if element or any of its ancestors should be filtered
+    let unwanted_classes = vec![
+        "noprint",
+        "reference",
+        "Template-Fact",
+    ];
+
+    // Check element's own classes
+    if let Some(class_attr) = elem.value().attr("class") {
+        for unwanted in &unwanted_classes {
+            if class_attr.contains(unwanted) {
+                return true;
+            }
+        }
+    }
+
+    // Check if element is a sup tag (often used for citations)
+    if elem.value().name() == "sup" {
+        return true;
+    }
+
+    false
+}
+
 fn get_text_with_links(node: scraper::element_ref::ElementRef) -> String {
     let mut result = String::new();
     for child in node.children() {
         if let Some(text) = child.value().as_text() {
             result.push_str(text);
         } else if let Some(elem) = scraper::ElementRef::wrap(child) {
+            // Skip elements that should be filtered (like citation needed markers)
+            if should_skip_element(elem) {
+                continue;
+            }
+
             if elem.value().name() == "a" {
                 let link_text = elem.text().collect::<String>();
                 if let Some(href) = elem.value().attr("href") {
@@ -641,5 +673,45 @@ mod tests {
         let html = r#"<blockquote><p>   </p></blockquote>"#;
         let result = html_to_plain_text(html).unwrap();
         assert!(!result.contains(">"));
+    }
+
+    #[test]
+    fn test_filters_citation_needed_markers() {
+        // Test that citation needed markers with sup tags are filtered out
+        let html = r#"<p>This is a fact<sup class="noprint"><a href="/wiki/Wikipedia:Citation_needed">citation needed</a></sup> with more text.</p>"#;
+        let result = html_to_plain_text(html).unwrap();
+
+        // Should not contain the citation needed link or text
+        assert!(!result.contains("citation needed"));
+        assert!(!result.contains("[[citation needed]"));
+
+        // Should contain the actual content
+        assert!(result.contains("This is a fact"));
+        assert!(result.contains("with more text"));
+    }
+
+    #[test]
+    fn test_filters_sup_elements_in_links() {
+        // Test that sup elements are completely skipped, preventing double brackets
+        let html = r#"<p>Content here<sup><a href="http://example.com">note</a></sup> more content</p>"#;
+        let result = html_to_plain_text(html).unwrap();
+
+        // The sup element should be filtered, so no link should appear
+        assert!(!result.contains("[note]"));
+        assert!(!result.contains("http://example.com"));
+
+        // Regular content should remain
+        assert!(result.contains("Content here"));
+        assert!(result.contains("more content"));
+    }
+
+    #[test]
+    fn test_preserves_regular_links_not_in_sup() {
+        // Verify that regular links outside sup tags are preserved
+        let html = r#"<p>Check out <a href="/wiki/Article">this article</a> for more.</p>"#;
+        let result = html_to_plain_text(html).unwrap();
+
+        // Regular links should be preserved
+        assert!(result.contains("[this article](https://en.wikipedia.org/wiki/Article)"));
     }
 }

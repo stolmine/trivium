@@ -127,6 +127,87 @@ fn extract_context_from_positions(content: &str, start_pos: i64, end_pos: i64, c
     (before_context, after_context, start_pos, end_pos)
 }
 
+/// Parse a markdown link starting at the given byte index
+/// Returns (link_text, url, end_index) or None if no valid link found
+/// Properly handles URLs with parentheses like https://en.wikipedia.org/wiki/Name_(disambiguation)
+fn parse_markdown_link(text: &str, start_index: usize) -> Option<(String, String, usize)> {
+    let bytes = text.as_bytes();
+    if start_index >= bytes.len() || bytes[start_index] != b'[' {
+        return None;
+    }
+
+    // Find the closing ]( for link text
+    let mut i = start_index + 1;
+    let mut link_text = String::new();
+    let mut found_end = false;
+
+    while i < bytes.len() {
+        if bytes[i] == b']' && i + 1 < bytes.len() && bytes[i + 1] == b'(' {
+            found_end = true;
+            i += 1; // skip the ]
+            break;
+        }
+        link_text.push(bytes[i] as char);
+        i += 1;
+    }
+
+    if !found_end || i >= bytes.len() || bytes[i] != b'(' {
+        return None;
+    }
+    i += 1; // skip (
+
+    // Parse URL - track parenthesis depth to handle URLs with parentheses
+    let mut url = String::new();
+    let mut paren_depth = 0;
+
+    while i < bytes.len() {
+        if bytes[i] == b'(' {
+            paren_depth += 1;
+            url.push(bytes[i] as char);
+            i += 1;
+        } else if bytes[i] == b')' {
+            if paren_depth > 0 {
+                // This ) is part of the URL
+                paren_depth -= 1;
+                url.push(bytes[i] as char);
+                i += 1;
+            } else {
+                // This ) closes the markdown link
+                break;
+            }
+        } else {
+            url.push(bytes[i] as char);
+            i += 1;
+        }
+    }
+
+    if i >= bytes.len() || bytes[i] != b')' {
+        return None;
+    }
+    i += 1; // skip )
+
+    Some((link_text, url, i))
+}
+
+/// Strip markdown links from text, keeping only the link text
+/// Handles URLs with parentheses correctly
+fn strip_markdown_links(text: &str) -> String {
+    let mut result = String::new();
+    let mut i = 0;
+
+    while i < text.len() {
+        if let Some((link_text, _url, end_index)) = parse_markdown_link(text, i) {
+            result.push_str(&link_text);
+            i = end_index;
+        } else {
+            result.push(text.chars().nth(i).unwrap());
+            i += 1;
+        }
+    }
+
+    result
+}
+
 /// Process content to DOM space by stripping [[exclude]] tags and markdown links
 /// This matches how the frontend renders content
 fn process_content_to_dom_space(content: &str) -> String {
@@ -138,8 +219,8 @@ fn process_content_to_dom_space(content: &str) -> String {
     let mut cleaned = exclude_regex.replace_all(content, "$1").to_string();
 
     // Then strip markdown links: [text](url) -> text
-    let link_regex = Regex::new(r"\[([^\]]*)\]\([^\)]+\)").unwrap();
-    cleaned = link_regex.replace_all(&cleaned, "$1").to_string();
+    // Use the proper parser that handles parentheses in URLs
+    cleaned = strip_markdown_links(&cleaned);
 
     // Strip mediawiki-style headers: == Header == -> Header
     let header_regex = Regex::new(r"={2,}\s*(.+?)\s*={2,}").unwrap();
