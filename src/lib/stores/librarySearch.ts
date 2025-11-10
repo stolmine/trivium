@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
-interface LibrarySearchState {
+type SearchContext = 'sidebar' | 'library';
+
+interface SearchContextState {
   isOpen: boolean;
   query: string;
   caseSensitive: boolean;
@@ -9,18 +11,23 @@ interface LibrarySearchState {
   matchedFolderIds: string[];
   totalMatches: number;
   currentMatchIndex: number;
-  openSearch: () => void;
-  closeSearch: () => void;
-  setQuery: (query: string) => void;
-  toggleCaseSensitive: () => void;
-  toggleWholeWord: () => void;
-  setMatches: (textIds: number[], folderIds: string[]) => void;
-  nextMatch: () => void;
-  previousMatch: () => void;
-  reset: () => void;
 }
 
-export const useLibrarySearchStore = create<LibrarySearchState>((set, get) => ({
+interface LibrarySearchState {
+  sidebar: SearchContextState;
+  library: SearchContextState;
+  openSearch: (context: SearchContext) => void;
+  closeSearch: (context: SearchContext) => void;
+  setQuery: (context: SearchContext, query: string) => void;
+  toggleCaseSensitive: (context: SearchContext) => void;
+  toggleWholeWord: (context: SearchContext) => void;
+  setMatches: (context: SearchContext, textIds: number[], folderIds: string[]) => void;
+  nextMatch: (context: SearchContext) => void;
+  previousMatch: (context: SearchContext) => void;
+  reset: (context: SearchContext) => void;
+}
+
+const createInitialContextState = (): SearchContextState => ({
   isOpen: false,
   query: '',
   caseSensitive: false,
@@ -29,75 +36,113 @@ export const useLibrarySearchStore = create<LibrarySearchState>((set, get) => ({
   matchedFolderIds: [],
   totalMatches: 0,
   currentMatchIndex: 0,
+});
 
-  openSearch: () => {
-    set({ isOpen: true });
-  },
+export const useLibrarySearchStore = create<LibrarySearchState>((set, get) => ({
+  sidebar: createInitialContextState(),
+  library: createInitialContextState(),
 
-  closeSearch: () => {
-    set({ isOpen: false });
-  },
-
-  setQuery: (query: string) => {
-    set({
-      query,
-      currentMatchIndex: 0
-    });
-  },
-
-  toggleCaseSensitive: () => {
+  openSearch: (context: SearchContext) => {
     set((state) => ({
-      caseSensitive: !state.caseSensitive,
-      currentMatchIndex: 0
+      [context]: {
+        ...state[context],
+        isOpen: true
+      }
     }));
   },
 
-  toggleWholeWord: () => {
+  closeSearch: (context: SearchContext) => {
     set((state) => ({
-      wholeWord: !state.wholeWord,
-      currentMatchIndex: 0
+      [context]: {
+        ...state[context],
+        isOpen: false
+      }
     }));
   },
 
-  setMatches: (textIds: number[], folderIds: string[]) => {
+  setQuery: (context: SearchContext, query: string) => {
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        query,
+        currentMatchIndex: 0
+      }
+    }));
+  },
+
+  toggleCaseSensitive: (context: SearchContext) => {
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        caseSensitive: !state[context].caseSensitive,
+        currentMatchIndex: 0
+      }
+    }));
+  },
+
+  toggleWholeWord: (context: SearchContext) => {
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        wholeWord: !state[context].wholeWord,
+        currentMatchIndex: 0
+      }
+    }));
+  },
+
+  setMatches: (context: SearchContext, textIds: number[], folderIds: string[]) => {
     const totalMatches = textIds.length + folderIds.length;
-    set({
-      matchedTextIds: textIds,
-      matchedFolderIds: folderIds,
-      totalMatches,
-      currentMatchIndex: totalMatches > 0 ? 0 : 0
-    });
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        matchedTextIds: textIds,
+        matchedFolderIds: folderIds,
+        totalMatches,
+        currentMatchIndex: totalMatches > 0 ? 0 : 0
+      }
+    }));
   },
 
-  nextMatch: () => {
-    const { matchedTextIds, currentMatchIndex } = get();
-    // Only navigate through text matches, not folders
-    const textMatchCount = matchedTextIds.length;
+  nextMatch: (context: SearchContext) => {
+    const contextState = get()[context];
+    const textMatchCount = contextState.matchedTextIds.length;
     if (textMatchCount === 0) {
       return;
     }
-    const nextIndex = currentMatchIndex >= textMatchCount - 1 ? 0 : currentMatchIndex + 1;
-    set({ currentMatchIndex: nextIndex });
+    const nextIndex = contextState.currentMatchIndex >= textMatchCount - 1 ? 0 : contextState.currentMatchIndex + 1;
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        currentMatchIndex: nextIndex
+      }
+    }));
   },
 
-  previousMatch: () => {
-    const { matchedTextIds, currentMatchIndex } = get();
-    // Only navigate through text matches, not folders
-    const textMatchCount = matchedTextIds.length;
+  previousMatch: (context: SearchContext) => {
+    const contextState = get()[context];
+    const textMatchCount = contextState.matchedTextIds.length;
     if (textMatchCount === 0) {
       return;
     }
-    const prevIndex = currentMatchIndex <= 0 ? textMatchCount - 1 : currentMatchIndex - 1;
-    set({ currentMatchIndex: prevIndex });
+    const prevIndex = contextState.currentMatchIndex <= 0 ? textMatchCount - 1 : contextState.currentMatchIndex - 1;
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        currentMatchIndex: prevIndex
+      }
+    }));
   },
 
-  reset: () => {
-    set({
-      query: '',
-      matchedTextIds: [],
-      matchedFolderIds: [],
-      totalMatches: 0,
-      currentMatchIndex: 0
-    });
+  reset: (context: SearchContext) => {
+    set((state) => ({
+      [context]: {
+        ...state[context],
+        query: '',
+        matchedTextIds: [],
+        matchedFolderIds: [],
+        totalMatches: 0,
+        currentMatchIndex: 0
+      }
+    }));
   }
 }));

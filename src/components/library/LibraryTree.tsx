@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection } from '@dnd-kit/core';
-import { FileText, Folder, FolderOpen, Search } from 'lucide-react';
+import { FileText, Folder, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLibraryStore, type SortOption } from '../../stores/library';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
+import { useFocusContextStore, shouldTrackFocus } from '../../stores/focusContext';
 import { buildTree, isFolderDescendant, getNodeById } from '../../lib/tree-utils';
 import { cn } from '../../lib/utils';
 import { FolderNode } from './FolderNode';
@@ -86,10 +87,31 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
   const toggleFolder = useLibraryStore((state) =>
     context === 'library' ? state.toggleLibraryFolder : state.toggleFolder
   );
-  const { isOpen, query, matchedTextIds, matchedFolderIds, currentMatchIndex } = useLibrarySearchStore();
+  const searchContext = context === 'library' ? 'library' : 'sidebar';
+  const searchState = useLibrarySearchStore((state) => state[searchContext]);
+  const { isOpen, query, matchedTextIds, matchedFolderIds, currentMatchIndex } = searchState;
+  const { setActiveContext, isContextActive } = useFocusContextStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const focusContext = context === 'sidebar' ? 'sidebar' : 'library-left';
+  const isActive = isContextActive(focusContext);
+
+  // Only show focus tracking UI when on library page
+  // When not on library page, focus outlines should not appear anywhere (including sidebar)
+  const trackingEnabled = shouldTrackFocus();
+  const showFocusUI = trackingEnabled && isActive;
+
+  const handleTreeInteraction = () => {
+    // Only set active context if focus tracking is enabled
+    if (trackingEnabled) {
+      setActiveContext(focusContext);
+    }
+    if (treeContainerRef.current && !collapsed) {
+      treeContainerRef.current.focus();
+    }
+  };
 
   useEffect(() => {
     loadLibrary();
@@ -333,7 +355,10 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
       sensors={sensors}
       collisionDetection={customCollisionDetection}
       measuring={measuringConfig}
-      onDragStart={(e) => setActiveId(String(e.active.id))}
+      onDragStart={(e) => {
+        setActiveId(String(e.active.id));
+        handleTreeInteraction();
+      }}
       onDragEnd={(e) => {
         handleDragEnd(e);
         setActiveId(null);
@@ -343,8 +368,19 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
         {context === 'library' && <RootDropZone />}
         <div
           ref={treeContainerRef}
-          tabIndex={0}
-          className="space-y-1 px-2 outline-none focus:outline-none overflow-y-auto flex-1 min-h-0"
+          tabIndex={collapsed ? -1 : 0}
+          onClick={handleTreeInteraction}
+          onFocus={handleTreeInteraction}
+          className={cn(
+            'space-y-1 px-2 outline-none focus:outline-none overflow-y-auto flex-1 min-h-0',
+            // Only apply focus-related classes when focus tracking is enabled
+            trackingEnabled && 'focusable-pane',
+            trackingEnabled && context === 'sidebar' && 'sidebar-pane',
+            trackingEnabled && context === 'library' && 'library-left-pane',
+            trackingEnabled && showFocusUI && !collapsed ? 'focusable-pane--focused' : trackingEnabled && 'focusable-pane--unfocused',
+            trackingEnabled && showFocusUI && !collapsed && context === 'sidebar' && 'sidebar-pane--focused',
+            trackingEnabled && showFocusUI && !collapsed && context === 'library' && 'library-left-pane--focused'
+          )}
           role="tree"
           aria-label="Library navigation tree"
         >

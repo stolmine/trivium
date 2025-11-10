@@ -105,6 +105,18 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Focus state colors - Light mode */
+  --focus-border: oklch(0.45 0 0);
+  --focus-border-width: 2px;
+  --focus-bg-overlay: oklch(1 0 0);
+  --unfocus-border: oklch(0.922 0 0);
+  --unfocus-bg-overlay: oklch(0.985 0 0);
+
+  /* Focus shadows */
+  --focus-shadow: 0 0 0 1px oklch(0.45 0 0 / 8%),
+                  0 2px 4px oklch(0 0 0 / 4%);
+  --unfocus-shadow: none;
 }
 
 .dark {
@@ -139,6 +151,17 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Focus state colors - Dark mode */
+  --focus-border: oklch(0.75 0 0);
+  --focus-bg-overlay: oklch(0.155 0 0);
+  --unfocus-border: oklch(1 0 0 / 10%);
+  --unfocus-bg-overlay: oklch(0.145 0 0);
+
+  /* Focus shadows */
+  --focus-shadow: 0 0 0 1px oklch(1 0 0 / 12%),
+                  0 2px 4px oklch(0 0 0 / 8%);
+  --unfocus-shadow: none;
 }
 
 @layer base {
@@ -272,6 +295,84 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Focus state classes for pane focus tracking */
+.focusable-pane {
+  position: relative;
+  border: 1px solid var(--unfocus-border);
+  background-color: var(--background);
+  box-shadow: var(--unfocus-shadow);
+  transition: border-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focusable-pane--focused {
+  border-color: var(--focus-border);
+  border-width: var(--focus-border-width);
+  box-shadow: var(--focus-shadow);
+  background-color: var(--focus-bg-overlay);
+  z-index: 1;
+}
+
+.focusable-pane--unfocused {
+  border-color: var(--unfocus-border);
+  border-width: 1px;
+  box-shadow: var(--unfocus-shadow);
+  background-color: var(--unfocus-bg-overlay);
+  z-index: 0;
+}
+
+.sidebar-pane {
+  border-right-color: var(--unfocus-border);
+  border-right-width: 1px;
+  transition: border-right-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-right-width 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-pane--focused {
+  border-right-color: var(--focus-border);
+  border-right-width: var(--focus-border-width);
+  background-color: var(--focus-bg-overlay);
+}
+
+.library-left-pane {
+  border-right: 1px solid var(--unfocus-border);
+  transition: border-right-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-right-width 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.library-left-pane--focused {
+  border-right-color: var(--focus-border);
+  border-right-width: var(--focus-border-width);
+  background-color: var(--focus-bg-overlay);
+}
+
+.library-right-pane {
+  border-left: 1px solid var(--unfocus-border);
+  transition: border-left-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-left-width 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              background-color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.library-right-pane--focused {
+  border-left-color: var(--focus-border);
+  border-left-width: var(--focus-border-width);
+  background-color: var(--focus-bg-overlay);
+}
+
+/* Optional content dimming enhancement */
+.focusable-pane--unfocused > * {
+  opacity: 0.88;
+  transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focusable-pane--focused > * {
+  opacity: 1;
+  transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -280,6 +381,15 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .focusable-pane,
+  .sidebar-pane,
+  .library-left-pane,
+  .library-right-pane,
+  .focusable-pane--unfocused > *,
+  .focusable-pane--focused > * {
+    transition: none !important;
   }
 }
 

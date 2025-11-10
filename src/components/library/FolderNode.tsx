@@ -53,13 +53,21 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
   const expandedFolderIds = useLibraryStore((state) =>
     context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds
   );
-  const selectedItemId = useLibraryStore((state) => state.selectedItemId);
-  const selectedItemIds = useLibraryStore((state) => state.selectedItemIds);
+  const selectedItemId = useLibraryStore((state) =>
+    context === 'library' ? state.librarySelectedItemId : state.selectedItemId
+  );
+  const selectedItemIds = useLibraryStore((state) =>
+    context === 'library' ? state.librarySelectedItemIds : state.selectedItemIds
+  );
   const toggleFolder = useLibraryStore((state) =>
     context === 'library' ? state.toggleLibraryFolder : state.toggleFolder
   );
-  const selectItem = useLibraryStore((state) => state.selectItem);
-  const selectItemMulti = useLibraryStore((state) => state.selectItemMulti);
+  const selectItem = useLibraryStore((state) =>
+    context === 'library' ? state.selectLibraryItem : state.selectItem
+  );
+  const selectItemMulti = useLibraryStore((state) =>
+    context === 'library' ? state.selectLibraryItemMulti : state.selectItemMulti
+  );
 
   const folder = node.data as FolderType;
   const isExpanded = expandedFolderIds.has(folder.id);

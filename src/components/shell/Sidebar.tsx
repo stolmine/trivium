@@ -61,14 +61,12 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
   const { folders, texts, createFolder, sortBy, setSortBy, expandAllFolders, collapseAllFolders } = useLibraryStore();
-  const {
-    isOpen: isSearchOpen,
-    query,
-    caseSensitive,
-    wholeWord,
-    openSearch,
-    setMatches
-  } = useLibrarySearchStore();
+  const isSearchOpen = useLibrarySearchStore((state) => state.sidebar.isOpen);
+  const query = useLibrarySearchStore((state) => state.sidebar.query);
+  const caseSensitive = useLibrarySearchStore((state) => state.sidebar.caseSensitive);
+  const wholeWord = useLibrarySearchStore((state) => state.sidebar.wholeWord);
+  const openSearch = useLibrarySearchStore((state) => state.openSearch);
+  const setMatches = useLibrarySearchStore((state) => state.setMatches);
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [allFoldersExpanded, setAllFoldersExpanded] = useState(false);
@@ -110,19 +108,6 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     }
   }, [newFolderName, folders, showCreateFolderDialog]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Shift+Ctrl/Cmd+F opens library search (Ctrl/Cmd+F without Shift is for text search)
-      if (e.shiftKey && (e.metaKey || e.ctrlKey) && e.key === 'f') {
-        e.preventDefault();
-        openSearch();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [openSearch]);
-
   const handleToggleExpandAll = () => {
     if (allFoldersExpanded) {
       collapseAllFolders();
@@ -132,17 +117,6 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
       setAllFoldersExpanded(true);
     }
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.shiftKey && (e.metaKey || e.ctrlKey) && (e.key === 'e' || e.key === 'E')) {
-        e.preventDefault();
-        handleToggleExpandAll();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [allFoldersExpanded, handleToggleExpandAll]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -157,7 +131,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
 
   useEffect(() => {
     if (!query.trim()) {
-      setMatches([], []);
+      setMatches('sidebar', [], []);
       return;
     }
 
@@ -167,6 +141,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     });
 
     setMatches(
+      'sidebar',
       Array.from(results.matchedTextIds),
       Array.from(results.matchedFolderIds)
     );
@@ -308,7 +283,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
                 variant="ghost"
                 size="sm"
                 className="h-6 w-6 p-0"
-                onClick={openSearch}
+                onClick={() => openSearch('sidebar')}
                 title={`Search library (Shift+${mod}+F)`}
                 aria-label="Search library"
               >
@@ -372,7 +347,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
           </div>
         )}
         <div className="flex-1 overflow-y-auto min-h-0">
-          {isSearchOpen && !sidebarCollapsed && <LibrarySearchBar />}
+          {isSearchOpen && !sidebarCollapsed && <LibrarySearchBar context="sidebar" />}
           <LibraryTree collapsed={sidebarCollapsed} context="sidebar" />
         </div>
       </nav>

@@ -3,8 +3,8 @@ import { Button } from '../../lib/components/ui/button';
 import { X } from 'lucide-react';
 
 export function SelectionToolbar() {
-  const selectedItemIds = useLibraryStore((state) => state.selectedItemIds);
-  const clearSelection = useLibraryStore((state) => state.clearSelection);
+  const selectedItemIds = useLibraryStore((state) => state.librarySelectedItemIds);
+  const clearSelection = useLibraryStore((state) => state.clearLibrarySelection);
 
   if (selectedItemIds.size === 0) return null;
 

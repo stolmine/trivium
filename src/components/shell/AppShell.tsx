@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { ShortcutHelp } from '../shared/ShortcutHelp';
 import { useGlobalShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useContextualHotkeys } from '../../lib/hooks/useContextualHotkeys';
 import { useAppStore } from '../../stores/app';
 
 export function AppShell() {
@@ -13,6 +14,8 @@ export function AppShell() {
     toggleSidebar,
     () => setShowShortcutHelp(true)
   );
+
+  useContextualHotkeys();
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">

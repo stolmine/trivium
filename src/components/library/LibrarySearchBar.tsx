@@ -6,11 +6,26 @@ import { Button } from '../../lib/components/ui'
 import { cn } from '../../lib/utils'
 import { useDebounce } from '../../lib/hooks/useDebounce'
 
-export function LibrarySearchBar() {
+type SearchContext = 'sidebar' | 'library';
+
+interface LibrarySearchBarProps {
+  context: SearchContext;
+}
+
+export function LibrarySearchBar({ context }: LibrarySearchBarProps) {
   const navigate = useNavigate()
   const inputRef = useRef<HTMLInputElement>(null)
   const [localQuery, setLocalQuery] = useState('')
   const debouncedQuery = useDebounce(localQuery, 300)
+
+  const searchState = useLibrarySearchStore((state) => state[context]);
+  const setQuery = useLibrarySearchStore((state) => state.setQuery);
+  const toggleCaseSensitive = useLibrarySearchStore((state) => state.toggleCaseSensitive);
+  const toggleWholeWord = useLibrarySearchStore((state) => state.toggleWholeWord);
+  const nextMatch = useLibrarySearchStore((state) => state.nextMatch);
+  const previousMatch = useLibrarySearchStore((state) => state.previousMatch);
+  const closeSearch = useLibrarySearchStore((state) => state.closeSearch);
+  const reset = useLibrarySearchStore((state) => state.reset);
 
   const {
     query,
@@ -19,14 +34,7 @@ export function LibrarySearchBar() {
     currentMatchIndex,
     caseSensitive,
     wholeWord,
-    setQuery,
-    toggleCaseSensitive,
-    toggleWholeWord,
-    nextMatch,
-    previousMatch,
-    closeSearch,
-    reset
-  } = useLibrarySearchStore()
+  } = searchState;
 
   useEffect(() => {
     if (inputRef.current) {
@@ -40,13 +48,13 @@ export function LibrarySearchBar() {
   }, [query])
 
   useEffect(() => {
-    setQuery(debouncedQuery)
-  }, [debouncedQuery, setQuery])
+    setQuery(context, debouncedQuery)
+  }, [debouncedQuery, setQuery, context])
 
   const handleClose = () => {
     setLocalQuery('')
-    reset()
-    closeSearch()
+    reset(context)
+    closeSearch(context)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -55,10 +63,10 @@ export function LibrarySearchBar() {
       handleClose()
     } else if (e.key === 'ArrowDown') {
       e.preventDefault()
-      nextMatch()
+      nextMatch(context)
     } else if (e.key === 'ArrowUp') {
       e.preventDefault()
-      previousMatch()
+      previousMatch(context)
     } else if (e.key === 'Enter') {
       e.preventDefault()
       // Navigate to currently selected text match
@@ -106,7 +114,7 @@ export function LibrarySearchBar() {
           "h-7 w-7 flex-shrink-0 font-semibold text-sm",
           caseSensitive && "bg-accent text-accent-foreground"
         )}
-        onClick={toggleCaseSensitive}
+        onClick={() => toggleCaseSensitive(context)}
         title="Match case"
         aria-label="Toggle case sensitive"
         aria-pressed={caseSensitive}
@@ -121,7 +129,7 @@ export function LibrarySearchBar() {
           "h-7 w-7 flex-shrink-0 font-mono text-xs",
           wholeWord && "bg-accent text-accent-foreground"
         )}
-        onClick={toggleWholeWord}
+        onClick={() => toggleWholeWord(context)}
         title="Match whole word"
         aria-label="Toggle whole word"
         aria-pressed={wholeWord}

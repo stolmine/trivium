@@ -49,7 +49,18 @@ interface TextNodeProps {
 
 export function TextNode({ text, depth, collapsed = false, highlightQuery = null, isSearchSelected = false, context = 'sidebar' }: TextNodeProps) {
   const navigate = useNavigate();
-  const { selectedItemId, selectedItemIds, selectItem, selectItemMulti } = useLibraryStore();
+  const selectedItemId = useLibraryStore((state) =>
+    context === 'library' ? state.librarySelectedItemId : state.selectedItemId
+  );
+  const selectedItemIds = useLibraryStore((state) =>
+    context === 'library' ? state.librarySelectedItemIds : state.selectedItemIds
+  );
+  const selectItem = useLibraryStore((state) =>
+    context === 'library' ? state.selectLibraryItem : state.selectItem
+  );
+  const selectItemMulti = useLibraryStore((state) =>
+    context === 'library' ? state.selectLibraryItemMulti : state.selectItemMulti
+  );
   const { progress } = useTextProgress(text.id);
   const nodeRef = useRef<HTMLDivElement>(null);
 

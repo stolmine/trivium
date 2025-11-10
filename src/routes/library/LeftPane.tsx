@@ -1,7 +1,10 @@
+import { useEffect } from 'react';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
+import { useLibraryStore } from '../../stores/library';
 import { LibraryTree } from '../../components/library/LibraryTree';
 import { LibrarySearchBar } from '../../components/library/LibrarySearchBar';
 import { SelectionToolbar } from '../../components/library/SelectionToolbar';
+import { searchLibrary } from '../../lib/utils/librarySearch';
 import { cn } from '../../lib/utils';
 
 interface LeftPaneProps {
@@ -9,7 +12,30 @@ interface LeftPaneProps {
 }
 
 export function LeftPane({ width }: LeftPaneProps) {
-  const { isOpen: isSearchOpen } = useLibrarySearchStore();
+  const isSearchOpen = useLibrarySearchStore((state) => state.library.isOpen);
+  const query = useLibrarySearchStore((state) => state.library.query);
+  const caseSensitive = useLibrarySearchStore((state) => state.library.caseSensitive);
+  const wholeWord = useLibrarySearchStore((state) => state.library.wholeWord);
+  const setMatches = useLibrarySearchStore((state) => state.setMatches);
+  const { folders, texts } = useLibraryStore();
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setMatches('library', [], []);
+      return;
+    }
+
+    const results = searchLibrary(folders, texts, query, {
+      caseSensitive,
+      wholeWord
+    });
+
+    setMatches(
+      'library',
+      Array.from(results.matchedTextIds),
+      Array.from(results.matchedFolderIds)
+    );
+  }, [query, caseSensitive, wholeWord, folders, texts, setMatches]);
 
   return (
     <div
@@ -22,7 +48,7 @@ export function LeftPane({ width }: LeftPaneProps) {
         <h2 className="text-lg font-semibold">Library</h2>
       </div>
 
-      {isSearchOpen && <LibrarySearchBar />}
+      {isSearchOpen && <LibrarySearchBar context="library" />}
 
       <SelectionToolbar />
 

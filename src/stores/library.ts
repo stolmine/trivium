@@ -15,6 +15,9 @@ interface LibraryState {
   selectedItemId: string | null;
   selectedItemIds: Set<string>;
   anchorItemId: string | null;
+  librarySelectedItemId: string | null;
+  librarySelectedItemIds: Set<string>;
+  libraryAnchorItemId: string | null;
   sortBy: SortOption;
   isLoading: boolean;
   error: string | null;
@@ -27,11 +30,18 @@ interface LibraryState {
   toggleLibraryFolder: (folderId: string) => void;
   expandAllFolders: () => void;
   collapseAllFolders: () => void;
+  expandAllLibraryFolders: () => void;
+  collapseAllLibraryFolders: () => void;
   selectItem: (itemId: string | null) => void;
+  selectLibraryItem: (itemId: string | null) => void;
   selectItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => void;
+  selectLibraryItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => void;
   selectAll: () => void;
+  selectAllLibrary: () => void;
   clearSelection: () => void;
+  clearLibrarySelection: () => void;
   getSelectedItems: () => { folders: Folder[], texts: Text[] };
+  getSelectedLibraryItems: () => { folders: Folder[], texts: Text[] };
   setSortBy: (sortBy: SortOption) => void;
   selectNextItem: () => void;
   selectPreviousItem: () => void;
@@ -58,6 +68,9 @@ export const useLibraryStore = create<LibraryState>()(
       selectedItemId: null,
       selectedItemIds: new Set<string>(),
       anchorItemId: null,
+      librarySelectedItemId: null,
+      librarySelectedItemIds: new Set<string>(),
+      libraryAnchorItemId: null,
       sortBy: 'date-newest',
       isLoading: false,
       error: null,
@@ -120,11 +133,30 @@ export const useLibraryStore = create<LibraryState>()(
     set({ expandedFolderIds: new Set() });
   },
 
+  expandAllLibraryFolders: () => {
+    set((state) => {
+      const allFolderIds = new Set(state.folders.map(f => f.id));
+      return { libraryExpandedFolderIds: allFolderIds };
+    });
+  },
+
+  collapseAllLibraryFolders: () => {
+    set({ libraryExpandedFolderIds: new Set() });
+  },
+
   selectItem: (itemId: string | null) => {
     set({
       selectedItemId: itemId,
       selectedItemIds: itemId ? new Set([itemId]) : new Set(),
       anchorItemId: itemId,
+    });
+  },
+
+  selectLibraryItem: (itemId: string | null) => {
+    set({
+      librarySelectedItemId: itemId,
+      librarySelectedItemIds: itemId ? new Set([itemId]) : new Set(),
+      libraryAnchorItemId: itemId,
     });
   },
 
@@ -190,6 +222,61 @@ export const useLibraryStore = create<LibraryState>()(
     });
   },
 
+  selectLibraryItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => {
+    set((state) => {
+      const newSelectedIds = new Set(state.librarySelectedItemIds);
+      let newAnchorId = state.libraryAnchorItemId;
+      let newSelectedItemId: string | null = id;
+
+      if (mode === 'single') {
+        newSelectedIds.clear();
+        newSelectedIds.add(id);
+        newAnchorId = id;
+      } else if (mode === 'toggle') {
+        if (newSelectedIds.has(id)) {
+          newSelectedIds.delete(id);
+          if (newSelectedIds.size === 0) {
+            newAnchorId = null;
+            newSelectedItemId = null;
+          } else {
+            newSelectedItemId = Array.from(newSelectedIds)[0];
+          }
+        } else {
+          newSelectedIds.add(id);
+          newAnchorId = id;
+        }
+      } else if (mode === 'range') {
+        if (!newAnchorId) {
+          newSelectedIds.clear();
+          newSelectedIds.add(id);
+          newAnchorId = id;
+        } else {
+          const tree = buildTree(state.folders, state.texts);
+          const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
+
+          const anchorIndex = flatNodes.findIndex(n => n.id === newAnchorId);
+          const targetIndex = flatNodes.findIndex(n => n.id === id);
+
+          if (anchorIndex !== -1 && targetIndex !== -1) {
+            const startIndex = Math.min(anchorIndex, targetIndex);
+            const endIndex = Math.max(anchorIndex, targetIndex);
+
+            newSelectedIds.clear();
+            for (let i = startIndex; i <= endIndex; i++) {
+              newSelectedIds.add(flatNodes[i].id);
+            }
+          }
+        }
+      }
+
+      return {
+        librarySelectedItemIds: newSelectedIds,
+        libraryAnchorItemId: newAnchorId,
+        librarySelectedItemId: newSelectedItemId,
+      };
+    });
+  },
+
   selectAll: () => {
     set((state) => {
       const tree = buildTree(state.folders, state.texts);
@@ -204,6 +291,20 @@ export const useLibraryStore = create<LibraryState>()(
     });
   },
 
+  selectAllLibrary: () => {
+    set((state) => {
+      const tree = buildTree(state.folders, state.texts);
+      const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
+      const allIds = new Set(flatNodes.map(n => n.id));
+
+      return {
+        librarySelectedItemIds: allIds,
+        librarySelectedItemId: flatNodes.length > 0 ? flatNodes[0].id : null,
+        libraryAnchorItemId: flatNodes.length > 0 ? flatNodes[0].id : null,
+      };
+    });
+  },
+
   clearSelection: () => {
     set({
       selectedItemIds: new Set(),
@@ -212,9 +313,30 @@ export const useLibraryStore = create<LibraryState>()(
     });
   },
 
+  clearLibrarySelection: () => {
+    set({
+      librarySelectedItemIds: new Set(),
+      librarySelectedItemId: null,
+      libraryAnchorItemId: null,
+    });
+  },
+
   getSelectedItems: () => {
     const state = get();
     const selectedIds = state.selectedItemIds;
+
+    const selectedFolders = state.folders.filter(folder => selectedIds.has(folder.id));
+    const selectedTexts = state.texts.filter(text => selectedIds.has(`text-${text.id}`));
+
+    return {
+      folders: selectedFolders,
+      texts: selectedTexts,
+    };
+  },
+
+  getSelectedLibraryItems: () => {
+    const state = get();
+    const selectedIds = state.librarySelectedItemIds;
 
     const selectedFolders = state.folders.filter(folder => selectedIds.has(folder.id));
     const selectedTexts = state.texts.filter(text => selectedIds.has(`text-${text.id}`));
@@ -425,6 +547,32 @@ export const useLibraryStore = create<LibraryState>()(
         syncSidebarSelection: state.syncSidebarSelection,
         libraryExpandedFolderIds: state.libraryExpandedFolderIds
       }),
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          const parsed = JSON.parse(str);
+          // Reconstruct Sets from arrays
+          if (parsed.state?.libraryExpandedFolderIds) {
+            parsed.state.libraryExpandedFolderIds = new Set(parsed.state.libraryExpandedFolderIds);
+          }
+          return parsed;
+        },
+        setItem: (name, value) => {
+          // Convert Sets to arrays for JSON serialization
+          const toStore = {
+            ...value,
+            state: {
+              ...value.state,
+              libraryExpandedFolderIds: value.state?.libraryExpandedFolderIds
+                ? Array.from(value.state.libraryExpandedFolderIds)
+                : []
+            }
+          };
+          localStorage.setItem(name, JSON.stringify(toStore));
+        },
+        removeItem: (name) => localStorage.removeItem(name),
+      },
     }
   )
 );
