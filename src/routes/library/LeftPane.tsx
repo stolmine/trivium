@@ -4,6 +4,10 @@ import { useLibraryStore } from '../../stores/library';
 import { LibraryTree } from '../../components/library/LibraryTree';
 import { LibrarySearchBar } from '../../components/library/LibrarySearchBar';
 import { SelectionToolbar } from '../../components/library/SelectionToolbar';
+import { ViewModeToggle } from '../../components/library/ViewModeToggle';
+import { BreadcrumbNav } from '../../components/library/BreadcrumbNav';
+import { IconGridView } from '../../components/library/IconGridView';
+import { ListView } from '../../components/library/ListView';
 import { searchLibrary } from '../../lib/utils/librarySearch';
 import { cn } from '../../lib/utils';
 
@@ -17,7 +21,7 @@ export function LeftPane({ width }: LeftPaneProps) {
   const caseSensitive = useLibrarySearchStore((state) => state.library.caseSensitive);
   const wholeWord = useLibrarySearchStore((state) => state.library.wholeWord);
   const setMatches = useLibrarySearchStore((state) => state.setMatches);
-  const { folders, texts } = useLibraryStore();
+  const { folders, texts, viewMode } = useLibraryStore();
 
   useEffect(() => {
     if (!query.trim()) {
@@ -50,11 +54,17 @@ export function LeftPane({ width }: LeftPaneProps) {
 
       {isSearchOpen && <LibrarySearchBar context="library" />}
 
-      <SelectionToolbar />
+      <ViewModeToggle />
+
+      {(viewMode === 'icon' || viewMode === 'list') && <BreadcrumbNav />}
 
       <div className="flex-1 flex flex-col min-h-0">
-        <LibraryTree context="library" />
+        {viewMode === 'tree' && <LibraryTree context="library" />}
+        {viewMode === 'icon' && <IconGridView />}
+        {viewMode === 'list' && <ListView />}
       </div>
+
+      <SelectionToolbar />
     </div>
   );
 }

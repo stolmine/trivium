@@ -6,6 +6,9 @@ import type { Text } from '../lib/types/article';
 import { buildTree, getFlattenedVisibleNodes, getNodeById } from '../lib/tree-utils';
 
 export type SortOption = 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'content-length';
+export type ViewMode = 'tree' | 'icon' | 'list';
+export type SortColumn = 'name' | 'size' | 'modified' | 'progress' | 'flashcards';
+export type SortDirection = 'asc' | 'desc';
 
 interface LibraryState {
   folders: Folder[];
@@ -22,7 +25,10 @@ interface LibraryState {
   isLoading: boolean;
   error: string | null;
   paneSizes: { left: number; right: number };
-  viewMode: 'tree' | 'icon' | 'list';
+  viewMode: ViewMode;
+  currentFolderId: string | null;
+  sortColumn: SortColumn;
+  sortDirection: SortDirection;
   syncSidebarSelection: boolean;
 
   loadLibrary: () => Promise<void>;
@@ -56,6 +62,9 @@ interface LibraryState {
   deleteText: (id: number) => Promise<void>;
   setPaneSize: (left: number, right: number) => void;
   toggleSyncSidebarSelection: () => void;
+  setViewMode: (mode: ViewMode) => void;
+  setCurrentFolder: (folderId: string | null) => void;
+  setSortColumn: (column: SortColumn, direction?: SortDirection) => void;
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -76,6 +85,9 @@ export const useLibraryStore = create<LibraryState>()(
       error: null,
       paneSizes: { left: 40, right: 60 },
       viewMode: 'tree',
+      currentFolderId: null,
+      sortColumn: 'name',
+      sortDirection: 'asc',
       syncSidebarSelection: false,
 
   loadLibrary: async () => {
@@ -538,12 +550,35 @@ export const useLibraryStore = create<LibraryState>()(
   toggleSyncSidebarSelection: () => {
     set((state) => ({ syncSidebarSelection: !state.syncSidebarSelection }));
   },
+
+  setViewMode: (mode: ViewMode) => {
+    set({ viewMode: mode });
+  },
+
+  setCurrentFolder: (folderId: string | null) => {
+    set({ currentFolderId: folderId });
+  },
+
+  setSortColumn: (column: SortColumn, direction?: SortDirection) => {
+    set((state) => {
+      if (direction !== undefined) {
+        return { sortColumn: column, sortDirection: direction };
+      }
+      if (state.sortColumn === column) {
+        return { sortDirection: state.sortDirection === 'asc' ? 'desc' : 'asc' };
+      }
+      return { sortColumn: column, sortDirection: 'asc' };
+    });
+  },
     }),
     {
       name: 'trivium-library-storage',
       partialize: (state) => ({
         paneSizes: state.paneSizes,
         viewMode: state.viewMode,
+        currentFolderId: state.currentFolderId,
+        sortColumn: state.sortColumn,
+        sortDirection: state.sortDirection,
         syncSidebarSelection: state.syncSidebarSelection,
         libraryExpandedFolderIds: state.libraryExpandedFolderIds
       }),

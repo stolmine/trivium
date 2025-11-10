@@ -1,8 +1,8 @@
 # Library Page Planning Document
 
 **Project**: Trivium - Library Page Feature
-**Status**: In Progress (Phases 1-2 Complete, 5 Phases Remaining)
-**Last Updated**: 2025-11-09
+**Status**: In Progress (Phases 1-3 Complete, 4 Phases Remaining)
+**Last Updated**: 2025-11-10
 **Current Branch**: `29_libraryPage`
 
 ---
@@ -255,14 +255,14 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
 
 ---
 
-### Phase 3: View Mode Toggle (NOT STARTED)
+### Phase 3: View Mode Toggle ✅ COMPLETE
 
-**Status**: ⏳ Not Started
-**Estimated Effort**: 5-6 hours
+**Status**: ✅ Complete (2025-11-10)
+**Effort**: ~5-6 hours core + ~2-3 hours post-phase improvements
 **Priority**: High
 **Dependencies**: Phases 1-2 complete ✅
 
-#### Planned Features
+#### Features Delivered
 
 1. **Three View Modes**
    - **Tree View**: Current implementation (keep as-is)
@@ -277,15 +277,18 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
 
 3. **IconGridView Component**
    - Responsive grid layout (CSS Grid)
-   - Folder icons with names
-   - Text file icons with names
+   - Folder icons with names (theme-aware colors)
+   - Text file icons with names (theme-aware colors)
    - Double-click to navigate/expand
    - Hover states and selection highlights
    - Multi-selection support (Ctrl/Shift+click)
+   - **Full drag-and-drop support** (post-phase)
+   - **URL-based navigation** (post-phase)
+   - **"Up one level" button with Cmd/Ctrl+↑** (post-phase)
 
 4. **ListView Component**
    - Table with columns:
-     - Name (with icon)
+     - Name (with icon, theme-aware colors)
      - Size (character/word count)
      - Modified date
      - Progress (read percentage)
@@ -294,17 +297,66 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
    - Row selection with highlights
    - Multi-selection support
    - Responsive column widths
+   - **Full drag-and-drop support** (post-phase)
+   - **URL-based navigation** (post-phase)
+   - **"Up one level" button with Cmd/Ctrl+↑** (post-phase)
+   - **Sticky table header** (post-phase)
 
 5. **BreadcrumbNav Component**
    - Shows current folder path (for icon/list views)
    - Clickable breadcrumbs for navigation
    - Home/root button
    - Positioned above view content
+   - **URL-based navigation** (post-phase)
 
 6. **Persistent View Mode**
    - Save preference to localStorage
    - Per-context (sidebar always tree, library remembers)
    - Default: 'tree'
+
+#### Post-Phase 3 Improvements (Complete ✅)
+
+**Date**: 2025-11-10
+
+1. **Theme-Aware Icon Colors**
+   - Removed hardcoded `text-amber-*` and `text-blue-*` colors
+   - Icons now inherit theme-aware colors from parent containers
+   - Better dark/light mode consistency
+
+2. **Drag-and-Drop Support**
+   - Full DndContext integration in IconGridView and ListView
+   - Draggable items with DragOverlay
+   - Droppable folders
+   - Visual feedback during drag operations
+   - Prevents invalid drops (folder into itself)
+
+3. **URL-Based Navigation**
+   - Folder navigation updates URL with `?folder=<folderId>`
+   - Browser back/forward buttons work
+   - Bookmarkable folder locations
+   - Direct links to folders
+
+4. **"Up One Level" Button**
+   - ArrowUp icon button in grid/list views
+   - Keyboard shortcut: Cmd/Ctrl+↑
+   - Only visible in subfolders (hidden at root)
+   - Matches file browser conventions
+
+5. **Root Drop Zones**
+   - Fixed visibility: only show in subfolders (not at root)
+   - Made sticky with `sticky top-0 z-10`
+   - Consistent across grid and list views
+   - Better discoverability during scrolling
+
+6. **SelectionToolbar Repositioned**
+   - Moved from top to bottom of left pane
+   - Cleaner header layout
+   - More spacious feel
+   - Follows common file browser patterns
+
+7. **Updated Documentation**
+   - Added Cmd/Ctrl+↑ to KEYBOARD_SHORTCUTS.md
+   - Comprehensive post-phase documentation
 
 #### Implementation Plan
 
@@ -362,18 +414,18 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
 3. `/Users/why/repos/trivium/src/routes/library/index.tsx`
    - Pass view mode state to components
 
-#### Success Criteria
+#### Success Criteria ✅
 
-- [ ] ViewModeToggle switches between three modes
-- [ ] Tree view works exactly as before (no regressions)
-- [ ] Icon view displays items in responsive grid
-- [ ] List view displays sortable table
-- [ ] Double-click navigation works in all views
-- [ ] Multi-selection works in all views
-- [ ] BreadcrumbNav shows current path (icon/list)
-- [ ] View mode persists via localStorage
-- [ ] Performance: < 50ms view switch
-- [ ] Dark mode support for all views
+- [x] ViewModeToggle switches between three modes
+- [x] Tree view works exactly as before (no regressions)
+- [x] Icon view displays items in responsive grid
+- [x] List view displays sortable table
+- [x] Double-click navigation works in all views
+- [x] Multi-selection works in all views
+- [x] BreadcrumbNav shows current path (icon/list)
+- [x] View mode persists via localStorage
+- [x] Performance: < 50ms view switch
+- [x] Dark mode support for all views
 
 ---
 
@@ -1009,10 +1061,10 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 
 ### Overview
 
-**Completion**: 2 of 7 phases complete (29%)
-**Time Invested**: ~8-10 hours
-**Time Remaining**: ~18-22 hours (estimated)
-**Current Phase**: Phase 3 (View Modes) - Not Started
+**Completion**: 3 of 7 phases complete (43%)
+**Time Invested**: ~13-16 hours
+**Time Remaining**: ~13-17 hours (estimated)
+**Current Phase**: Phase 4 (Info Panel) - Not Started
 
 ### What's Working ✅
 
@@ -1044,25 +1096,35 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
    - Dashed border drop area
    - Only in library context
 
+6. **View Modes**
+   - Tree view: Full hierarchical navigation
+   - Icon/Grid view: Responsive CSS Grid with folder/file icons, drag-and-drop, URL navigation
+   - List view: Sortable table with 5 columns, drag-and-drop, URL navigation
+   - ViewModeToggle component
+   - BreadcrumbNav for icon/list views with URL navigation
+   - Folder navigation via currentFolderId with browser history support
+   - "Up one level" button and Cmd/Ctrl+↑ keyboard shortcut
+   - Theme-aware icon colors (no hardcoded colors)
+   - Root drop zones with sticky positioning and correct visibility
+   - SelectionToolbar at bottom of left pane
+
 ### What's Not Working / Missing ⚠️
 
-1. **View Modes**: Only tree view available (icon/list not implemented)
+1. **Progress/Flashcard Data**: List view columns show "—" (backend stats not implemented yet)
 2. **Info Panel**: Right pane shows placeholder (no metadata yet)
 3. **Preview**: No text content preview
-4. **Batch Operations**: Multi-selection enabled but no batch actions
-5. **Keyboard Navigation**: No arrow key navigation yet
+4. **Batch Operations**: Multi-selection enabled but no batch actions (move, delete, export)
+5. **Keyboard Grid Navigation**: Arrow keys don't navigate grid items (Phase 7)
 6. **Context Menu**: No right-click menu
-7. **Empty States**: No visual feedback for empty states
-8. **Accessibility**: Minimal ARIA attributes
-9. **Animations**: Basic transitions only
+7. **Accessibility**: Minimal ARIA attributes (needs Phase 7 improvements)
+8. **Animations**: Basic transitions only (Phase 7 polish)
 
 ### Known Issues
 
-1. **Debug Logging**: LibraryTree has debug console.log statements (investigating root drop zone)
-2. **Root Drop Zone**: May not be working correctly (under investigation)
-3. **No Select All Shortcut**: `selectAll()` method exists but no Ctrl+A binding yet
+1. **No Select All Shortcut**: `selectAll()` method exists but no Ctrl+A binding yet (Phase 6)
+2. **Range Selection in Flat Views**: Shift+click not meaningful in icon/list views (only tree)
 
-### Files Created (Total: 6)
+### Files Created (Total: 10)
 
 **Phase 1 (5 files):**
 1. `/Users/why/repos/trivium/src/components/library/ResizableHandle.tsx`
@@ -1074,7 +1136,13 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 **Phase 2 (1 file):**
 1. `/Users/why/repos/trivium/src/components/library/SelectionToolbar.tsx`
 
-### Files Modified (Total: 10+)
+**Phase 3 (4 files):**
+1. `/Users/why/repos/trivium/src/components/library/ViewModeToggle.tsx`
+2. `/Users/why/repos/trivium/src/components/library/BreadcrumbNav.tsx`
+3. `/Users/why/repos/trivium/src/components/library/IconGridView.tsx`
+4. `/Users/why/repos/trivium/src/components/library/ListView.tsx`
+
+### Files Modified (Total: 12+)
 
 **Phase 1 (4 files):**
 1. `/Users/why/repos/trivium/src/stores/library.ts`
@@ -1091,6 +1159,10 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 6. `/Users/why/repos/trivium/src/components/shell/Sidebar.tsx`
 7. `/Users/why/repos/trivium/src/lib/components/settings/DefaultsSection.tsx`
 
+**Phase 3 (2 files):**
+1. `/Users/why/repos/trivium/src/stores/library.ts` (additional changes)
+2. `/Users/why/repos/trivium/src/routes/library/LeftPane.tsx` (additional changes)
+
 ### Backend Changes
 
 **Phase 1:**
@@ -1098,6 +1170,9 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 - Updated `lib.rs` with plugin initialization
 
 **Phase 2:**
+- No backend changes (frontend-only)
+
+**Phase 3:**
 - No backend changes (frontend-only)
 
 ---
@@ -1540,39 +1615,39 @@ const toggleFolder = useLibraryStore((state) =>
 |-------|--------|----------------|--------------|
 | Phase 1: Core Layout | ✅ Complete | 3-4 | ~4 |
 | Phase 2: Multi-Selection | ✅ Complete | 4-5 | ~4-6 |
-| Phase 3: View Modes | ⏳ Not Started | 5-6 | - |
+| Phase 3: View Modes | ✅ Complete | 5-6 | ~5-6 |
 | Phase 4: Info Panel | ⏳ Not Started | 3-4 | - |
 | Phase 5: Preview | ⏳ Not Started | 3-4 | - |
 | Phase 6: Batch Operations | ⏳ Not Started | 5-6 | - |
 | Phase 7: Polish & UX | ⏳ Not Started | 2-3 | - |
-| **Total** | **29% Complete** | **25-32** | **~8-10** |
+| **Total** | **43% Complete** | **25-32** | **~13-16** |
 
-**Remaining**: ~18-22 hours (estimated)
+**Remaining**: ~13-17 hours (estimated)
 
 ### File Count Summary
 
-**Created**: 6 files
-**Modified**: 10+ files
+**Created**: 10 files
+**Modified**: 12+ files
 **Backend Changes**: 1 (plugin-os installation)
 
 **Estimated Future:**
-- Phase 3: +4 created, ~3 modified
 - Phase 4: +4 created, ~4 modified, +1 backend module
 - Phase 5: +1 created, ~3 modified, +1 backend command
 - Phase 6: +5 created, ~6 modified, +1 backend module
 - Phase 7: +3 created, ~8 modified
 
-**Total Estimated**: ~23 created, ~34 modified, ~3 backend modules
+**Total Estimated**: ~23 created, ~33 modified, ~3 backend modules
 
 ### Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-11-09 | Initial planning document created |
+| 1.1 | 2025-11-10 | Updated with Phase 3 completion status |
 
 ---
 
 **Document Maintained By**: AI Agents and Contributors
-**Document Version**: 1.0
-**Last Updated**: 2025-11-09
-**Next Review**: After Phase 3 completion
+**Document Version**: 1.1
+**Last Updated**: 2025-11-10
+**Next Review**: After Phase 4 completion

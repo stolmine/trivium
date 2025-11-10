@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-10-24 (Phase 25: Review System Improvements - Undo and Bury)
+Last Updated: 2025-11-10 (Phase 29: Library Navigation - Up One Level Shortcut)
 
 ---
 
@@ -188,6 +188,12 @@ These shortcuts control the UI appearance and help system.
 | Collapse Folder | `←` | Collapse selected folder |
 | Open Selected | `Enter` | Open selected text for reading |
 
+### View Navigation
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Navigate up one level | `Ctrl + ↑` | `⌘ + ↑` | In grid/list view, navigate to parent folder |
+
 ### Folder Management
 
 | Action | Windows/Linux | macOS | Description |
@@ -286,6 +292,13 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-11-10 (Phase 29 - Library Navigation Enhancement)
+- Added keyboard shortcut for "Navigate up one level" in grid/list views
+- New shortcut: Ctrl+↑ / Cmd+↑ navigates to parent folder
+- Only active in grid/list view modes (not tree view)
+- Prevents default browser behavior (scrolling)
+- Updated button tooltips to show keyboard shortcut
 
 ### 2025-10-24 (Phase 25 - Review System Improvements)
 - Added "Card Management" section to Review Session
