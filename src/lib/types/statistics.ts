@@ -67,3 +67,34 @@ export interface DailyStudyTime {
   cardCount: number;
   avgTimePerCardMs: number;
 }
+
+export interface TextStatistics {
+  id: number;
+  title: string;
+  folderPath: string | null;
+  contentLength: number;
+  wordCount: number;
+  paragraphCount: number;
+  readPercentage: number;
+  currentPosition: number;
+  totalFlashcards: number;
+  newCards: number;
+  learningCards: number;
+  reviewCards: number;
+  retentionRate: number | null;
+  createdAt: string;
+  updatedAt: string;
+  lastReadAt: string | null;
+}
+
+export interface FolderStatistics {
+  id: string;
+  name: string;
+  parentPath: string | null;
+  totalTexts: number;
+  totalContentLength: number;
+  averageProgress: number;
+  totalFlashcards: number;
+  createdAt: string;
+  updatedAt: string;
+}

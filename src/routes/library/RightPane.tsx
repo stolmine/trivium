@@ -1,14 +1,17 @@
 import { useLibraryStore } from '../../stores/library';
 import { useFocusContextStore, shouldTrackFocus } from '../../stores/focusContext';
-import { FileText, Folder } from 'lucide-react';
+import { MousePointerClick } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { TextInfoView } from '../../components/library/TextInfoView';
+import { FolderInfoView } from '../../components/library/FolderInfoView';
+import { MultiSelectInfoView } from '../../components/library/MultiSelectInfoView';
 
 interface RightPaneProps {
   width: number;
 }
 
 export function RightPane({ width }: RightPaneProps) {
-  const { librarySelectedItemId, folders, texts } = useLibraryStore();
+  const librarySelectedItemIds = useLibraryStore(state => state.librarySelectedItemIds);
   const { setActiveContext, isContextActive } = useFocusContextStore();
   const isFocused = isContextActive('library-right');
 
@@ -23,60 +26,14 @@ export function RightPane({ width }: RightPaneProps) {
     }
   };
 
-  if (!librarySelectedItemId) {
-    return (
-      <div
-        className={cn(
-          'flex flex-col bg-background',
-          // Only apply focus-related classes when focus tracking is enabled
-          trackingEnabled && 'focusable-pane library-right-pane',
-          trackingEnabled && (showFocusUI ? 'focusable-pane--focused' : 'focusable-pane--unfocused')
-        )}
-        style={{ width: `${width}%` }}
-        onClick={handleClick}
-      >
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="text-center text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Select a folder or text to view details</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const folder = folders.find((f) => f.id === librarySelectedItemId);
-  const text = texts.find((t) => `text-${t.id}` === librarySelectedItemId);
-
-  const selectedItem = folder || text;
-  const isFolder = !!folder;
-
-  if (!selectedItem) {
-    return (
-      <div
-        className={cn(
-          'flex flex-col bg-background',
-          // Only apply focus-related classes when focus tracking is enabled
-          trackingEnabled && 'focusable-pane library-right-pane',
-          trackingEnabled && (showFocusUI ? 'focusable-pane--focused' : 'focusable-pane--unfocused')
-        )}
-        style={{ width: `${width}%` }}
-        onClick={handleClick}
-      >
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="text-center text-muted-foreground">
-            <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>Select a folder or text to view details</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Determine what to render based on selection
+  const selectedCount = librarySelectedItemIds.size;
+  const firstItemId = selectedCount > 0 ? Array.from(librarySelectedItemIds)[0] : null;
 
   return (
     <div
       className={cn(
-        'flex flex-col bg-background',
+        'flex flex-col bg-background overflow-y-auto',
         // Only apply focus-related classes when focus tracking is enabled
         trackingEnabled && 'focusable-pane library-right-pane',
         trackingEnabled && (showFocusUI ? 'focusable-pane--focused' : 'focusable-pane--unfocused')
@@ -84,18 +41,27 @@ export function RightPane({ width }: RightPaneProps) {
       style={{ width: `${width}%` }}
       onClick={handleClick}
     >
-      <div className="p-6">
-        <div className="flex items-center gap-3">
-          {isFolder ? (
-            <Folder className="h-6 w-6 text-muted-foreground" />
-          ) : (
-            <FileText className="h-6 w-6 text-muted-foreground" />
-          )}
-          <h2 className="text-xl font-semibold">
-            {isFolder ? folder.name : text?.title}
-          </h2>
+      {selectedCount === 0 && (
+        <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+          <MousePointerClick className="h-16 w-16 text-muted-foreground mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No Selection</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Select a text or folder from the library to view details and statistics.
+          </p>
         </div>
-      </div>
+      )}
+
+      {selectedCount === 1 && firstItemId?.startsWith('text-') && (
+        <TextInfoView textId={parseInt(firstItemId.replace('text-', ''))} />
+      )}
+
+      {selectedCount === 1 && firstItemId && !firstItemId.startsWith('text-') && (
+        <FolderInfoView folderId={firstItemId} />
+      )}
+
+      {selectedCount > 1 && (
+        <MultiSelectInfoView selectedItemIds={librarySelectedItemIds} />
+      )}
     </div>
   );
 }

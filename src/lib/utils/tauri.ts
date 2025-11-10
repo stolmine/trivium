@@ -21,7 +21,9 @@ import type {
   HourlyReviewDistribution,
   DailyReviewStats,
   ReadingStatistics,
-  StudyTimeStats
+  StudyTimeStats,
+  TextStatistics,
+  FolderStatistics
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -357,6 +359,14 @@ export const api = {
     },
     getStudyTimeStats: async (startDate: string, endDate: string): Promise<StudyTimeStats> => {
       return await invoke('get_study_time_stats', { startDate, endDate });
+    },
+  },
+  libraryStatistics: {
+    getTextStatistics: async (textId: number): Promise<TextStatistics> => {
+      return await invoke('get_text_statistics', { textId });
+    },
+    getFolderStatistics: async (folderId: string): Promise<FolderStatistics> => {
+      return await invoke('get_folder_statistics', { folderId });
     },
   },
 };

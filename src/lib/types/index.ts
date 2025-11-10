@@ -33,5 +33,7 @@ export type {
   ReadingStatistics,
   FolderReadingStats,
   StudyTimeStats,
-  DailyStudyTime
+  DailyStudyTime,
+  TextStatistics,
+  FolderStatistics
 } from './statistics';

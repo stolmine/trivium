@@ -109,7 +109,9 @@ pub fn run() {
             commands::statistics::get_difficulty_by_hour,
             commands::statistics::get_daily_review_stats,
             commands::statistics::get_reading_stats,
-            commands::statistics::get_study_time_stats
+            commands::statistics::get_study_time_stats,
+            commands::library_statistics::get_text_statistics,
+            commands::library_statistics::get_folder_statistics
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
