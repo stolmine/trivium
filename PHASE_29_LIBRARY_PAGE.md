@@ -2070,6 +2070,171 @@ useEffect(() => {
 
 ---
 
-**Documentation Version**: 2.4
+---
+
+## Additional Post-Phase 3 Grid View Improvements
+
+**Date**: 2025-11-10
+**Status**: Complete ✅
+
+Three additional refinements were made to the grid view implementation after the initial post-phase improvements:
+
+### 1. Click-in-Void to Deselect Functionality
+
+**Problem**: Users couldn't easily clear selection by clicking empty space in grid view.
+
+**Solution**: Added click handler to the grid container in IconGridView that clears selection when clicking empty space (not on items).
+
+**Implementation**:
+```tsx
+// Grid container with click-in-void handler
+<div
+  className="grid auto-fill gap-4 p-4"
+  onClick={(e) => {
+    // If clicking the grid itself (not an item), clear selection
+    if (e.target === e.currentTarget) {
+      clearSelection();
+    }
+  }}
+>
+  {/* Grid items */}
+</div>
+```
+
+**Impact**:
+- More intuitive selection management
+- Matches common file browser UX patterns
+- Provides quick way to clear selection without toolbar button
+
+**Files Changed**: IconGridView.tsx
+
+### 2. Dynamic Grid Reflow on Pane Resize
+
+**Problem**: Grid used fixed Tailwind breakpoints (`grid-cols-4`, `md:grid-cols-6`, etc.) that didn't respond to pane resizing - only responded to window resizing.
+
+**Solution**: Replaced Tailwind grid classes with CSS Grid `auto-fill` and `minmax()` for dynamic column calculation.
+
+**Implementation**:
+```css
+/* Before: Fixed breakpoints (not pane-aware) */
+grid-template-columns: repeat(4, 1fr);
+
+/* After: Dynamic auto-fill (responds to container width) */
+grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+```
+
+**Benefits**:
+- Grid reflows automatically as user drags the pane divider
+- No JavaScript needed - pure CSS solution
+- Better use of available space
+- Responsive to both window and pane resizing
+
+**Impact**: Grid now feels truly responsive to the dual-pane layout instead of being locked to viewport breakpoints.
+
+**Files Changed**: IconGridView.tsx
+
+### 3. Fixed Selection Count Bug - Range Selection Scope
+
+**Problem**: Range selection (Shift+click) in grid and list views was selecting items across the entire flattened tree, including items in other folders not currently visible.
+
+**Why it happened**: `selectLibraryItemMulti()` with `'range'` mode was operating on the full tree structure, not just the visible items in the current folder view.
+
+**Solution**: Added optional `visibleItemIds` parameter to `selectLibraryItemMulti()` in library store. When provided, range selection only operates on the subset of visible items.
+
+**Implementation**:
+
+**In library.ts**:
+```typescript
+selectLibraryItemMulti: (
+  targetId: string,
+  mode: 'single' | 'toggle' | 'range',
+  visibleItemIds?: string[] // NEW optional parameter
+) => {
+  // ... existing single/toggle logic
+
+  if (mode === 'range' && state.anchorItemId) {
+    // Use visibleItemIds if provided, otherwise full tree
+    const itemsToSearch = visibleItemIds || getAllItemIds(state);
+    // Find range only within visible items
+    const rangeIds = findRangeBetween(anchorId, targetId, itemsToSearch);
+    // ... select range
+  }
+}
+```
+
+**In IconGridView.tsx and ListView.tsx**:
+```tsx
+// Get visible item IDs (current folder only)
+const visibleItemIds = useMemo(() => {
+  const folderItems = folders
+    .filter(f => f.parentId === currentFolderId)
+    .map(f => f.id);
+  const textItems = texts
+    .filter(t => t.folderId === currentFolderId)
+    .map(t => `text-${t.id}`);
+  return [...folderItems, ...textItems];
+}, [folders, texts, currentFolderId]);
+
+// Pass visible items to selectLibraryItemMulti
+const handleClick = (e: React.MouseEvent, itemId: string) => {
+  if (e.shiftKey) {
+    selectLibraryItemMulti(itemId, 'range', visibleItemIds); // Pass visible items
+  }
+  // ...
+};
+```
+
+**Impact**:
+- Range selection now behaves correctly in grid/list views
+- Selection count matches user's visual expectation
+- No unexpected items from other folders get selected
+- More predictable UX
+
+**Files Changed**: library.ts, IconGridView.tsx, ListView.tsx
+
+### 4. RootDropZone Click Propagation Fix
+
+**Problem**: Clicking on the RootDropZone component in grid/list views would bubble up to the parent container's click-in-void handler, inadvertently clearing selection.
+
+**Solution**: Added `onClick` handler with `stopPropagation()` to RootDropZone component.
+
+**Implementation**:
+```tsx
+<div
+  onClick={(e) => e.stopPropagation()} // Prevent bubbling to parent
+  className="sticky top-0 z-10 px-4 py-6 mx-2 mb-2 border-2 border-dashed ..."
+>
+  Drop here to move to top level
+</div>
+```
+
+**Impact**:
+- Clicking RootDropZone no longer clears selection
+- Users can interact with drop zone without side effects
+- Better component isolation
+
+**Files Changed**: RootDropZone.tsx
+
+### Summary of Additional Improvements
+
+**Total Improvements**: 4 enhancements
+**Implementation Time**: ~1 hour
+**Files Changed**: 4 files (library.ts, IconGridView.tsx, ListView.tsx, RootDropZone.tsx)
+
+**Technical Quality**:
+- No breaking changes to existing functionality
+- Clean, minimal code additions
+- Follows established patterns
+- Better UX alignment with file browser conventions
+
+**User Experience Improvements**:
+- Click-in-void provides intuitive deselection
+- Dynamic grid reflow feels natural and responsive
+- Range selection now scoped correctly to visible items
+- RootDropZone interaction properly isolated
+
+---
+
+**Documentation Version**: 2.5
 **Last Updated**: 2025-11-10
-**Author**: Claude Code (Phase 29 Implementation - Parts 1-3 + Drag-to-Root Bug Fix + View Modes + Post-Phase 3 Improvements)
+**Author**: Claude Code (Phase 29 Implementation - Parts 1-3 + Drag-to-Root Bug Fix + View Modes + Post-Phase 3 Improvements + Additional Grid View Improvements)

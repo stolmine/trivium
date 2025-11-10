@@ -405,6 +405,47 @@ After completing the core Phase 3 implementation, seven important improvements w
 
 **Implementation Time**: ~2-3 hours (incremental improvements)
 
+### Additional Grid View Improvements (Complete)
+
+**Date**: 2025-11-10
+**Status**: Complete ✅
+
+Four additional refinements to the grid view implementation for improved UX and bug fixes:
+
+1. **Click-in-Void to Deselect Functionality**
+   - Added click handler to grid container in IconGridView
+   - Clicking empty space (not on items) clears selection
+   - Provides intuitive selection management
+   - Matches file browser UX patterns
+
+2. **Dynamic Grid Reflow on Pane Resize**
+   - Replaced fixed Tailwind breakpoints with CSS Grid auto-fill
+   - Grid columns: `repeat(auto-fill, minmax(120px, 1fr))`
+   - Grid reflows automatically as user drags pane divider
+   - Pure CSS solution, responsive to both window and pane resizing
+
+3. **Fixed Selection Count Bug - Range Selection Scope**
+   - Problem: Shift+click was selecting items across entire tree, not just visible items
+   - Solution: Added optional `visibleItemIds` parameter to `selectLibraryItemMulti()`
+   - Range selection now scoped to current folder view only
+   - Selection count matches user's visual expectation
+
+4. **RootDropZone Click Propagation Fix**
+   - Added `stopPropagation()` to RootDropZone onClick handler
+   - Prevents clicks from bubbling to parent's click-in-void handler
+   - Users can interact with drop zone without clearing selection
+
+**Files Changed**:
+- Modified: library.ts, IconGridView.tsx, ListView.tsx, RootDropZone.tsx (4 files)
+
+**Impact**:
+- More intuitive selection management (click-in-void)
+- Natural and responsive grid layout (dynamic reflow)
+- Correct range selection behavior (scoped to visible items)
+- Better component isolation (RootDropZone)
+
+**Implementation Time**: ~1 hour
+
 ### Next Phases (4-7)
 
 **Phase 4 - Info Panel** (Estimated: 4-5 hours):

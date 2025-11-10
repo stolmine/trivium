@@ -338,10 +338,11 @@ export function ListView() {
   }, [items, sortColumn, sortDirection]);
 
   const handleRowClick = (id: string, e: React.MouseEvent) => {
+    const visibleItemIds = sortedItems.map(item => item.id);
     if (e.ctrlKey || e.metaKey) {
       selectLibraryItemMulti(id, 'toggle');
     } else if (e.shiftKey) {
-      selectLibraryItemMulti(id, 'range');
+      selectLibraryItemMulti(id, 'range', visibleItemIds);
     } else {
       selectLibraryItemMulti(id, 'single');
     }

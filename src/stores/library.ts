@@ -41,7 +41,7 @@ interface LibraryState {
   selectItem: (itemId: string | null) => void;
   selectLibraryItem: (itemId: string | null) => void;
   selectItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => void;
-  selectLibraryItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => void;
+  selectLibraryItemMulti: (id: string, mode: 'single' | 'toggle' | 'range', visibleItemIds?: string[]) => void;
   selectAll: () => void;
   selectAllLibrary: () => void;
   clearSelection: () => void;
@@ -234,7 +234,7 @@ export const useLibraryStore = create<LibraryState>()(
     });
   },
 
-  selectLibraryItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => {
+  selectLibraryItemMulti: (id: string, mode: 'single' | 'toggle' | 'range', visibleItemIds?: string[]) => {
     set((state) => {
       const newSelectedIds = new Set(state.librarySelectedItemIds);
       let newAnchorId = state.libraryAnchorItemId;
@@ -263,11 +263,19 @@ export const useLibraryStore = create<LibraryState>()(
           newSelectedIds.add(id);
           newAnchorId = id;
         } else {
-          const tree = buildTree(state.folders, state.texts);
-          const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
+          // Use provided visible items if available (for grid/icon/list views),
+          // otherwise fall back to flattened tree (for tree view)
+          let itemIds: string[];
+          if (visibleItemIds) {
+            itemIds = visibleItemIds;
+          } else {
+            const tree = buildTree(state.folders, state.texts);
+            const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
+            itemIds = flatNodes.map(n => n.id);
+          }
 
-          const anchorIndex = flatNodes.findIndex(n => n.id === newAnchorId);
-          const targetIndex = flatNodes.findIndex(n => n.id === id);
+          const anchorIndex = itemIds.findIndex(itemId => itemId === newAnchorId);
+          const targetIndex = itemIds.findIndex(itemId => itemId === id);
 
           if (anchorIndex !== -1 && targetIndex !== -1) {
             const startIndex = Math.min(anchorIndex, targetIndex);
@@ -275,7 +283,7 @@ export const useLibraryStore = create<LibraryState>()(
 
             newSelectedIds.clear();
             for (let i = startIndex; i <= endIndex; i++) {
-              newSelectedIds.add(flatNodes[i].id);
+              newSelectedIds.add(itemIds[i]);
             }
           }
         }

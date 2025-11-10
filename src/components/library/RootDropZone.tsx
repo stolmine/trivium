@@ -20,6 +20,7 @@ export function RootDropZone({ className }: RootDropZoneProps) {
   return (
     <div
       ref={setNodeRef}
+      onClick={(e) => e.stopPropagation()}
       className={cn(
         'sticky top-0 z-10 px-4 py-6 mx-2 mb-2 border-2 border-dashed rounded transition-colors min-h-[64px] flex-shrink-0',
         'bg-background dark:bg-background',

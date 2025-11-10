@@ -85,6 +85,7 @@ export function IconGridView() {
     setCurrentFolder,
     librarySelectedItemIds,
     selectLibraryItemMulti,
+    clearLibrarySelection,
     moveTextToFolder,
     moveFolder,
   } = useLibraryStore();
@@ -180,10 +181,11 @@ export function IconGridView() {
   }, [folders, texts, currentFolderId]);
 
   const handleItemClick = (id: string, e: React.MouseEvent) => {
+    const visibleItemIds = items.map(item => item.id);
     if (e.ctrlKey || e.metaKey) {
       selectLibraryItemMulti(id, 'toggle');
     } else if (e.shiftKey) {
-      selectLibraryItemMulti(id, 'range');
+      selectLibraryItemMulti(id, 'range', visibleItemIds);
     } else {
       selectLibraryItemMulti(id, 'single');
     }
@@ -195,6 +197,12 @@ export function IconGridView() {
     } else {
       const textId = parseInt(id.replace('text-', ''));
       navigate(`/read/${textId}`);
+    }
+  };
+
+  const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      clearLibrarySelection();
     }
   };
 
@@ -277,13 +285,19 @@ export function IconGridView() {
       }}
     >
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="p-4 overflow-y-auto flex-1">
+        <div
+          className="p-4 overflow-y-auto flex-1"
+          onClick={handleContainerClick}
+        >
           {/* Root Drop Zone - shown when in a subfolder */}
           {currentFolderId !== null && <RootDropZone />}
           {/* Up One Level Button */}
           {currentFolderId !== null && (
             <button
-              onClick={() => navigateToFolder(parentFolderId)}
+              onClick={(e) => {
+                e.stopPropagation();
+                navigateToFolder(parentFolderId);
+              }}
               className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg text-sm font-medium transition-colors hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground"
               aria-label="Navigate to parent folder"
               title="Up one level (Cmd/Ctrl+↑)"
@@ -292,7 +306,10 @@ export function IconGridView() {
               <span>Up</span>
             </button>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          <div
+            className="grid gap-3"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}
+          >
             {items.map((item) => (
               <GridItem
                 key={item.id}
