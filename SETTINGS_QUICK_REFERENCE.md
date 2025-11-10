@@ -6,6 +6,28 @@
 
 ---
 
+## Implemented Settings (Current)
+
+### Default Settings
+
+#### `show_links_by_default`
+- **Type**: Boolean
+- **Default**: `true`
+- **Description**: Controls whether Wikipedia links are shown by default in the reading view
+- **UI Location**: Settings > Defaults tab
+- **Hotkey**: Ctrl+L / Cmd+L to toggle links visibility
+
+#### `enable_focus_tracking`
+- **Type**: Boolean
+- **Default**: `false`
+- **Description**: Controls whether the Library page uses click-to-focus with visual feedback. When OFF (default), library always gets hotkeys without focus management. When ON, requires clicking panes to focus them with visual outlines
+- **UI Location**: Settings > Defaults tab
+- **Applies To**: Library page (`/library`) only
+- **Visual Effects**: When enabled, shows darker borders (2px), shadows, and dimming (88% opacity) on unfocused panes
+- **Related**: Phase 29.3 Focus Tracking feature
+
+---
+
 ## Feature Breakdown by Complexity
 
 ### 🟢 LOW (Week 1)

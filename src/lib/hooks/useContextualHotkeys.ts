@@ -2,10 +2,12 @@ import { useEffect } from 'react';
 import { useFocusContextStore, isLibraryPageActive } from '../../stores/focusContext';
 import { useLibraryStore } from '../../stores/library';
 import { useLibrarySearchStore } from '../stores/librarySearch';
+import { useSettingsStore } from '../stores/settings';
 import { isMac } from '../utils/platform';
 
 export function useContextualHotkeys() {
   const { activeContext } = useFocusContextStore();
+  const enableFocusTracking = useSettingsStore((state) => state.enableFocusTracking);
   const libraryStore = useLibraryStore();
   const { openSearch } = useLibrarySearchStore();
 
@@ -18,9 +20,21 @@ export function useContextualHotkeys() {
 
       const modKey = isMac ? e.metaKey : e.ctrlKey;
 
-      // When not on library page, always use sidebar context
+      // Determine effective context based on focus tracking setting
       const isOnLibraryPage = isLibraryPageActive();
-      const effectiveContext = isOnLibraryPage ? activeContext : 'sidebar';
+      let effectiveContext = activeContext;
+
+      if (!enableFocusTracking) {
+        // When focus tracking is disabled:
+        // - On library page: always use 'library-left' context
+        // - Not on library page: always use 'sidebar' context
+        effectiveContext = isOnLibraryPage ? 'library-left' : 'sidebar';
+      } else {
+        // When focus tracking is enabled:
+        // - Not on library page: always use 'sidebar' context
+        // - On library page: use the active context
+        effectiveContext = isOnLibraryPage ? activeContext : 'sidebar';
+      }
 
       if (modKey && e.shiftKey && e.key.toLowerCase() === 'e') {
         e.preventDefault();
@@ -66,5 +80,5 @@ export function useContextualHotkeys() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeContext, libraryStore, openSearch]);
+  }, [activeContext, enableFocusTracking, libraryStore, openSearch]);
 }

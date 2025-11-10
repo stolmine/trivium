@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useSettingsStore } from '../lib/stores/settings';
 
 export type FocusContext = 'sidebar' | 'library-left' | 'library-right' | 'none';
 
@@ -20,10 +21,13 @@ export function isLibraryPageActive(): boolean {
 
 /**
  * Helper function to determine if focus tracking should be active
- * Focus tracking is only active when on the library page
+ * Focus tracking is only active when:
+ * 1. On the library page, AND
+ * 2. The enableFocusTracking setting is enabled
  */
 export function shouldTrackFocus(): boolean {
-  return isLibraryPageActive();
+  const enableFocusTracking = useSettingsStore.getState().enableFocusTracking;
+  return isLibraryPageActive() && enableFocusTracking;
 }
 
 export const useFocusContextStore = create<FocusContextState>()(

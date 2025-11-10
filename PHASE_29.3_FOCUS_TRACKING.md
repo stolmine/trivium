@@ -10,6 +10,8 @@
 
 Phase 29.3 introduces context-aware focus tracking for the Library page with visual feedback, independent search states between sidebar and library, independent selection states, and context-aware hotkeys. This allows users to work with the sidebar and library page independently without interference, with clear visual indicators showing which pane is active.
 
+**Settings Toggle**: Focus tracking is now controllable via the `enable_focus_tracking` setting (default: OFF). When disabled, the library page always receives hotkeys without requiring click-to-focus, and visual focus outlines are hidden. When enabled, the full click-to-focus system with visual feedback is active.
+
 ### Key Deliverables
 
 1. **Focus Tracking System**
@@ -17,6 +19,7 @@ Phase 29.3 introduces context-aware focus tracking for the Library page with vis
    - Three focus contexts: `sidebar`, `library-left`, `library-right`
    - Click-to-focus interaction pattern
    - Persistent state via localStorage
+   - **User-configurable**: Settings toggle for enable/disable (default: OFF)
 
 2. **Context-Aware Hotkeys**
    - **Ctrl+Shift+E**: Expand/collapse all folders in focused context
@@ -358,17 +361,37 @@ useContextualHotkeys();
 ### Route-Aware Behavior
 
 **On Library Page** (`/library`):
-- Focus tracking active
+- Focus tracking active (if `enable_focus_tracking` is enabled)
 - Three contexts available: `sidebar`, `library-left`, `library-right`
-- Click any pane to focus it
-- Hotkeys operate on focused context
-- Visual feedback shows active pane
+- Click any pane to focus it (when enabled)
+- Hotkeys operate on focused context (or default to library when disabled)
+- Visual feedback shows active pane (when enabled)
 
 **On Other Pages** (e.g., `/read`, `/create`, `/review`):
 - Focus tracking inactive (`shouldTrackFocus()` returns `false`)
 - Hotkeys always use `sidebar` context as effective context
 - No visual focus indicators
 - Sidebar state remains independent
+
+### Settings Control
+
+**`enable_focus_tracking` Setting** (Default: `false`):
+
+**When OFF** (Default Behavior):
+- No click-to-focus required on library page
+- Hotkeys always operate on library-left pane (unless sidebar is interacted with)
+- No visual focus outlines or dimming
+- Simpler, less cluttered UI experience
+- Library page behaves more like a traditional file browser
+
+**When ON**:
+- Full click-to-focus system enabled
+- Visual feedback with borders, shadows, and dimming
+- Must click a pane to activate its hotkeys
+- Clear visual indication of active context
+- More complex but explicit focus management
+
+**Configuration**: Toggle in Settings > Defaults tab. Changes apply immediately without page reload.
 
 ### Click-to-Focus Pattern
 
@@ -889,8 +912,8 @@ export function shouldTrackFocus(): boolean {
 
 ---
 
-**Phase 29.3 Status**: Complete ✅
+**Phase 29.3 Status**: Complete ✅ (including settings toggle)
 **Next Phase**: View Modes (Phase 3 of 7)
-**Documentation Version**: 1.0
+**Documentation Version**: 1.1
 **Last Updated**: 2025-11-09
-**Author**: Claude Code (Phase 29.3 Implementation)
+**Author**: Claude Code (Phase 29.3 Implementation + Settings Toggle)

@@ -5,7 +5,7 @@ import { useLibraryStore } from '../../../stores/library';
 import { api } from '../../utils/tauri';
 
 export function DefaultsSection() {
-  const { defaultLinksVisible, setDefaultLinksVisible } = useSettingsStore();
+  const { defaultLinksVisible, setDefaultLinksVisible, enableFocusTracking, setEnableFocusTracking } = useSettingsStore();
   const syncSidebarSelection = useLibraryStore((state) => state.syncSidebarSelection);
   const toggleSyncSidebarSelection = useLibraryStore((state) => state.toggleSyncSidebarSelection);
 
@@ -13,6 +13,15 @@ export function DefaultsSection() {
     try {
       await api.settings.updateSetting('defaultLinksVisible', String(checked));
       setDefaultLinksVisible(checked);
+    } catch (error) {
+      console.error('Failed to update setting:', error);
+    }
+  };
+
+  const handleFocusTrackingToggle = async (checked: boolean) => {
+    try {
+      await api.settings.updateSetting('enableFocusTracking', String(checked));
+      setEnableFocusTracking(checked);
     } catch (error) {
       console.error('Failed to update setting:', error);
     }
@@ -56,6 +65,23 @@ export function DefaultsSection() {
           checked={syncSidebarSelection}
           onCheckedChange={toggleSyncSidebarSelection}
           aria-label="Toggle library and sidebar selection sync"
+        />
+      </div>
+
+      <div className="flex items-center justify-between py-4">
+        <div className="space-y-1">
+          <Label htmlFor="focus-tracking" className="cursor-pointer">
+            Enable Focus Tracking
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            When enabled, clicking panes sets focus. Hotkeys target the focused pane. When disabled, hotkeys always target the library page when open.
+          </p>
+        </div>
+        <Switch
+          id="focus-tracking"
+          checked={enableFocusTracking}
+          onCheckedChange={handleFocusTrackingToggle}
+          aria-label="Toggle focus tracking"
         />
       </div>
     </div>
