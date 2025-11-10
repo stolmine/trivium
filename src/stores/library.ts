@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { api } from '../lib/utils/tauri';
 import type { Folder } from '../lib/types/folder';
 import type { Text } from '../lib/types/article';
@@ -14,6 +15,8 @@ interface LibraryState {
   sortBy: SortOption;
   isLoading: boolean;
   error: string | null;
+  paneSizes: { left: number; right: number };
+  viewMode: 'tree' | 'icon' | 'list';
 
   loadLibrary: () => Promise<void>;
   toggleFolder: (folderId: string) => void;
@@ -32,16 +35,21 @@ interface LibraryState {
   moveFolder: (folderId: string, parentId: string | null) => Promise<void>;
   renameText: (id: number, title: string) => Promise<void>;
   deleteText: (id: number) => Promise<void>;
+  setPaneSize: (left: number, right: number) => void;
 }
 
-export const useLibraryStore = create<LibraryState>((set) => ({
-  folders: [],
-  texts: [],
-  expandedFolderIds: new Set<string>(),
-  selectedItemId: null,
-  sortBy: 'date-newest',
-  isLoading: false,
-  error: null,
+export const useLibraryStore = create<LibraryState>()(
+  persist(
+    (set) => ({
+      folders: [],
+      texts: [],
+      expandedFolderIds: new Set<string>(),
+      selectedItemId: null,
+      sortBy: 'date-newest',
+      isLoading: false,
+      error: null,
+      paneSizes: { left: 40, right: 60 },
+      viewMode: 'tree',
 
   loadLibrary: async () => {
     set({ isLoading: true, error: null });
@@ -266,4 +274,19 @@ export const useLibraryStore = create<LibraryState>((set) => ({
       throw error; // Let the caller handle the error
     }
   },
-}));
+
+  setPaneSize: (left: number, _right: number) => {
+    const clampedLeft = Math.max(25, Math.min(75, left));
+    const clampedRight = 100 - clampedLeft;
+    set({ paneSizes: { left: clampedLeft, right: clampedRight } });
+  },
+    }),
+    {
+      name: 'trivium-library-storage',
+      partialize: (state) => ({
+        paneSizes: state.paneSizes,
+        viewMode: state.viewMode
+      }),
+    }
+  )
+);
