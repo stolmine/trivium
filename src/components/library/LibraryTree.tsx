@@ -78,8 +78,6 @@ const filterTreeByMatches = (
 };
 
 export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryTreeProps) {
-  console.log('[LibraryTree] Rendering with context:', context);
-
   const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, selectedItemId, selectNextItem, selectPreviousItem, expandSelectedFolder, collapseSelectedFolder } = useLibraryStore();
   const expandedFolderIds = useLibraryStore((state) =>
     context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds

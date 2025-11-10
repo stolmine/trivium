@@ -48,6 +48,39 @@
 - Border-radius: 4px
 - Padding: 0 4px
 
+### Focus States (Pane-Level)
+
+**Last Updated**: 2025-11-09
+**Status**: Designed - Ready for Implementation
+**Full Specification**: `/FOCUS_VISUAL_FEEDBACK_DESIGN.md`
+
+Focusable panes (sidebar navigation, library left pane, library right pane) use subtle border and background treatments to indicate focus state for context-aware hotkeys.
+
+#### Light Mode
+- **Focused Border**: `oklch(0.45 0 0)` - Dark gray, 2px width
+- **Unfocused Border**: `oklch(0.922 0 0)` - Light gray, 1px width
+- **Focused Background**: `oklch(1 0 0)` - Pure white (+2% brightness)
+- **Unfocused Background**: `oklch(0.985 0 0)` - Very subtle dimming
+- **Focus Shadow**: `0 0 0 1px oklch(0.45 0 0 / 8%), 0 2px 4px oklch(0 0 0 / 4%)`
+
+#### Dark Mode
+- **Focused Border**: `oklch(0.75 0 0)` - Light gray, 2px width
+- **Unfocused Border**: `oklch(1 0 0 / 10%)` - Semi-transparent white, 1px width
+- **Focused Background**: `oklch(0.155 0 0)` - Subtle brightness boost
+- **Unfocused Background**: `oklch(0.145 0 0)` - Standard dark
+- **Focus Shadow**: `0 0 0 1px oklch(1 0 0 / 12%), 0 2px 4px oklch(0 0 0 / 8%)`
+
+#### Transition
+- Duration: 150ms (fast micro-interaction)
+- Easing: `cubic-bezier(0.4, 0, 0.2, 1)` (standard)
+- Properties: border-color, border-width, background-color, box-shadow
+- Respects `prefers-reduced-motion`
+
+#### Accessibility
+- All focus borders meet WCAG AA contrast (>3:1 for UI components)
+- Screen reader announcements via ARIA live regions
+- Keyboard navigation: Ctrl/Cmd+0 (sidebar), Ctrl/Cmd+Shift+L (toggle library panes)
+
 ### Component Patterns
 
 #### Buttons (shadcn/ui)

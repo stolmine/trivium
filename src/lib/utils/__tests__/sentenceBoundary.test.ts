@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { shouldRespectExactSelection, expandToSmartBoundary } from '../sentenceBoundary'
+import { shouldRespectExactSelection, expandToSmartBoundary, expandToSentenceBoundary } from '../sentenceBoundary'
 
 describe('shouldRespectExactSelection', () => {
   describe('Small selections (< 20 chars) - should always expand', () => {
@@ -190,6 +190,73 @@ describe('expandToSmartBoundary integration', () => {
       const result = expandToSmartBoundary(text, start, end)
       expect(result.start).toBe(28)
       expect(result.end).toBe(79)
+    })
+  })
+})
+
+describe('expandToSentenceBoundary - abbreviation handling', () => {
+  describe('Parenthetical abbreviations in historical texts', () => {
+    it('should not break on "(r." in reigned dates', () => {
+      const text = 'King Edgar (r. 960-976) was an important monarch.'
+      const start = 0
+      const end = 10 // "King Edgar"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(text.length) // Should include the full sentence, not break at "(r."
+    })
+
+    it('should not break on "(b." for birth dates', () => {
+      const text = 'Shakespeare (b. 1564) wrote many plays.'
+      const start = 0
+      const end = 11 // "Shakespeare"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(text.length)
+    })
+
+    it('should not break on "(d." for death dates', () => {
+      const text = 'Leonardo da Vinci (d. 1519) was a polymath.'
+      const start = 0
+      const end = 17 // "Leonardo da Vinci"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(text.length)
+    })
+
+    it('should not break on "(c." for circa dates', () => {
+      const text = 'The building was constructed (c. 1450) in Florence.'
+      const start = 0
+      const end = 20 // "The building was constructed"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(text.length)
+    })
+
+    it('should not break on "(fl." for flourished dates', () => {
+      const text = 'The poet (fl. 1300-1350) wrote in vernacular Italian.'
+      const start = 0
+      const end = 8 // "The poet"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(text.length)
+    })
+
+    it('should handle multiple parenthetical abbreviations in one sentence', () => {
+      const text = 'King John (b. 1166, r. 1199-1216, d. 1216) signed the Magna Carta.'
+      const start = 0
+      const end = 9 // "King John"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(text.length)
+    })
+
+    it('should correctly identify sentence end after parenthetical abbreviation', () => {
+      const text = 'King Edgar (r. 960-976) was important. Another sentence here.'
+      const start = 0
+      const end = 10 // "King Edgar"
+      const result = expandToSentenceBoundary(text, start, end)
+      expect(result.start).toBe(0)
+      expect(result.end).toBe(38) // Should stop at the real sentence ending, not at "(r."
     })
   })
 })

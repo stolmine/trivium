@@ -5,7 +5,7 @@ import { useLibraryStore } from '../../../stores/library';
 import { api } from '../../utils/tauri';
 
 export function DefaultsSection() {
-  const { defaultLinksVisible, setDefaultLinksVisible, enableFocusTracking, setEnableFocusTracking } = useSettingsStore();
+  const { defaultLinksVisible, setDefaultLinksVisible, enableFocusTracking, setEnableFocusTracking, showLibraryControlsInSidebar, setShowLibraryControlsInSidebar } = useSettingsStore();
   const syncSidebarSelection = useLibraryStore((state) => state.syncSidebarSelection);
   const toggleSyncSidebarSelection = useLibraryStore((state) => state.toggleSyncSidebarSelection);
 
@@ -22,6 +22,15 @@ export function DefaultsSection() {
     try {
       await api.settings.updateSetting('enableFocusTracking', String(checked));
       setEnableFocusTracking(checked);
+    } catch (error) {
+      console.error('Failed to update setting:', error);
+    }
+  };
+
+  const handleLibraryControlsInSidebarToggle = async (checked: boolean) => {
+    try {
+      await api.settings.updateSetting('showLibraryControlsInSidebar', String(checked));
+      setShowLibraryControlsInSidebar(checked);
     } catch (error) {
       console.error('Failed to update setting:', error);
     }
@@ -82,6 +91,23 @@ export function DefaultsSection() {
           checked={enableFocusTracking}
           onCheckedChange={handleFocusTrackingToggle}
           aria-label="Toggle focus tracking"
+        />
+      </div>
+
+      <div className="flex items-center justify-between py-4">
+        <div className="space-y-1">
+          <Label htmlFor="library-controls-sidebar" className="cursor-pointer">
+            Show Library Controls in Sidebar
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            When enabled, library control buttons will appear in the sidebar tree header
+          </p>
+        </div>
+        <Switch
+          id="library-controls-sidebar"
+          checked={showLibraryControlsInSidebar}
+          onCheckedChange={handleLibraryControlsInSidebarToggle}
+          aria-label="Toggle library controls in sidebar"
         />
       </div>
     </div>

@@ -4,6 +4,7 @@ import { api } from '../lib/utils/tauri';
 import type { Folder } from '../lib/types/folder';
 import type { Text } from '../lib/types/article';
 import { buildTree, getFlattenedVisibleNodes, getNodeById } from '../lib/tree-utils';
+import { useLibraryStatsCacheStore } from './libraryStatsCache';
 
 export type SortOption = 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest' | 'content-length';
 export type ViewMode = 'tree' | 'icon' | 'list';
@@ -477,6 +478,8 @@ export const useLibraryStore = create<LibraryState>()(
           folder.id === id ? { ...folder, name, updatedAt: new Date().toISOString() } : folder
         ),
       }));
+      // Invalidate cache for this folder
+      useLibraryStatsCacheStore.getState().invalidateFolderStats(id);
     } catch (error) {
       console.error('Failed to rename folder:', error);
       throw error; // Let the caller handle the error
@@ -495,6 +498,8 @@ export const useLibraryStore = create<LibraryState>()(
           Array.from(state.libraryExpandedFolderIds).filter((fid) => fid !== id)
         ),
       }));
+      // Invalidate cache for deleted folder
+      useLibraryStatsCacheStore.getState().invalidateFolderStats(id);
     } catch (error) {
       console.error('Failed to delete folder:', error);
       throw error; // Let the caller handle the error
@@ -503,12 +508,24 @@ export const useLibraryStore = create<LibraryState>()(
 
   moveTextToFolder: async (textId: number, folderId: string | null) => {
     try {
+      const oldText = get().texts.find(t => t.id === textId);
+      const oldFolderId = oldText?.folderId ?? null;
+
       await api.folders.moveText(textId, folderId);
       set((state) => ({
         texts: state.texts.map((text) =>
           text.id === textId ? { ...text, folderId } : text
         ),
       }));
+
+      // Invalidate cache for affected text and folders
+      useLibraryStatsCacheStore.getState().invalidateTextStats(textId);
+      if (oldFolderId) {
+        useLibraryStatsCacheStore.getState().invalidateFolderStats(oldFolderId);
+      }
+      if (folderId) {
+        useLibraryStatsCacheStore.getState().invalidateFolderStats(folderId);
+      }
     } catch (error) {
       console.error('Failed to move text to folder:', error);
       throw error; // Let the caller handle the error
@@ -520,6 +537,11 @@ export const useLibraryStore = create<LibraryState>()(
       await api.folders.moveFolder(folderId, parentId);
       const tree = await api.folders.getAll();
       set({ folders: tree });
+      // Invalidate cache for moved folder and both old and new parent folders
+      useLibraryStatsCacheStore.getState().invalidateFolderStats(folderId);
+      if (parentId) {
+        useLibraryStatsCacheStore.getState().invalidateFolderStats(parentId);
+      }
     } catch (error) {
       console.error('Failed to move folder:', error);
       throw error;
@@ -534,6 +556,8 @@ export const useLibraryStore = create<LibraryState>()(
           text.id === id ? { ...text, title, updatedAt: new Date().toISOString() } : text
         ),
       }));
+      // Invalidate cache for this text
+      useLibraryStatsCacheStore.getState().invalidateTextStats(id);
     } catch (error) {
       console.error('Failed to rename text:', error);
       throw error; // Let the caller handle the error
@@ -546,6 +570,8 @@ export const useLibraryStore = create<LibraryState>()(
       set((state) => ({
         texts: state.texts.filter((text) => text.id !== id),
       }));
+      // Invalidate cache for deleted text
+      useLibraryStatsCacheStore.getState().invalidateTextStats(id);
     } catch (error) {
       console.error('Failed to delete text:', error);
       throw error; // Let the caller handle the error

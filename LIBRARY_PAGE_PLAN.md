@@ -1438,19 +1438,26 @@ const toggleFolder = useLibraryStore((state) =>
 
 ## Known Issues & Limitations
 
-### Current Issues (Phase 2)
+### Current Issues (Post-Phase 4)
 
-1. **Debug Logging Active**
-   - Location: `LibraryTree.tsx`
-   - Purpose: Investigating root drop zone behavior
-   - Impact: Console clutter
-   - Plan: Remove once issue resolved
-
-2. **Root Drop Zone Investigation**
-   - Status: May not be working correctly
-   - Impact: Cannot move items to root level via drag
-   - Priority: Medium
-   - Plan: Debug and fix before Phase 3
+1. **Selection Performance Lag (UNRESOLVED)**
+   - Status: Investigation complete, issue persists
+   - Impact: Choppy/laggy selection indication when clicking items
+   - Investigation: 6-8 hours invested, 9 optimizations attempted
+   - Optimizations Applied:
+     - ✅ FolderContextMenu effect storm fix
+     - ✅ React.memo on FolderNode, TextNode, GridItem, ListRow
+     - ✅ Debug console logs removed (8 files)
+     - ✅ CSS transitions removed from focus panes (150ms saved)
+     - ✅ Scroll behavior changed from smooth to auto
+     - ✅ Box-shadow replaced with border in grid view
+     - ✅ CSS containment added for rendering isolation
+     - ✅ GPU acceleration hints with will-change
+     - ✅ MultiSelectInfoView infinite loop fixed
+   - Root Cause: Cumulative from many small sources (React re-render overhead, Zustand subscriptions, DOM updates)
+   - Priority: Low (monitor user feedback)
+   - Future Options: Virtual scrolling, state debouncing, web workers, alternative state library
+   - Documentation: See "Phase 29.X: Selection Performance Investigation" in PHASE_29_LIBRARY_PAGE.md
 
 ### Phase Scope Limitations
 

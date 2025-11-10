@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection, useDraggable, useDroppable } from '@dnd-kit/core';
@@ -15,13 +15,14 @@ interface GridItemProps {
   id: string;
   type: 'folder' | 'text';
   name: string;
-  isSelected: boolean;
   onSelect: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
   data: FolderType | Text;
 }
 
-function GridItem({ id, type, name, isSelected, onSelect, onDoubleClick, data }: GridItemProps) {
+const GridItem = React.memo(function GridItem({ id, type, name, onSelect, onDoubleClick, data }: GridItemProps) {
+  // Optimized selector - only re-render when THIS item's selection state changes
+  const isSelected = useLibraryStore((state) => state.librarySelectedItemIds.has(id));
   const Icon = type === 'folder' ? Folder : FileText;
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -55,16 +56,20 @@ function GridItem({ id, type, name, isSelected, onSelect, onDoubleClick, data }:
         draggable.transform
           ? {
               transform: `translate3d(${draggable.transform.x}px, ${draggable.transform.y}px, 0)`,
+              contain: 'layout style paint',
             }
-          : undefined
+          : {
+              contain: 'layout style paint',
+            }
       }
       onClick={onSelect}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer',
+        'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-none',
         'hover:bg-sidebar-accent/50',
-        isSelected && 'bg-sidebar-primary/20 ring-2 ring-sidebar-primary/50',
-        isOver && type === 'folder' && 'bg-sidebar-primary/10 ring-2 ring-sidebar-primary',
+        'will-change-[background-color,border-color]',
+        isSelected && 'bg-sidebar-primary/20 border-2 border-sidebar-primary',
+        isOver && type === 'folder' && 'bg-sidebar-primary/10 border-2 border-sidebar-primary',
         draggable.isDragging && 'opacity-50'
       )}
       title={name}
@@ -91,7 +96,7 @@ function GridItem({ id, type, name, isSelected, onSelect, onDoubleClick, data }:
       </TextContextMenu>
     );
   }
-}
+});
 
 export function IconGridView() {
   const navigate = useNavigate();
@@ -101,7 +106,6 @@ export function IconGridView() {
     texts,
     currentFolderId,
     setCurrentFolder,
-    librarySelectedItemIds,
     selectLibraryItemMulti,
     clearLibrarySelection,
     moveTextToFolder,
@@ -200,6 +204,7 @@ export function IconGridView() {
 
   const handleItemClick = (id: string, e: React.MouseEvent) => {
     const visibleItemIds = items.map(item => item.id);
+
     if (e.ctrlKey || e.metaKey) {
       selectLibraryItemMulti(id, 'toggle');
     } else if (e.shiftKey) {
@@ -319,7 +324,6 @@ export function IconGridView() {
                 id={item.id}
                 type={item.type}
                 name={item.name}
-                isSelected={librarySelectedItemIds.has(item.id)}
                 onSelect={(e) => handleItemClick(item.id, e)}
                 onDoubleClick={() => handleItemDoubleClick(item.id, item.type)}
                 data={item.data}

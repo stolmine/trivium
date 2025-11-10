@@ -1,0 +1,1 @@
+- hotkeys should always be added to hotkey help, they should always display appropriate ctrl or cmd designation in tooltips and onscreen tips

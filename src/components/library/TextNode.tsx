@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDraggable } from '@dnd-kit/core';
@@ -46,14 +46,21 @@ interface TextNodeProps {
   context?: 'sidebar' | 'library';
 }
 
-export function TextNode({ text, depth, collapsed = false, highlightQuery = null, isSearchSelected = false, context = 'sidebar' }: TextNodeProps) {
+export const TextNode = React.memo(function TextNode({ text, depth, collapsed = false, highlightQuery = null, isSearchSelected = false, context = 'sidebar' }: TextNodeProps) {
   const navigate = useNavigate();
-  const selectedItemId = useLibraryStore((state) =>
-    context === 'library' ? state.librarySelectedItemId : state.selectedItemId
-  );
-  const selectedItemIds = useLibraryStore((state) =>
-    context === 'library' ? state.librarySelectedItemIds : state.selectedItemIds
-  );
+  const nodeId = `text-${text.id}`;
+
+  // Optimized selectors that only cause re-render when THIS specific item's state changes
+  const isSelected = useLibraryStore((state) => {
+    const selectedId = context === 'library' ? state.librarySelectedItemId : state.selectedItemId;
+    return selectedId === nodeId;
+  });
+
+  const isMultiSelected = useLibraryStore((state) => {
+    const selectedIds = context === 'library' ? state.librarySelectedItemIds : state.selectedItemIds;
+    return selectedIds.has(nodeId);
+  });
+
   const selectItem = useLibraryStore((state) =>
     context === 'library' ? state.selectLibraryItem : state.selectItem
   );
@@ -63,14 +70,10 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
   const { progress } = useTextProgress(text.id);
   const nodeRef = useRef<HTMLDivElement>(null);
 
-  const nodeId = `text-${text.id}`;
-  const isSelected = selectedItemId === nodeId;
-  const isMultiSelected = selectedItemIds.has(nodeId);
-
   useEffect(() => {
     if ((isSearchSelected || isSelected) && nodeRef.current) {
       nodeRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: 'auto',
         block: 'nearest',
         inline: 'nearest'
       });
@@ -166,4 +169,4 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
       {nodeContent}
     </TextContextMenu>
   );
-}
+});

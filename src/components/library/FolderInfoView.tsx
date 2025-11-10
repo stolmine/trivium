@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Folder, FileText, BookOpen, Activity, Brain, Calendar, AlertCircle, Loader2 } from 'lucide-react';
-import { api } from '../../lib/utils/tauri';
 import { Button } from '../../lib/components/ui/button';
+import { useLibraryStatsCacheStore } from '../../stores/libraryStatsCache';
 import type { FolderStatistics } from '../../lib/types/statistics';
 
 interface FolderInfoViewProps {
@@ -15,19 +15,39 @@ function formatDate(dateStr: string): string {
 }
 
 export function FolderInfoView({ folderId }: FolderInfoViewProps) {
-  const [stats, setStats] = useState<FolderStatistics | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { getFolderStats, loadFolderStats } = useLibraryStatsCacheStore();
+  const [stats, setStats] = useState<FolderStatistics | null>(() => getFolderStats(folderId));
+  const [isLoading, setIsLoading] = useState(() => !getFolderStats(folderId));
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadStats = async () => {
+      // Try to get from cache first
+      const cached = getFolderStats(folderId);
+      if (cached) {
+        setStats(cached);
+        setIsLoading(false);
+        // Still load fresh data in background
+        try {
+          const fresh = await loadFolderStats(folderId);
+          if (isMounted) {
+            setStats(fresh);
+          }
+        } catch (err) {
+          // Ignore errors on background refresh if we have cached data
+          console.error('Failed to refresh folder stats:', err);
+        }
+        return;
+      }
+
+      // No cache, show loading
       setIsLoading(true);
       setError(null);
 
       try {
-        const data = await api.libraryStatistics.getFolderStatistics(folderId);
+        const data = await loadFolderStats(folderId);
         if (isMounted) {
           setStats(data);
         }
@@ -47,7 +67,7 @@ export function FolderInfoView({ folderId }: FolderInfoViewProps) {
     return () => {
       isMounted = false;
     };
-  }, [folderId]);
+  }, [folderId, getFolderStats, loadFolderStats]);
 
   if (isLoading) {
     return (

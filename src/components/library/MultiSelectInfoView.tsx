@@ -1,7 +1,7 @@
 import { useLibraryStore } from '../../stores/library';
 import { Button } from '../../lib/components/ui/button';
 import { Layers, FileText, Activity, Brain } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '../../lib/utils/tauri';
 
 interface MultiSelectInfoViewProps {
@@ -19,7 +19,15 @@ export function MultiSelectInfoView({ selectedItemIds }: MultiSelectInfoViewProp
   const [textStats, setTextStats] = useState<Map<number, TextStats>>(new Map());
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
-  const { folders: selectedFolders, texts: selectedTexts } = getSelectedLibraryItems();
+  const { folders: selectedFolders, texts: selectedTexts } = useMemo(
+    () => getSelectedLibraryItems(),
+    [selectedItemIds, getSelectedLibraryItems]
+  );
+
+  const selectedTextIds = useMemo(
+    () => selectedTexts.map(text => text.id).join(','),
+    [selectedTexts]
+  );
 
   useEffect(() => {
     if (selectedTexts.length === 0) {
@@ -60,7 +68,7 @@ export function MultiSelectInfoView({ selectedItemIds }: MultiSelectInfoViewProp
     };
 
     loadStats();
-  }, [selectedTexts]);
+  }, [selectedTextIds, selectedTexts]);
 
   if (selectedItemIds.size === 0) {
     return (

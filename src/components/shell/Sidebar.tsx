@@ -1,9 +1,9 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, FolderPlus, ArrowUpDown, GraduationCap, Search, FilePlus, ChevronsDown, ChevronsUp, Sparkles, FileInput, Settings, BarChart3, ChevronUp, ChevronDown } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, GraduationCap, Search, Sparkles, FileInput, Settings, BarChart3, ChevronUp, ChevronDown, FilePlus, ArrowUpDown, ChevronsDown, ChevronsUp, FolderPlus } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
-import { useLibraryStore, type SortOption } from '../../stores/library';
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Input, Label, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../lib/components/ui';
+import { useLibraryStore } from '../../stores/library';
+import { Button } from '../../lib/components/ui';
 import { SIDEBAR_WIDTH, getTransitionStyle, shouldReduceMotion } from '../../lib/animations';
 import { cn } from '../../lib/utils';
 import { LibraryTree } from '../library/LibraryTree';
@@ -12,6 +12,8 @@ import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { searchLibrary } from '../../lib/utils/librarySearch';
 import { NavigationButtons } from '../../lib/components/shared/NavigationButtons';
 import { getModifierKey } from '../../lib/utils/platform';
+import { useSettingsStore } from '../../lib/stores/settings';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Input, Label, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../lib/components/ui';
 
 interface NavItem {
   id: string;
@@ -39,42 +41,26 @@ const getNavItems = (): NavItem[] => {
   ];
 };
 
-const getSortLabel = (sortBy: SortOption): string => {
-  switch (sortBy) {
-    case 'name-asc':
-      return 'Name (A-Z)';
-    case 'name-desc':
-      return 'Name (Z-A)';
-    case 'date-newest':
-      return 'Date Created (Newest)';
-    case 'date-oldest':
-      return 'Date Created (Oldest)';
-    case 'content-length':
-      return 'Content Length';
-    default:
-      return 'Sort';
-  }
-};
-
 export function Sidebar({ onShowHelp }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { sidebarCollapsed, toggleSidebar } = useAppStore();
-  const { folders, texts, createFolder, sortBy, setSortBy, expandAllFolders, collapseAllFolders } = useLibraryStore();
   const isSearchOpen = useLibrarySearchStore((state) => state.sidebar.isOpen);
   const query = useLibrarySearchStore((state) => state.sidebar.query);
   const caseSensitive = useLibrarySearchStore((state) => state.sidebar.caseSensitive);
   const wholeWord = useLibrarySearchStore((state) => state.sidebar.wholeWord);
-  const openSearch = useLibrarySearchStore((state) => state.openSearch);
   const setMatches = useLibrarySearchStore((state) => state.setMatches);
-  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [allFoldersExpanded, setAllFoldersExpanded] = useState(false);
-  const [folderError, setFolderError] = useState<string | null>(null);
+  const openSearch = useLibrarySearchStore((state) => state.openSearch);
+  const { folders, texts, sortBy, setSortBy, expandAllLibraryFolders, collapseAllLibraryFolders, createFolder } = useLibraryStore();
+  const showLibraryControlsInSidebar = useSettingsStore((state) => state.showLibraryControlsInSidebar);
   const [navCollapsed, setNavCollapsed] = useState(() => {
     const saved = localStorage.getItem('trivium-nav-collapsed');
     return saved ? JSON.parse(saved) : false;
   });
+  const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [allFoldersExpanded, setAllFoldersExpanded] = useState(false);
+  const [folderError, setFolderError] = useState<string | null>(null);
 
   const width = sidebarCollapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
   const transitionStyle = shouldReduceMotion() ? {} : getTransitionStyle('width', 300);
@@ -87,65 +73,15 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     localStorage.setItem('trivium-nav-collapsed', JSON.stringify(newValue));
   };
 
-  useEffect(() => {
-    if (!showCreateFolderDialog) return;
-
-    const trimmedName = newFolderName.trim();
-    if (!trimmedName) {
-      setFolderError(null);
-      return;
-    }
-
-    const duplicateFolder = folders.find(
-      f => f.parentId === null &&
-      f.name.toLowerCase() === trimmedName.toLowerCase()
-    );
-
-    if (duplicateFolder) {
-      setFolderError('A folder with this name already exists');
-    } else {
-      setFolderError(null);
-    }
-  }, [newFolderName, folders, showCreateFolderDialog]);
-
   const handleToggleExpandAll = () => {
     if (allFoldersExpanded) {
-      collapseAllFolders();
+      collapseAllLibraryFolders();
       setAllFoldersExpanded(false);
     } else {
-      expandAllFolders();
+      expandAllLibraryFolders();
       setAllFoldersExpanded(true);
     }
   };
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.shiftKey && (e.metaKey || e.ctrlKey) && (e.key === 'n' || e.key === 'N')) {
-        e.preventDefault();
-        setShowCreateFolderDialog(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  useEffect(() => {
-    if (!query.trim()) {
-      setMatches('sidebar', [], []);
-      return;
-    }
-
-    const results = searchLibrary(folders, texts, query, {
-      caseSensitive,
-      wholeWord
-    });
-
-    setMatches(
-      'sidebar',
-      Array.from(results.matchedTextIds),
-      Array.from(results.matchedFolderIds)
-    );
-  }, [query, caseSensitive, wholeWord, folders, texts, setMatches]);
 
   const handleCreateFolder = async () => {
     const trimmedName = newFolderName.trim();
@@ -170,6 +106,62 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
       console.error('Error creating folder:', error);
     }
   };
+
+  const getSortLabel = (sortOption: string): string => {
+    switch (sortOption) {
+      case 'name-asc':
+        return 'Name (A-Z)';
+      case 'name-desc':
+        return 'Name (Z-A)';
+      case 'date-newest':
+        return 'Date Created (Newest)';
+      case 'date-oldest':
+        return 'Date Created (Oldest)';
+      case 'content-length':
+        return 'Content Length';
+      default:
+        return 'Sort';
+    }
+  };
+
+  useEffect(() => {
+    if (!showCreateFolderDialog) return;
+
+    const trimmedName = newFolderName.trim();
+    if (!trimmedName) {
+      setFolderError(null);
+      return;
+    }
+
+    const duplicateFolder = folders.find(
+      f => f.parentId === null &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      setFolderError('A folder with this name already exists');
+    } else {
+      setFolderError(null);
+    }
+  }, [newFolderName, folders, showCreateFolderDialog]);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setMatches('sidebar', [], []);
+      return;
+    }
+
+    const results = searchLibrary(folders, texts, query, {
+      caseSensitive,
+      wholeWord
+    });
+
+    setMatches(
+      'sidebar',
+      Array.from(results.matchedTextIds),
+      Array.from(results.matchedFolderIds)
+    );
+  }, [query, caseSensitive, wholeWord, folders, texts, setMatches]);
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -268,82 +260,84 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Library Tree
             </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={() => navigate('/ingest')}
-                title={`New ingest (${mod}+N)`}
-                aria-label="Create new text"
-              >
-                <FilePlus className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={() => openSearch('sidebar')}
-                title={`Search library (Shift+${mod}+F)`}
-                aria-label="Search library"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    title={getSortLabel(sortBy)}
-                    aria-label="Sort library"
-                  >
-                    <ArrowUpDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}>
-                    Name (A-Z)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-desc' ? 'name-asc' : 'name-desc')}>
-                    Name (Z-A)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-newest' ? 'date-oldest' : 'date-newest')}>
-                    Date Created (Newest)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-oldest' ? 'date-newest' : 'date-oldest')}>
-                    Date Created (Oldest)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('content-length')}>
-                    Content Length
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={handleToggleExpandAll}
-                title={allFoldersExpanded ? `Collapse all folders (${mod}+Shift+E)` : `Expand all folders (${mod}+Shift+E)`}
-                aria-label={allFoldersExpanded ? "Collapse all folders" : "Expand all folders"}
-              >
-                {allFoldersExpanded ? (
-                  <ChevronsUp className="h-4 w-4" />
-                ) : (
-                  <ChevronsDown className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCreateFolderDialog(true)}
-                className="h-6 w-6 p-0"
-                aria-label="Create new folder"
-                title={`Create folder (${mod}+Shift+N)`}
-              >
-                <FolderPlus className="h-4 w-4" />
-              </Button>
-            </div>
+            {showLibraryControlsInSidebar && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => navigate('/ingest')}
+                  title={`New ingest (${mod}+N)`}
+                  aria-label="Create new text"
+                >
+                  <FilePlus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => openSearch('sidebar')}
+                  title={`Search library (Shift+${mod}+F)`}
+                  aria-label="Search library"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      title={getSortLabel(sortBy)}
+                      aria-label="Sort library"
+                    >
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-asc' ? 'name-desc' : 'name-asc')}>
+                      Name (A-Z)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'name-desc' ? 'name-asc' : 'name-desc')}>
+                      Name (Z-A)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-newest' ? 'date-oldest' : 'date-newest')}>
+                      Date Created (Newest)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy(sortBy === 'date-oldest' ? 'date-newest' : 'date-oldest')}>
+                      Date Created (Oldest)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('content-length')}>
+                      Content Length
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={handleToggleExpandAll}
+                  title={allFoldersExpanded ? `Collapse all folders (${mod}+Shift+E)` : `Expand all folders (${mod}+Shift+E)`}
+                  aria-label={allFoldersExpanded ? "Collapse all folders" : "Expand all folders"}
+                >
+                  {allFoldersExpanded ? (
+                    <ChevronsUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronsDown className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCreateFolderDialog(true)}
+                  className="h-6 w-6 p-0"
+                  aria-label="Create new folder"
+                  title={`Create folder (${mod}+Shift+N)`}
+                >
+                  <FolderPlus className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
         <div className="flex-1 overflow-y-auto min-h-0">

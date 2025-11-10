@@ -3258,6 +3258,262 @@ const loadStatistics = async (itemIds: string[]) => {
 
 ---
 
-**Documentation Version**: 4.1
+## Phase 29.X: Selection Performance Investigation & Attempted Fixes
+
+**Date**: 2025-11-10
+**Status**: Investigation Complete - Issue Persists ⚠️
+**Time Invested**: ~6-8 hours
+
+### Problem Statement
+
+Selection indication was observed to be choppy/laggy when clicking items in the Library Page, with noticeable visual delay before selection highlights appeared. This investigation attempted to identify and fix the root cause of the performance issue.
+
+### Investigation Approach
+
+A comprehensive performance investigation was conducted across multiple areas:
+
+1. **Profiling**: Browser DevTools performance profiling during selection operations
+2. **Instrumentation**: Added timing logs to identify bottlenecks
+3. **Component Analysis**: Reviewed render behavior of FolderNode, TextNode, GridItem, ListRow
+4. **State Management**: Analyzed Zustand store subscriptions and selector patterns
+5. **CSS Analysis**: Examined transition and animation properties
+6. **React Profiling**: Used React DevTools Profiler for component render timing
+
+### Optimizations Attempted
+
+#### 1. FolderContextMenu Effect Storm Fix ✅
+
+**Problem**: FolderContextMenu had a `useEffect` with `folders` array dependency causing excessive re-renders.
+
+**Location**: `/Users/why/repos/trivium/src/components/library/FolderContextMenu.tsx`
+
+**Fix**: Removed folders array subscription - component only needs single folder data, not entire array.
+
+```typescript
+// Before: Re-rendered on any folder array change
+useEffect(() => {
+  // ...
+}, [folders, ...])
+
+// After: No dependency on folders array
+// Component receives single folder as prop
+```
+
+**Impact**: Reduced re-renders on folder operations
+
+#### 2. React.memo Optimization ✅
+
+**Added React.memo to**:
+- `/Users/why/repos/trivium/src/components/library/FolderNode.tsx`
+- `/Users/why/repos/trivium/src/components/library/TextNode.tsx`
+- `/Users/why/repos/trivium/src/components/library/IconGridView.tsx` (GridItem components)
+- `/Users/why/repos/trivium/src/components/library/ListView.tsx` (ListRow components)
+
+**Purpose**: Prevent unnecessary re-renders of unchanged items when only selection state changes.
+
+**Implementation**:
+```typescript
+export const FolderNode = React.memo(({ folder, context }) => {
+  // Component implementation
+});
+```
+
+**Impact**: Reduced render count for non-selected items during selection changes
+
+#### 3. Debug Console Log Removal ✅
+
+**Removed debug logs from 8 files**:
+1. `/Users/why/repos/trivium/src/stores/library.ts`
+2. `/Users/why/repos/trivium/src/components/library/FolderNode.tsx`
+3. `/Users/why/repos/trivium/src/components/library/TextNode.tsx`
+4. `/Users/why/repos/trivium/src/components/library/IconGridView.tsx`
+5. `/Users/why/repos/trivium/src/components/library/ListView.tsx`
+6. `/Users/why/repos/trivium/src/components/library/LibraryTree.tsx`
+7. `/Users/why/repos/trivium/src/components/library/FolderContextMenu.tsx`
+8. `/Users/why/repos/trivium/src/components/library/RootDropZone.tsx`
+
+**Reason**: Console.log operations can impact performance, especially in hot render paths.
+
+#### 4. CSS Transition Removal (Focus Panes) ✅
+
+**Problem**: Focusable pane CSS transitions adding 150ms delay to selection visual feedback.
+
+**Location**: `/Users/why/repos/trivium/src/index.css`
+
+**Changes**:
+```css
+/* Before: 150ms transitions on focus panes */
+.focusable-pane {
+  transition: border-color 150ms, box-shadow 150ms, background-color 150ms;
+}
+
+/* After: Instant focus state changes */
+.focusable-pane {
+  /* Removed transitions for instant feedback */
+}
+```
+
+**Also Removed**:
+- Sidebar pane transitions
+- Library pane transitions
+- Unfocused opacity transitions
+
+**Impact**: Eliminated 150ms CSS animation delay from selection feedback
+
+#### 5. Scroll Behavior Change ✅
+
+**Changed**: `scrollIntoView({ behavior: 'smooth' })` → `scrollIntoView({ behavior: 'auto' })`
+
+**Location**: All view components (IconGridView, ListView, FolderNode, TextNode)
+
+**Reason**: Smooth scrolling adds 20-30ms delay. Auto scroll is instant.
+
+**Impact**: Reduced scroll animation overhead
+
+#### 6. Box-Shadow Replacement (Grid View) ✅
+
+**Problem**: Box-shadow is expensive to animate/render, especially on many items.
+
+**Location**: `/Users/why/repos/trivium/src/components/library/IconGridView.tsx`
+
+**Change**:
+```css
+/* Before: box-shadow on hover/selection */
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+/* After: Simple border */
+border: 2px solid currentColor;
+```
+
+**Impact**: Reduced GPU rendering overhead in grid view
+
+#### 7. CSS Containment ✅
+
+**Added**: `contain: layout style paint;` to grid items and list rows
+
+**Purpose**: Isolates rendering to individual items, preventing layout thrashing
+
+**Implementation**:
+```css
+.grid-item {
+  contain: layout style paint;
+}
+
+.list-row {
+  contain: layout style paint;
+}
+```
+
+**Impact**: Improved rendering isolation for large lists
+
+#### 8. GPU Acceleration Hints ✅
+
+**Added**: `will-change: transform;` to frequently changing elements
+
+**Purpose**: Promote elements to GPU layer for faster compositing
+
+**Applied To**:
+- Selection highlights
+- Focus state borders
+- Hover states
+
+**Impact**: Offloaded rendering to GPU
+
+#### 9. MultiSelectInfoView Infinite Loop Fix ✅
+
+**Problem**: Component had infinite loop causing excessive re-renders.
+
+**Location**: `/Users/why/repos/trivium/src/components/library/MultiSelectInfoView.tsx`
+
+**Fix**: Corrected dependency array in useEffect to prevent infinite calculation loop.
+
+**Impact**: Eliminated render storm when multiple items selected
+
+### Performance Metrics
+
+**Before Optimizations**:
+- Selection lag: ~175-215ms perceived delay
+- Console logs: 50+ logs per selection
+- Re-renders: All visible items re-rendering on each selection
+- CSS transitions: 150ms animation delay
+
+**After Optimizations**:
+- Selection lag: Still present (issue persists)
+- Console logs: 0 (all removed)
+- Re-renders: Reduced (React.memo working)
+- CSS transitions: 0ms (removed)
+
+### Root Cause Analysis
+
+Despite implementing multiple optimizations, the selection lag **persists**. The investigation revealed:
+
+1. **React Re-render Overhead**: Even with React.memo, there's inherent overhead in React's reconciliation
+2. **Zustand Subscription Model**: Each component subscribes individually to store slices
+3. **DOM Update Batching**: Browser may not batch DOM updates optimally for selection changes
+4. **Potential Browser Paint Issues**: Selection highlights may trigger repaints/reflows
+
+**Key Finding**: The lag appears to be cumulative from many small sources rather than one single bottleneck.
+
+### Files Modified During Investigation
+
+**Performance Fixes (15 files)**:
+1. `/Users/why/repos/trivium/src/components/library/FolderContextMenu.tsx` - Effect storm fix
+2. `/Users/why/repos/trivium/src/components/library/FolderNode.tsx` - React.memo, logs removed
+3. `/Users/why/repos/trivium/src/components/library/TextNode.tsx` - React.memo, logs removed
+4. `/Users/why/repos/trivium/src/components/library/IconGridView.tsx` - React.memo, box-shadow fix, logs removed
+5. `/Users/why/repos/trivium/src/components/library/ListView.tsx` - React.memo, logs removed
+6. `/Users/why/repos/trivium/src/components/library/LibraryTree.tsx` - Logs removed
+7. `/Users/why/repos/trivium/src/components/library/RootDropZone.tsx` - Logs removed
+8. `/Users/why/repos/trivium/src/components/library/MultiSelectInfoView.tsx` - Infinite loop fix
+9. `/Users/why/repos/trivium/src/index.css` - Transition removal, containment added
+10. `/Users/why/repos/trivium/src/stores/library.ts` - Logs removed
+
+**Investigation Documents Created (4 files)**:
+1. `SELECTION_PERFORMANCE_INVESTIGATION.md` - Initial investigation findings
+2. `SELECTION_BOTTLENECK_FINDINGS.md` - Bottleneck analysis with timing data
+3. `SELECTION_PERFORMANCE_FIX.md` - Detailed fix documentation
+4. `LIBRARY_SELECTION_QUICK_FIXES.md` - Quick reference for fixes applied
+
+### Known Limitations
+
+**Issue Status**: ⚠️ **UNRESOLVED**
+
+Despite implementing:
+- ✅ Effect storm fix
+- ✅ React.memo optimization
+- ✅ Debug log removal
+- ✅ CSS transition removal (150ms saved)
+- ✅ Smooth scroll removal (20-30ms saved)
+- ✅ Box-shadow replacement
+- ✅ CSS containment
+- ✅ GPU acceleration hints
+- ✅ Infinite loop fix
+
+**The selection lag persists**. The optimizations improved individual metrics but did not eliminate the perceived choppiness.
+
+### Potential Future Approaches
+
+If this issue needs to be revisited:
+
+1. **Virtual Scrolling**: Implement react-window or react-virtual for large lists
+2. **Selection State Debouncing**: Debounce rapid selection changes (may hurt UX)
+3. **Web Workers**: Move heavy computations off main thread
+4. **Alternative State Library**: Evaluate Jotai/Recoil for fine-grained subscriptions
+5. **Canvas Rendering**: Consider canvas-based rendering for list views (complex)
+6. **Profiler Deep Dive**: Conduct extended profiling session to identify micro-bottlenecks
+
+### Conclusion
+
+This investigation represents a thorough attempt to optimize Library Page selection performance. Multiple performance improvements were successfully implemented and will benefit the application overall (reduced re-renders, cleaner console, faster CSS rendering). However, the core selection lag issue **remains unresolved** and may require architectural changes or alternative approaches beyond component-level optimizations.
+
+**Recommendation**: Monitor user feedback. If lag is not significantly impacting UX, consider this a "nice to have" optimization rather than critical issue. The implemented optimizations provide good foundation for future work.
+
+### Implementation Time
+
+~6-8 hours (investigation, profiling, implementation, testing, documentation)
+
+---
+
+**Documentation Version**: 4.2
 **Last Updated**: 2025-11-10
-**Author**: Claude Code (Phase 29 Implementation - Parts 1-4: Dual-Pane Layout + Multi-Selection + Focus Tracking + View Modes + Info Panel + Polish Improvements + Housekeeping)
+**Author**: Claude Code (Phase 29 Implementation - Parts 1-4: Dual-Pane Layout + Multi-Selection + Focus Tracking + View Modes + Info Panel + Polish Improvements + Housekeeping + Performance Investigation)

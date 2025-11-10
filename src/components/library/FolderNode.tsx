@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
@@ -48,16 +48,25 @@ interface FolderNodeProps {
   context?: 'sidebar' | 'library';
 }
 
-export function FolderNode({ node, depth, collapsed = false, highlightQuery = null, selectedTextId = null, context = 'sidebar' }: FolderNodeProps) {
-  const expandedFolderIds = useLibraryStore((state) =>
-    context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds
-  );
-  const selectedItemId = useLibraryStore((state) =>
-    context === 'library' ? state.librarySelectedItemId : state.selectedItemId
-  );
-  const selectedItemIds = useLibraryStore((state) =>
-    context === 'library' ? state.librarySelectedItemIds : state.selectedItemIds
-  );
+export const FolderNode = React.memo(function FolderNode({ node, depth, collapsed = false, highlightQuery = null, selectedTextId = null, context = 'sidebar' }: FolderNodeProps) {
+  const folder = node.data as FolderType;
+
+  // Optimized selectors that only cause re-render when THIS specific item's state changes
+  const isExpanded = useLibraryStore((state) => {
+    const expandedIds = context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds;
+    return expandedIds.has(folder.id);
+  });
+
+  const isSelected = useLibraryStore((state) => {
+    const selectedId = context === 'library' ? state.librarySelectedItemId : state.selectedItemId;
+    return selectedId === folder.id;
+  });
+
+  const isMultiSelected = useLibraryStore((state) => {
+    const selectedIds = context === 'library' ? state.librarySelectedItemIds : state.selectedItemIds;
+    return selectedIds.has(folder.id);
+  });
+
   const toggleFolder = useLibraryStore((state) =>
     context === 'library' ? state.toggleLibraryFolder : state.toggleFolder
   );
@@ -67,18 +76,13 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
   const selectItemMulti = useLibraryStore((state) =>
     context === 'library' ? state.selectLibraryItemMulti : state.selectItemMulti
   );
-
-  const folder = node.data as FolderType;
-  const isExpanded = expandedFolderIds.has(folder.id);
-  const isSelected = selectedItemId === folder.id;
-  const isMultiSelected = selectedItemIds.has(folder.id);
   const { progress } = useFolderProgress(folder.id);
   const nodeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isSelected && nodeRef.current) {
       nodeRef.current.scrollIntoView({
-        behavior: 'smooth',
+        behavior: 'auto',
         block: 'nearest',
         inline: 'nearest'
       });
@@ -218,4 +222,4 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
       )}
     </div>
   );
-}
+});

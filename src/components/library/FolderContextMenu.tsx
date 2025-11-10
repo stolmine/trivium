@@ -24,7 +24,9 @@ interface FolderContextMenuProps {
 }
 
 export function FolderContextMenu({ folderId, folderName, children }: FolderContextMenuProps) {
-  const { folders, createFolder, renameFolder, deleteFolder } = useLibraryStore();
+  const createFolder = useLibraryStore((state) => state.createFolder);
+  const renameFolder = useLibraryStore((state) => state.renameFolder);
+  const deleteFolder = useLibraryStore((state) => state.deleteFolder);
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -73,42 +75,29 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
   };
 
   useEffect(() => {
-    console.log('=== useEffect running - create validation ===');
-    console.log('showCreateDialog:', showCreateDialog);
-    console.log('newFolderName:', newFolderName);
-
     if (!showCreateDialog) {
-      console.log('Early return: showCreateDialog is false');
       return;
     }
 
     const trimmedName = newFolderName.trim();
     if (!trimmedName) {
-      console.log('Early return: newFolderName is empty after trim');
       setCreateError(null);
       return;
     }
 
-    console.log('=== DUPLICATE CHECK DEBUG ===');
-    console.log('Current folderId (parent):', folderId);
-    console.log('New folder name:', trimmedName);
-    console.log('All folders:', folders);
-    console.log('Folders with matching parent:', folders.filter(f => f.parentId === folderId));
+    const folders = useLibraryStore.getState().folders;
 
     const duplicateFolder = folders.find(
       f => f.parentId === folderId &&
       f.name.toLowerCase() === trimmedName.toLowerCase()
     );
 
-    console.log('Duplicate found?', duplicateFolder);
-    console.log('=== END DEBUG ===');
-
     if (duplicateFolder) {
       setCreateError('A folder with this name already exists');
     } else {
       setCreateError(null);
     }
-  }, [newFolderName, folders, folderId, showCreateDialog]);
+  }, [newFolderName, folderId, showCreateDialog]);
 
   useEffect(() => {
     if (!showRenameDialog) {
@@ -120,6 +109,8 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
       setRenameError(null);
       return;
     }
+
+    const folders = useLibraryStore.getState().folders;
 
     const currentFolder = folders.find(f => f.id === folderId);
     if (!currentFolder) {
@@ -138,7 +129,7 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
     } else {
       setRenameError(null);
     }
-  }, [renameFolderName, folders, folderId, folderName, showRenameDialog]);
+  }, [renameFolderName, folderId, folderName, showRenameDialog]);
 
   useEffect(() => {
     if (!showDeleteDialog) return;
@@ -159,10 +150,7 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
       <ContextMenu>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={() => {
-            console.log('Create Subfolder clicked - opening dialog');
-            setShowCreateDialog(true);
-          }}>
+          <ContextMenuItem onClick={() => setShowCreateDialog(true)}>
             <FolderPlus className="mr-2 h-4 w-4" />
             Create Subfolder
           </ContextMenuItem>
@@ -179,7 +167,6 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
       </ContextMenu>
 
       <Dialog open={showCreateDialog} onOpenChange={(open) => {
-        console.log('Create dialog onOpenChange - open:', open);
         setShowCreateDialog(open);
         if (!open) {
           setNewFolderName('');
@@ -196,10 +183,7 @@ export function FolderContextMenu({ folderId, folderName, children }: FolderCont
               <Input
                 id="subfolder-name"
                 value={newFolderName}
-                onChange={(e) => {
-                  console.log('Input onChange - new value:', e.target.value);
-                  setNewFolderName(e.target.value);
-                }}
+                onChange={(e) => setNewFolderName(e.target.value)}
                 placeholder="Enter folder name"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {

@@ -100,11 +100,13 @@ export function TextInfoView({ textId }: TextInfoViewProps) {
     loadStatistics();
   }, [textId]);
 
-  const handleOpen = () => {
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
     navigate(`/read/${textId}`);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
     console.log('Delete action not yet implemented');
   };
 

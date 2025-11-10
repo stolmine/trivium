@@ -20,6 +20,8 @@ interface SettingsState {
   setDefaultLinksVisible: (visible: boolean) => void;
   enableFocusTracking: boolean;
   setEnableFocusTracking: (enabled: boolean) => void;
+  showLibraryControlsInSidebar: boolean;
+  setShowLibraryControlsInSidebar: (show: boolean) => void;
   databaseSize: number;
   setDatabaseSize: (size: number) => void;
   loadDatabaseSize: () => Promise<void>;
@@ -38,6 +40,7 @@ export const useSettingsStore = create<SettingsState>()(
       flashcardSidebarCollapsed: false,
       defaultLinksVisible: false,
       enableFocusTracking: false,
+      showLibraryControlsInSidebar: true,
       databaseSize: 0,
       themeMode: 'adaptive',
       customColors: {
@@ -67,6 +70,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       setEnableFocusTracking: (enabled: boolean) => {
         set({ enableFocusTracking: enabled });
+      },
+
+      setShowLibraryControlsInSidebar: (show: boolean) => {
+        set({ showLibraryControlsInSidebar: show });
       },
 
       setDatabaseSize: (size: number) => {

@@ -15,8 +15,6 @@ export function RootDropZone({ className }: RootDropZoneProps) {
     },
   });
 
-  console.log('[RootDropZone] State:', { isOver });
-
   return (
     <div
       ref={setNodeRef}

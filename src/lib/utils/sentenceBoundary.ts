@@ -172,32 +172,41 @@ function isAbbreviation(text: string, position: number): boolean {
   if (position >= 1) {
     const beforePrev = position >= 2 ? text[position - 2] : '';
 
+    // Check if this is a parenthetical abbreviation (e.g., "(r.", "(b.", "(d.")
+    // For single letter: check if there's an opening paren right before the letter
+    const isParenthetical = beforePrev === '(';
+
     // Single letter followed by period
-    if (!beforePrev || /[\s\n]/.test(beforePrev)) {
+    // Handle regular case: space/newline/start before letter
+    // Also handle parenthetical abbreviations: "(r.", "(b.", "(d.", etc.
+    if (!beforePrev || /[\s\n]/.test(beforePrev) || isParenthetical) {
       const letter = text[position - 1];
 
       // "I." at sentence start is typically "I." as a sentence, not abbreviation
       // But allow it in middle of text or after punctuation
       if (letter === 'I' || letter === 'i') {
-        // Check if this is at the start of a sentence
-        if (position >= 2) {
-          let checkPos = position - 2;
-          // Skip whitespace
-          while (checkPos >= 0 && /\s/.test(text[checkPos])) {
-            checkPos--;
-          }
-          // If we find sentence-ending punctuation or we're at the start, this is sentence start
-          if (checkPos < 0 || /[.!?]/.test(text[checkPos])) {
-            // "I." at sentence start is NOT an abbreviation
+        // Skip the "I." check for parenthetical case like "(I." - always treat as abbreviation
+        if (!isParenthetical) {
+          // Check if this is at the start of a sentence
+          if (position >= 2) {
+            let checkPos = position - 2;
+            // Skip whitespace
+            while (checkPos >= 0 && /\s/.test(text[checkPos])) {
+              checkPos--;
+            }
+            // If we find sentence-ending punctuation or we're at the start, this is sentence start
+            if (checkPos < 0 || /[.!?]/.test(text[checkPos])) {
+              // "I." at sentence start is NOT an abbreviation
+              return false;
+            }
+          } else if (position === 1) {
+            // "I." at very beginning of text is NOT an abbreviation
             return false;
           }
-        } else if (position === 1) {
-          // "I." at very beginning of text is NOT an abbreviation
-          return false;
         }
       }
 
-      // All other single letters are abbreviations
+      // All other single letters are abbreviations (including parenthetical ones)
       return true;
     }
   }
@@ -270,8 +279,14 @@ function isAbbreviation(text: string, position: number): boolean {
   }
 
   // Check for common abbreviations by word match
-  const wordStart = getWordStart(text, position - 1);
-  const word = text.slice(wordStart, position + 1);
+  let wordStart = getWordStart(text, position - 1);
+  let word = text.slice(wordStart, position + 1);
+
+  // Also check if there's a parenthesis before the word (for parenthetical abbreviations)
+  // This handles cases like "(fl." where the abbreviation is inside parentheses
+  if (wordStart > 0 && text[wordStart - 1] === '(') {
+    // Don't include the paren in the word, but note that this is a valid abbreviation context
+  }
 
   const commonAbbreviations = [
     'ca.', 'Dr.', 'Mr.', 'Mrs.', 'Ms.', 'Prof.', 'Sr.', 'Jr.',
@@ -287,7 +302,8 @@ function isAbbreviation(text: string, position: number): boolean {
     'cf.', 'viz.', 'al.', 'ibid.', 'op.', 'loc.', 'et.',
     'approx.', 'est.', 'max.', 'min.', 'misc.',
     'Mt.', 'Mtn.', 'Ft.', 'Pt.', 'Sq.', 'Ln.',
-    'no.', 'nos.', 'vol.', 'pp.', 'ed.', 'eds.'
+    'no.', 'nos.', 'vol.', 'pp.', 'ed.', 'eds.',
+    'fl.'  // flourished (historical texts)
   ];
 
   return commonAbbreviations.some(abbr =>

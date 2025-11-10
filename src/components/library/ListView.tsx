@@ -1,16 +1,15 @@
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Folder, FileText, ArrowUp, ArrowDown } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection, useDraggable, useDroppable } from '@dnd-kit/core';
 import { useLibraryStore, type SortColumn } from '../../stores/library';
+import { useLibraryStatsCacheStore } from '../../stores/libraryStatsCache';
 import { cn } from '../../lib/utils';
 import { isFolderDescendant } from '../../lib/tree-utils';
 import { FolderContextMenu } from './FolderContextMenu';
 import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
 import type { Folder as FolderType } from '../../lib/types/folder';
-import { api } from '../../lib/utils/tauri';
-import type { TextStatistics, FolderStatistics } from '../../lib/types/statistics';
 
 interface ListItem {
   id: string;
@@ -21,11 +20,6 @@ interface ListItem {
   progress: number | null;
   flashcards: number | null;
   data: FolderType | Text;
-}
-
-interface StatsCache {
-  texts: Map<number, TextStatistics>;
-  folders: Map<string, FolderStatistics>;
 }
 
 function formatDate(date: Date): string {
@@ -118,12 +112,13 @@ function RootDropZoneRow() {
 
 interface ListRowProps {
   item: ListItem;
-  isSelected: boolean;
   onClick: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
 }
 
-function ListRow({ item, isSelected, onClick, onDoubleClick }: ListRowProps) {
+const ListRow = React.memo(function ListRow({ item, onClick, onDoubleClick }: ListRowProps) {
+  // Optimized selector - only re-render when THIS item's selection state changes
+  const isSelected = useLibraryStore((state) => state.librarySelectedItemIds.has(item.id));
   const Icon = item.type === 'folder' ? Folder : FileText;
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -157,14 +152,18 @@ function ListRow({ item, isSelected, onClick, onDoubleClick }: ListRowProps) {
         draggable.transform
           ? {
               transform: `translate3d(${draggable.transform.x}px, ${draggable.transform.y}px, 0)`,
+              contain: 'layout style paint',
             }
-          : undefined
+          : {
+              contain: 'layout style paint',
+            }
       }
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'cursor-pointer border-b border-sidebar-border/50',
+        'cursor-pointer border-b border-sidebar-border/50 transition-none',
         'hover:bg-sidebar-accent/50',
+        'will-change-[background-color]',
         isSelected && 'bg-sidebar-primary/20',
         isOver && item.type === 'folder' && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
         draggable.isDragging && 'opacity-50'
@@ -206,7 +205,7 @@ function ListRow({ item, isSelected, onClick, onDoubleClick }: ListRowProps) {
       </TextContextMenu>
     );
   }
-}
+});
 
 export function ListView() {
   const navigate = useNavigate();
@@ -216,7 +215,6 @@ export function ListView() {
     texts,
     currentFolderId,
     setCurrentFolder,
-    librarySelectedItemIds,
     selectLibraryItemMulti,
     sortColumn,
     sortDirection,
@@ -224,11 +222,15 @@ export function ListView() {
     moveTextToFolder,
     moveFolder,
   } = useLibraryStore();
+  const {
+    getTextStats,
+    getFolderStats,
+    loadMultipleTextStats,
+    loadMultipleFolderStats,
+    textStats: textStatsCache,
+    folderStats: folderStatsCache,
+  } = useLibraryStatsCacheStore();
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [statsCache, setStatsCache] = useState<StatsCache>({
-    texts: new Map(),
-    folders: new Map(),
-  });
 
   // Sync URL param with store state on mount and when URL changes
   useEffect(() => {
@@ -240,55 +242,24 @@ export function ListView() {
 
   // Load statistics for visible items
   useEffect(() => {
-    let isMounted = true;
+    const filteredFolders = folders.filter(
+      (folder) => folder.parentId === currentFolderId
+    );
+    const filteredTexts = texts.filter(
+      (text) => (text.folderId ?? null) === currentFolderId
+    );
 
-    const loadStats = async () => {
-      const filteredFolders = folders.filter(
-        (folder) => folder.parentId === currentFolderId
-      );
-      const filteredTexts = texts.filter(
-        (text) => (text.folderId ?? null) === currentFolderId
-      );
+    // Load stats in background (they'll be cached)
+    const textIds = filteredTexts.map((text) => text.id);
+    const folderIds = filteredFolders.map((folder) => folder.id);
 
-      const newCache: StatsCache = {
-        texts: new Map(),
-        folders: new Map(),
-      };
-
-      await Promise.all([
-        ...filteredTexts.map(async (text) => {
-          try {
-            const stats = await api.libraryStatistics.getTextStatistics(text.id);
-            if (isMounted) {
-              newCache.texts.set(text.id, stats);
-            }
-          } catch (error) {
-            console.error(`Failed to load stats for text ${text.id}:`, error);
-          }
-        }),
-        ...filteredFolders.map(async (folder) => {
-          try {
-            const stats = await api.libraryStatistics.getFolderStatistics(folder.id);
-            if (isMounted) {
-              newCache.folders.set(folder.id, stats);
-            }
-          } catch (error) {
-            console.error(`Failed to load stats for folder ${folder.id}:`, error);
-          }
-        }),
-      ]);
-
-      if (isMounted) {
-        setStatsCache(newCache);
-      }
-    };
-
-    loadStats();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [folders, texts, currentFolderId]);
+    if (textIds.length > 0) {
+      loadMultipleTextStats(textIds);
+    }
+    if (folderIds.length > 0) {
+      loadMultipleFolderStats(folderIds);
+    }
+  }, [folders, texts, currentFolderId, loadMultipleTextStats, loadMultipleFolderStats]);
 
   // Helper to navigate to a folder via URL
   const navigateToFolder = (folderId: string | null) => {
@@ -355,7 +326,7 @@ export function ListView() {
     );
 
     const folderItems: ListItem[] = filteredFolders.map((folder) => {
-      const stats = statsCache.folders.get(folder.id);
+      const stats = getFolderStats(folder.id);
       return {
         id: folder.id,
         type: 'folder' as const,
@@ -369,7 +340,7 @@ export function ListView() {
     });
 
     const textItems: ListItem[] = filteredTexts.map((text) => {
-      const stats = statsCache.texts.get(text.id);
+      const stats = getTextStats(text.id);
       return {
         id: `text-${text.id}`,
         type: 'text' as const,
@@ -383,7 +354,7 @@ export function ListView() {
     });
 
     return [...folderItems, ...textItems];
-  }, [folders, texts, currentFolderId, statsCache]);
+  }, [folders, texts, currentFolderId, getTextStats, getFolderStats, textStatsCache, folderStatsCache]);
 
   const sortedItems = useMemo(() => {
     const sorted = [...items];
@@ -426,6 +397,7 @@ export function ListView() {
 
   const handleRowClick = (id: string, e: React.MouseEvent) => {
     const visibleItemIds = sortedItems.map(item => item.id);
+
     if (e.ctrlKey || e.metaKey) {
       selectLibraryItemMulti(id, 'toggle');
     } else if (e.shiftKey) {
@@ -574,7 +546,6 @@ export function ListView() {
                 <ListRow
                   key={item.id}
                   item={item}
-                  isSelected={librarySelectedItemIds.has(item.id)}
                   onClick={(e) => handleRowClick(item.id, e)}
                   onDoubleClick={() => handleRowDoubleClick(item)}
                 />
