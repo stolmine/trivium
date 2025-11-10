@@ -3,6 +3,7 @@ import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection, useDraggable, useDroppable } from '@dnd-kit/core';
 import { useLibraryStore } from '../../stores/library';
+import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { cn } from '../../lib/utils';
 import { isFolderDescendant } from '../../lib/tree-utils';
 import { RootDropZone } from './RootDropZone';
@@ -18,9 +19,10 @@ interface GridItemProps {
   onSelect: (e: React.MouseEvent) => void;
   onDoubleClick: () => void;
   data: FolderType | Text;
+  isHighlighted?: boolean;
 }
 
-const GridItem = React.memo(function GridItem({ id, type, name, onSelect, onDoubleClick, data }: GridItemProps) {
+const GridItem = React.memo(function GridItem({ id, type, name, onSelect, onDoubleClick, data, isHighlighted = false }: GridItemProps) {
   // Optimized selector - only re-render when THIS item's selection state changes
   const isSelected = useLibraryStore((state) => state.librarySelectedItemIds.has(id));
   const Icon = type === 'folder' ? Folder : FileText;
@@ -68,7 +70,9 @@ const GridItem = React.memo(function GridItem({ id, type, name, onSelect, onDoub
         'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-none',
         'hover:bg-sidebar-accent/50',
         'will-change-[background-color,border-color]',
-        isSelected && 'bg-sidebar-primary/20 border-2 border-sidebar-primary',
+        isSelected && !isHighlighted && 'bg-sidebar-primary/20 border-2 border-sidebar-primary',
+        isHighlighted && !isSelected && 'bg-yellow-100 dark:bg-yellow-900/20 ring-2 ring-yellow-400',
+        isHighlighted && isSelected && 'bg-yellow-100 dark:bg-yellow-900/20 border-2 border-sidebar-primary ring-2 ring-yellow-400',
         isOver && type === 'folder' && 'bg-sidebar-primary/10 border-2 border-sidebar-primary',
         draggable.isDragging && 'opacity-50'
       )}
@@ -111,6 +115,8 @@ export function IconGridView() {
     moveTextToFolder,
     moveFolder,
   } = useLibraryStore();
+  const searchState = useLibrarySearchStore((state) => state.library);
+  const { query, matchedTextIds, matchedFolderIds } = searchState;
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Sync URL param with store state on mount and when URL changes
@@ -177,6 +183,8 @@ export function IconGridView() {
     })
   );
 
+  const isSearchActive = query.trim().length > 0;
+
   const items = useMemo(() => {
     const filteredFolders = folders.filter(
       (folder) => folder.parentId === currentFolderId
@@ -185,22 +193,49 @@ export function IconGridView() {
       (text) => (text.folderId ?? null) === currentFolderId
     );
 
-    const folderItems = filteredFolders.map((folder) => ({
-      id: folder.id,
-      type: 'folder' as const,
-      name: folder.name,
-      data: folder,
-    }));
+    const matchedTextIdSet = new Set(matchedTextIds);
+    const matchedFolderIdSet = new Set(matchedFolderIds);
+
+    const folderContainsMatches = (folderId: string): boolean => {
+      const hasMatchingText = texts.some(
+        (text) => text.folderId === folderId && matchedTextIdSet.has(text.id)
+      );
+
+      if (hasMatchingText) return true;
+
+      const subfolders = folders.filter(f => f.parentId === folderId);
+      return subfolders.some(subfolder => folderContainsMatches(subfolder.id));
+    };
+
+    const folderItems = filteredFolders.map((folder) => {
+      let isHighlighted = false;
+      if (isSearchActive) {
+        if (matchedFolderIdSet.has(folder.id)) {
+          isHighlighted = true;
+        } else {
+          isHighlighted = folderContainsMatches(folder.id);
+        }
+      }
+
+      return {
+        id: folder.id,
+        type: 'folder' as const,
+        name: folder.name,
+        data: folder,
+        isHighlighted,
+      };
+    });
 
     const textItems = filteredTexts.map((text) => ({
       id: `text-${text.id}`,
       type: 'text' as const,
       name: text.title,
       data: text,
+      isHighlighted: isSearchActive && matchedTextIdSet.has(text.id),
     }));
 
     return [...folderItems, ...textItems];
-  }, [folders, texts, currentFolderId]);
+  }, [folders, texts, currentFolderId, isSearchActive, matchedTextIds, matchedFolderIds]);
 
   const handleItemClick = (id: string, e: React.MouseEvent) => {
     const visibleItemIds = items.map(item => item.id);
@@ -327,6 +362,7 @@ export function IconGridView() {
                 onSelect={(e) => handleItemClick(item.id, e)}
                 onDoubleClick={() => handleItemDoubleClick(item.id, item.type)}
                 data={item.data}
+                isHighlighted={item.isHighlighted}
               />
             ))}
           </div>

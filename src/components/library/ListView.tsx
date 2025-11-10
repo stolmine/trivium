@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection, useDraggable, useDroppable } from '@dnd-kit/core';
 import { useLibraryStore, type SortColumn } from '../../stores/library';
 import { useLibraryStatsCacheStore } from '../../stores/libraryStatsCache';
+import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { cn } from '../../lib/utils';
 import { isFolderDescendant } from '../../lib/tree-utils';
 import { FolderContextMenu } from './FolderContextMenu';
@@ -20,6 +21,7 @@ interface ListItem {
   progress: number | null;
   flashcards: number | null;
   data: FolderType | Text;
+  isHighlighted?: boolean;
 }
 
 function formatDate(date: Date): string {
@@ -119,6 +121,7 @@ interface ListRowProps {
 const ListRow = React.memo(function ListRow({ item, onClick, onDoubleClick }: ListRowProps) {
   // Optimized selector - only re-render when THIS item's selection state changes
   const isSelected = useLibraryStore((state) => state.librarySelectedItemIds.has(item.id));
+  const isHighlighted = item.isHighlighted ?? false;
   const Icon = item.type === 'folder' ? Folder : FileText;
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -164,7 +167,8 @@ const ListRow = React.memo(function ListRow({ item, onClick, onDoubleClick }: Li
         'cursor-pointer border-b border-sidebar-border/50 transition-none',
         'hover:bg-sidebar-accent/50',
         'will-change-[background-color]',
-        isSelected && 'bg-sidebar-primary/20',
+        isSelected && !isHighlighted && 'bg-sidebar-primary/20',
+        isHighlighted && 'bg-yellow-100 dark:bg-yellow-900/20',
         isOver && item.type === 'folder' && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
         draggable.isDragging && 'opacity-50'
       )}
@@ -230,6 +234,8 @@ export function ListView() {
     textStats: textStatsCache,
     folderStats: folderStatsCache,
   } = useLibraryStatsCacheStore();
+  const searchState = useLibrarySearchStore((state) => state.library);
+  const { query, matchedTextIds, matchedFolderIds } = searchState;
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Sync URL param with store state on mount and when URL changes
@@ -317,6 +323,8 @@ export function ListView() {
     })
   );
 
+  const isSearchActive = query.trim().length > 0;
+
   const items = useMemo(() => {
     const filteredFolders = folders.filter(
       (folder) => folder.parentId === currentFolderId
@@ -325,8 +333,32 @@ export function ListView() {
       (text) => (text.folderId ?? null) === currentFolderId
     );
 
+    const matchedTextIdSet = new Set(matchedTextIds);
+    const matchedFolderIdSet = new Set(matchedFolderIds);
+
+    const folderContainsMatches = (folderId: string): boolean => {
+      const hasMatchingText = texts.some(
+        (text) => text.folderId === folderId && matchedTextIdSet.has(text.id)
+      );
+
+      if (hasMatchingText) return true;
+
+      const subfolders = folders.filter(f => f.parentId === folderId);
+      return subfolders.some(subfolder => folderContainsMatches(subfolder.id));
+    };
+
     const folderItems: ListItem[] = filteredFolders.map((folder) => {
       const stats = getFolderStats(folder.id);
+
+      let isHighlighted = false;
+      if (isSearchActive) {
+        if (matchedFolderIdSet.has(folder.id)) {
+          isHighlighted = true;
+        } else {
+          isHighlighted = folderContainsMatches(folder.id);
+        }
+      }
+
       return {
         id: folder.id,
         type: 'folder' as const,
@@ -336,6 +368,7 @@ export function ListView() {
         progress: stats ? stats.averageProgress : null,
         flashcards: stats ? stats.totalFlashcards : null,
         data: folder,
+        isHighlighted,
       };
     });
 
@@ -350,11 +383,12 @@ export function ListView() {
         progress: stats ? stats.readPercentage : null,
         flashcards: stats ? stats.totalFlashcards : null,
         data: text,
+        isHighlighted: isSearchActive && matchedTextIdSet.has(text.id),
       };
     });
 
     return [...folderItems, ...textItems];
-  }, [folders, texts, currentFolderId, getTextStats, getFolderStats, textStatsCache, folderStatsCache]);
+  }, [folders, texts, currentFolderId, getTextStats, getFolderStats, textStatsCache, folderStatsCache, isSearchActive, matchedTextIds, matchedFolderIds]);
 
   const sortedItems = useMemo(() => {
     const sorted = [...items];
