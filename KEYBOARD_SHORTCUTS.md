@@ -193,6 +193,7 @@ These shortcuts control the UI appearance and help system.
 | Action | Windows/Linux | macOS | Description |
 |--------|---------------|-------|-------------|
 | Navigate up one level | `Ctrl + ↑` | `⌘ + ↑` | In grid/list view, navigate to parent folder |
+| Toggle info panel | `Ctrl + I` | `⌘ + I` | Collapse/expand the info panel (right pane) |
 
 ### Folder Management
 
@@ -293,12 +294,17 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 
 ## Version History
 
-### 2025-11-10 (Phase 29 - Library Navigation Enhancement)
+### 2025-11-10 (Phase 29 - Library Navigation & Polish Enhancements)
 - Added keyboard shortcut for "Navigate up one level" in grid/list views
-- New shortcut: Ctrl+↑ / Cmd+↑ navigates to parent folder
-- Only active in grid/list view modes (not tree view)
-- Prevents default browser behavior (scrolling)
-- Updated button tooltips to show keyboard shortcut
+  - New shortcut: Ctrl+↑ / Cmd+↑ navigates to parent folder
+  - Only active in grid/list view modes (not tree view)
+  - Prevents default browser behavior (scrolling)
+  - Updated button tooltips to show keyboard shortcut
+- Added keyboard shortcut for "Toggle info panel"
+  - New shortcut: Ctrl+I / Cmd+I collapses/expands the info panel (right pane)
+  - State persists in localStorage
+  - Left pane expands to 100% width when info panel collapsed
+  - Part of Phase 29 Polish Improvements
 
 ### 2025-10-24 (Phase 25 - Review System Improvements)
 - Added "Card Management" section to Review Session

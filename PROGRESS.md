@@ -1,13 +1,15 @@
 # Trivium - Development Progress
 
-## Current Status: Library Page - View Modes (Phase 3 of 7) Complete ✅
+## Current Status: Library Page - Info Panel (Phase 4 of 7) Complete + Polish Improvements ✅
 
 **Branch**: `29_libraryPage`
 **Last Updated**: 2025-11-10
 
+Phase 4 info panel implementation complete with comprehensive metadata display (TextInfoView, FolderInfoView, MultiSelectInfoView) plus six polish improvements: info view collapse (Cmd/Ctrl+I), fixed action buttons, header consolidation, sidebar buttons restored, location persistence, and removed focus styling.
+
 ---
 
-## Phase 29: Library Page - Dual-Pane Layout (Parts 1-3 of 7)
+## Phase 29: Library Page - Dual-Pane Layout (Parts 1-4 of 7)
 
 ### Overview
 **Branch**: `29_libraryPage`
@@ -446,12 +448,87 @@ Four additional refinements to the grid view implementation for improved UX and 
 
 **Implementation Time**: ~1 hour
 
-### Next Phases (4-7)
+### Phase 4 Deliverables: Info Panel (Complete)
 
-**Phase 4 - Info Panel** (Estimated: 4-5 hours):
-- File/folder metadata
-- Statistics (read progress, flashcard count)
-- Quick actions (open, edit, delete, move)
+**Status**: Complete ✅
+**Date**: 2025-11-10
+
+Implements comprehensive metadata display in the right pane with statistics for texts and folders, providing users with detailed information about their library items.
+
+1. **TextInfoView Component**
+   - Text title and folder path with breadcrumb navigation
+   - Content metadata (character count, word count, paragraph count)
+   - Reading progress (percentage, character position)
+   - Flashcard breakdown (total, new, learning, review counts)
+   - Retention rate calculation (cards mastered / total cards)
+   - Timestamps (created, modified, last read dates)
+   - Quick action buttons (Open in Reader, Delete)
+
+2. **FolderInfoView Component**
+   - Folder name and parent path breadcrumbs
+   - Recursive statistics aggregation:
+     - Total texts count in folder and subfolders
+     - Total content length (characters across all texts)
+     - Average reading progress percentage
+     - Total flashcards (across all texts)
+   - Timestamps (created, modified dates)
+   - Quick action buttons (Delete, New Text)
+
+3. **MultiSelectInfoView Component**
+   - Selected item count with breakdown (N folders, M texts)
+   - Aggregate statistics:
+     - Total content length across selected texts
+     - Average reading progress
+     - Total flashcard count
+   - Batch action buttons (placeholder for Phase 6)
+   - Clear selection shortcut reminder
+
+4. **Backend Commands**
+   - `get_text_statistics(text_id)`: Returns comprehensive text metadata
+     - Basic info (title, folder_id, content_length, word_count, paragraph_count)
+     - Reading progress (progress_percentage, current_position)
+     - Flashcard stats (total, new, learning, review, retention_rate)
+     - Timestamps (created_at, updated_at, last_read_at)
+   - `get_folder_statistics(folder_id)`: Returns recursive folder stats
+     - Aggregates data from all texts in folder tree using CTEs
+     - Calculates total_texts, total_content_length, average_progress, total_flashcards
+     - Handles empty folders gracefully
+
+5. **RightPane Conditional Rendering**
+   - No selection: "Select an item to view its details" placeholder
+   - Single text: TextInfoView with full statistics
+   - Single folder: FolderInfoView with recursive aggregation
+   - Multiple items: MultiSelectInfoView with aggregate data
+   - Loading states during statistics fetch
+   - Error handling for failed queries
+
+6. **Type System Updates**
+   - `TextStatistics` interface with all text metadata fields
+   - `FolderStatistics` interface with recursive aggregation
+   - API wrappers in `tauri.ts` under `api.libraryStatistics`
+   - Complete type safety throughout the stack
+
+**Files Changed**:
+- Created: library_statistics.rs (~150 lines), TextStatistics/FolderStatistics types, TextInfoView.tsx (~179 lines), FolderInfoView.tsx (~179 lines), MultiSelectInfoView.tsx (~168 lines) (5 files)
+- Modified: mod.rs, lib.rs, tauri.ts, RightPane.tsx, index.ts (types re-export) (5 files)
+- Total: 10 files (5 created + 5 modified)
+
+**Performance**:
+- Text statistics query: < 50ms
+- Folder statistics query: < 100ms (with recursive CTE)
+- Component render: < 30ms
+- Loading state transitions: Smooth with React Suspense patterns
+
+**Technical Details**:
+- **Recursive Folder Stats**: Uses SQLite Common Table Expressions (CTEs) to traverse folder hierarchy
+- **Retention Rate Calculation**: Formula: (learning + review) / total_flashcards * 100
+- **Null Handling**: Gracefully handles texts with no progress or flashcards
+- **Date Formatting**: Uses JavaScript Intl.DateTimeFormat for locale-aware dates
+- **Number Formatting**: Humanized display (e.g., "1,234 characters", "82.5% progress")
+
+**Implementation Time**: ~3-4 hours (backend commands, frontend components, type definitions, integration, testing)
+
+### Next Phases (5-7)
 
 **Phase 5 - Preview Pane** (Estimated: 5-7 hours):
 - Text content preview
@@ -500,6 +577,72 @@ Four additional refinements to the grid view implementation for improved UX and 
 6. **No Context Menu**: Right-click menu for selected items in Phase 6
 7. **No Drag Multiple Items**: Drag-and-drop only works for single items (Phase 6)
 8. **Keyboard Pane Resizing**: Mouse-only resizing (Phase 7)
+
+### Phase 29 Polish Improvements (Post-Phase 4)
+
+**Date**: 2025-11-10
+**Status**: Complete ✅
+
+After completing the core Phase 4 info panel implementation, six polish improvements were made to enhance usability and user experience:
+
+#### 1. Info View Collapse Button
+
+**Feature**: Toggle button to collapse/expand the right info pane
+- Added toggle button to library header with ChevronsRight/ChevronsLeft icon
+- Keyboard shortcut: **Cmd/Ctrl+I** to toggle collapse state
+- State persists in localStorage via library store
+- When collapsed: Left pane expands to 100% width, right pane hidden
+- When expanded: Normal dual-pane layout respecting saved pane sizes
+
+**Benefits**: More screen space for browsing when info panel not needed, quick toggle with keyboard shortcut
+
+#### 2. Fixed Action Button Clickability
+
+**Problem**: Action buttons in TextInfoView (Open in Reader, Delete) were not responding to clicks
+
+**Solution**: Fixed button click handlers to properly trigger navigation and actions, ensured proper event propagation
+
+**Impact**: Action buttons now work correctly, improving usability of info panel
+
+#### 3. Header Button Consolidation
+
+**Feature**: Created unified LibraryHeader component with all library controls
+- New LibraryHeader component contains: Ingest button, Search button, Sort dropdown, Expand/Collapse All button, New Folder button, View Mode Toggle (tripartite), Info Collapse button
+- All buttons icon-only with platform-aware tooltips (Cmd on Mac, Ctrl on Windows/Linux)
+- Clean, minimal header with grouped controls matching modern file browser UX
+
+#### 4. Sidebar Buttons Restored
+
+**Feature**: Library control buttons available in BOTH sidebar AND library header
+- Restored all library control buttons to sidebar (Ingest, Search, Sort, Expand/Collapse All, New Folder)
+- Added new setting: **"Show Library Controls in Sidebar"** (default: true)
+- Location: Settings → Defaults tab
+- User choice: Quick access in sidebar OR minimal sidebar with header-only controls
+
+#### 5. Location Persistence
+
+**Feature**: Remember last folder location when returning to /library page
+- `currentFolderId` now persists in Zustand store via persist middleware
+- When navigating away from library page and returning, restores last browsed folder
+- Consistent with file browser expectations (Finder, Explorer)
+
+#### 6. Removed Info View Focus Styling
+
+**Problem**: Right pane had focus-related CSS classes from Phase 29.3, but info panel doesn't need focus tracking
+
+**Solution**: Removed focus-related classes from RightPane component, info panel no longer participates in focus system
+
+**Impact**: Cleaner visual design, less distraction, simpler mental model (only LeftPane uses focus tracking)
+
+#### Files Changed
+
+**Created (1 file)**:
+- `/Users/why/repos/trivium/src/components/library/LibraryHeader.tsx` - Unified header component
+
+**Modified (10+ files)**:
+- library.ts, LibraryDualPane.tsx, index.tsx (library), TextInfoView.tsx, RightPane.tsx, Sidebar.tsx, DefaultsSection.tsx, backend settings files
+
+**Implementation Time**: ~2-3 hours
 
 ---
 

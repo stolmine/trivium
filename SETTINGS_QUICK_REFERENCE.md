@@ -26,6 +26,15 @@
 - **Visual Effects**: When enabled, shows darker borders (2px), shadows, and dimming (88% opacity) on unfocused panes
 - **Related**: Phase 29.3 Focus Tracking feature
 
+#### `show_library_controls_in_sidebar`
+- **Type**: Boolean
+- **Default**: `true`
+- **Description**: Controls whether library control buttons (Ingest, Search, Sort, Expand/Collapse All, New Folder) are shown in the sidebar. When enabled, buttons appear in BOTH sidebar and library header. When disabled, buttons only appear in library header
+- **UI Location**: Settings > Defaults tab
+- **Applies To**: Sidebar and Library page
+- **Benefits**: User choice between quick sidebar access or minimal sidebar with header-only controls
+- **Related**: Phase 29 Polish Improvements
+
 ---
 
 ## Feature Breakdown by Complexity

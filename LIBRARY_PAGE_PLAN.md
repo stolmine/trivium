@@ -429,10 +429,10 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
 
 ---
 
-### Phase 4: Info Panel ✅ COMPLETE
+### Phase 4: Info Panel ✅ COMPLETE (with Polish Improvements)
 
-**Status**: ✅ Complete (2025-11-10)
-**Actual Effort**: 3-4 hours
+**Status**: ✅ Complete (2025-11-10) + Polish Improvements ✅
+**Actual Effort**: 3-4 hours (core) + 2-3 hours (polish)
 **Priority**: High
 **Dependencies**: Phase 1 complete ✅
 
@@ -549,6 +549,50 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
    - Re-exported statistics types
 
 **Total**: 10 files (5 created + 5 modified)
+
+#### Polish Improvements ✅ (Post-Phase 4)
+
+**Date**: 2025-11-10
+
+Six additional improvements were made to enhance usability and polish:
+
+1. **Info View Collapse Button** ✅
+   - Toggle button in library header with Cmd/Ctrl+I hotkey
+   - State persists in localStorage
+   - Left pane expands to 100% width when collapsed
+   - ChevronsRight/ChevronsLeft icon indicates state
+
+2. **Fixed Action Button Clickability** ✅
+   - Action buttons in TextInfoView now respond to clicks correctly
+   - Fixed event propagation issues
+
+3. **Header Button Consolidation** ✅
+   - Created LibraryHeader component with all controls
+   - All buttons icon-only with platform-aware tooltips
+   - Tripartite view mode toggle (Mac Finder-style)
+   - Clean, minimal design
+
+4. **Sidebar Buttons Restored** ✅
+   - Library controls available in BOTH sidebar and library header
+   - New setting: "Show Library Controls in Sidebar" (default: true)
+   - Location: Settings → Defaults tab
+   - User choice for sidebar visibility
+
+5. **Location Persistence** ✅
+   - currentFolderId persists across navigation
+   - Restores last folder location when returning to /library
+   - Consistent with file browser expectations
+
+6. **Removed Info View Focus Styling** ✅
+   - Right pane no longer has focus-related CSS classes
+   - Cleaner visual design
+   - Info panel is passive (read-only)
+
+**Files Changed**:
+- Created: LibraryHeader.tsx
+- Modified: library.ts, LibraryDualPane.tsx, index.tsx (library), TextInfoView.tsx, RightPane.tsx, Sidebar.tsx, DefaultsSection.tsx, backend settings
+
+**Total Polish**: 1 created + 10+ modified
 
 #### Data to Display
 
@@ -1081,8 +1125,8 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 
 ### Overview
 
-**Completion**: 4 of 7 phases complete (57%)
-**Time Invested**: ~16-20 hours
+**Completion**: 4 of 7 phases complete (57%) + Polish improvements
+**Time Invested**: ~18-23 hours (including polish)
 **Time Remaining**: ~10-14 hours (estimated)
 **Current Phase**: Phase 5 (Smart Preview Panel) - Not Started
 
@@ -1128,7 +1172,7 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
    - Root drop zones with sticky positioning and correct visibility
    - SelectionToolbar at bottom of left pane
 
-7. **Info Panel**
+7. **Info Panel (with Polish Improvements)**
    - TextInfoView: Comprehensive text metadata with reading progress and flashcard breakdown
    - FolderInfoView: Recursive folder statistics with CTE-based aggregation
    - MultiSelectInfoView: Aggregate statistics for multiple selections
@@ -1137,16 +1181,17 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
    - Locale-aware date formatting with Intl.DateTimeFormat
    - Number formatting with thousands separators
    - Quick action buttons (functional placeholders)
+   - **Polish**: Info view collapse (Cmd/Ctrl+I), fixed action buttons, LibraryHeader consolidation, sidebar buttons restored, location persistence, removed focus styling
 
 ### What's Not Working / Missing ⚠️
 
 1. **Info Panel Edit Actions**: View-only quick actions (edit/rename in Phase 6)
 2. **Preview**: No text content preview (Phase 5)
-4. **Batch Operations**: Multi-selection enabled but no batch actions (move, delete, export)
-5. **Keyboard Grid Navigation**: Arrow keys don't navigate grid items (Phase 7)
-6. **Context Menu**: No right-click menu
-7. **Accessibility**: Minimal ARIA attributes (needs Phase 7 improvements)
-8. **Animations**: Basic transitions only (Phase 7 polish)
+3. **Batch Operations**: Multi-selection enabled but no batch actions (move, delete, export)
+4. **Keyboard Grid Navigation**: Arrow keys don't navigate grid items (Phase 7)
+5. **Context Menu**: No right-click menu
+6. **Accessibility**: Minimal ARIA attributes (needs Phase 7 improvements)
+7. **Animations**: Basic transitions only (Phase 7 polish)
 
 ### Known Issues
 
@@ -1673,10 +1718,11 @@ const toggleFolder = useLibraryStore((state) =>
 |---------|------|---------|
 | 1.0 | 2025-11-09 | Initial planning document created |
 | 1.1 | 2025-11-10 | Updated with Phase 3 completion status |
+| 1.2 | 2025-11-10 | Updated with Phase 4 completion + Polish improvements |
 
 ---
 
 **Document Maintained By**: AI Agents and Contributors
-**Document Version**: 1.1
+**Document Version**: 1.2
 **Last Updated**: 2025-11-10
-**Next Review**: After Phase 4 completion
+**Next Review**: After Phase 5 completion
