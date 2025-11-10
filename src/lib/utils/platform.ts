@@ -1,11 +1,68 @@
 /**
  * Platform detection utilities for cross-platform keyboard shortcut support
+ * Enhanced with Tauri platform detection for accurate cross-platform behavior
  */
 
+import { platform } from '@tauri-apps/plugin-os';
+
 /**
- * Detects if the current platform is macOS
+ * Platform type definitions
+ */
+export type Platform = 'windows' | 'macos' | 'linux' | 'unknown';
+
+/**
+ * Browser-based macOS detection (synchronous)
+ * Detects if the current platform is macOS using browser APIs
  */
 export const isMac = typeof window !== 'undefined' && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+/**
+ * Cached platform value for performance
+ */
+let cachedPlatform: Platform | null = null;
+
+/**
+ * Get the current platform using Tauri's platform detection
+ * Result is cached after first call for performance
+ * @returns Platform name ('windows' | 'macos' | 'linux' | 'unknown')
+ */
+export async function getPlatform(): Promise<Platform> {
+  if (cachedPlatform) {
+    return cachedPlatform;
+  }
+
+  try {
+    const os = await platform();
+    cachedPlatform = os as Platform;
+    return cachedPlatform;
+  } catch (error) {
+    console.error('Failed to detect platform via Tauri, falling back to browser detection:', error);
+    // Fallback to browser detection
+    cachedPlatform = isMac ? 'macos' : 'unknown';
+    return cachedPlatform;
+  }
+}
+
+/**
+ * Check if running on Windows
+ */
+export async function isWindows(): Promise<boolean> {
+  return (await getPlatform()) === 'windows';
+}
+
+/**
+ * Check if running on macOS
+ */
+export async function isMacOS(): Promise<boolean> {
+  return (await getPlatform()) === 'macos';
+}
+
+/**
+ * Check if running on Linux
+ */
+export async function isLinux(): Promise<boolean> {
+  return (await getPlatform()) === 'linux';
+}
 
 /**
  * Returns the appropriate modifier key label for the current platform
@@ -93,4 +150,58 @@ export function formatShortcutSymbol(shortcut: {
   parts.push(shortcut.key.toUpperCase());
 
   return parts.join(isMac ? '' : '+');
+}
+
+/**
+ * Format a simple hotkey string with the correct modifier for the current platform
+ * Example: formatHotkey('S') => 'Cmd+S' on macOS, 'Ctrl+S' on Windows/Linux
+ * @param key - The key to format (e.g., 'S', 'N', 'F')
+ * @returns Formatted hotkey string
+ */
+export function formatHotkey(key: string): string {
+  return `${getModifierKey()}+${key}`;
+}
+
+/**
+ * Format multiple keys as a hotkey combination
+ * Example: formatHotkeyCombo(['Shift', 'S']) => 'Cmd+Shift+S' on macOS
+ * @param keys - Array of keys in the combination
+ * @returns Formatted hotkey string
+ */
+export function formatHotkeyCombo(keys: string[]): string {
+  return [getModifierKey(), ...keys].join('+');
+}
+
+/**
+ * React hook for using platform in components
+ * Usage: const platform = usePlatform();
+ * @returns Current platform ('windows' | 'macos' | 'linux' | 'unknown')
+ */
+import { useEffect, useState } from 'react';
+
+export function usePlatform(): Platform {
+  const [platformState, setPlatformState] = useState<Platform>('unknown');
+
+  useEffect(() => {
+    getPlatform().then(setPlatformState);
+  }, []);
+
+  return platformState;
+}
+
+/**
+ * React hook for using modifier key in components
+ * Usage: const modifierKey = useModifierKey(); // 'Cmd' or 'Ctrl'
+ * @returns Modifier key label for current platform
+ */
+export function useModifierKey(): string {
+  const [modifierKey, setModifierKey] = useState<string>(getModifierKey());
+
+  useEffect(() => {
+    getPlatform().then(() => {
+      setModifierKey(getModifierKey());
+    });
+  }, []);
+
+  return modifierKey;
 }

@@ -1,0 +1,288 @@
+{
+  "comment": "This file contains example configurations for different cross-platform scenarios",
+  "examples": {
+    "basic_multiplatform": {
+      "description": "Basic configuration for all platforms with minimal bundle size",
+      "config": {
+        "bundle": {
+          "active": true,
+          "targets": ["nsis", "msi", "deb", "rpm", "appimage", "dmg"],
+          "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+          ],
+          "windows": {
+            "webviewInstallMode": {
+              "type": "downloadBootstrapper"
+            },
+            "nsis": {
+              "installMode": "currentUser"
+            }
+          }
+        }
+      }
+    },
+    "windows_signed": {
+      "description": "Windows with code signing",
+      "config": {
+        "bundle": {
+          "windows": {
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": "http://timestamp.digicert.com",
+            "webviewInstallMode": {
+              "type": "downloadBootstrapper"
+            },
+            "nsis": {
+              "installMode": "currentUser",
+              "displayLanguageSelector": false,
+              "languages": ["en-US"]
+            }
+          }
+        }
+      }
+    },
+    "offline_installation": {
+      "description": "For offline/enterprise environments - bundles WebView2 runtime",
+      "config": {
+        "bundle": {
+          "windows": {
+            "webviewInstallMode": {
+              "type": "offlineInstaller"
+            }
+          }
+        }
+      }
+    },
+    "with_updater": {
+      "description": "Configuration with automatic updates enabled",
+      "config": {
+        "plugins": {
+          "updater": {
+            "active": true,
+            "pubkey": "YOUR_PUBLIC_KEY_HERE",
+            "endpoints": [
+              "https://github.com/your-username/trivium/releases/latest/download/latest.json"
+            ],
+            "windows": {
+              "installMode": "passive"
+            }
+          }
+        }
+      }
+    },
+    "macos_universal": {
+      "description": "macOS universal binary (both Intel and Apple Silicon)",
+      "note": "Build with: tauri build --target universal-apple-darwin",
+      "config": {
+        "bundle": {
+          "targets": ["dmg", "app"],
+          "macOS": {
+            "minimumSystemVersion": "10.13"
+          }
+        }
+      }
+    },
+    "linux_appimage_only": {
+      "description": "Linux AppImage for maximum compatibility",
+      "config": {
+        "bundle": {
+          "targets": ["appimage"],
+          "linux": {
+            "appimage": {
+              "bundleMediaFramework": true
+            }
+          }
+        }
+      }
+    },
+    "development": {
+      "description": "Development configuration with debug features",
+      "config": {
+        "build": {
+          "beforeDevCommand": "npm run dev:vite",
+          "devUrl": "http://localhost:1420",
+          "beforeBuildCommand": "npm run build",
+          "frontendDist": "../dist"
+        },
+        "app": {
+          "withGlobalTauri": true,
+          "security": {
+            "csp": null
+          }
+        }
+      }
+    },
+    "production_secure": {
+      "description": "Production with enhanced security CSP",
+      "config": {
+        "app": {
+          "withGlobalTauri": false,
+          "security": {
+            "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:"
+          }
+        }
+      }
+    },
+    "custom_capabilities": {
+      "description": "Custom permissions for different windows",
+      "config": {
+        "app": {
+          "windows": [
+            {
+              "label": "main",
+              "title": "Trivium",
+              "width": 800,
+              "height": 600,
+              "maximized": true,
+              "resizable": true,
+              "fullscreen": false,
+              "decorations": true,
+              "transparent": false,
+              "center": true,
+              "minWidth": 600,
+              "minHeight": 400
+            },
+            {
+              "label": "settings",
+              "title": "Settings",
+              "width": 600,
+              "height": 500,
+              "resizable": false,
+              "center": true,
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    "recommended_production": {
+      "description": "Recommended production configuration for Trivium",
+      "config": {
+        "productName": "Trivium",
+        "version": "0.1.0",
+        "identifier": "com.why.trivium",
+        "build": {
+          "beforeDevCommand": "npm run dev:vite",
+          "devUrl": "http://localhost:1420",
+          "beforeBuildCommand": "npm run build",
+          "frontendDist": "../dist"
+        },
+        "app": {
+          "windows": [
+            {
+              "label": "main",
+              "title": "Trivium",
+              "width": 1200,
+              "height": 800,
+              "maximized": true,
+              "resizable": true,
+              "center": true,
+              "minWidth": 800,
+              "minHeight": 600
+            }
+          ],
+          "withGlobalTauri": false,
+          "security": {
+            "csp": null
+          }
+        },
+        "bundle": {
+          "active": true,
+          "targets": ["nsis", "deb", "rpm", "appimage", "dmg"],
+          "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+          ],
+          "windows": {
+            "webviewInstallMode": {
+              "type": "downloadBootstrapper"
+            },
+            "nsis": {
+              "installMode": "currentUser",
+              "displayLanguageSelector": false,
+              "languages": ["en-US"]
+            },
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": "http://timestamp.digicert.com"
+          },
+          "macOS": {
+            "minimumSystemVersion": "10.13"
+          },
+          "linux": {
+            "deb": {
+              "depends": []
+            },
+            "rpm": {
+              "depends": []
+            }
+          }
+        },
+        "plugins": {
+          "updater": {
+            "active": true,
+            "pubkey": "YOUR_PUBLIC_KEY_HERE",
+            "endpoints": [
+              "https://github.com/your-username/trivium/releases/latest/download/latest.json"
+            ],
+            "windows": {
+              "installMode": "passive"
+            }
+          }
+        }
+      }
+    }
+  },
+  "usage_instructions": {
+    "note": "Copy sections from the 'recommended_production' example to your src-tauri/tauri.conf.json",
+    "steps": [
+      "1. Choose the configuration that matches your needs",
+      "2. Copy the relevant sections to src-tauri/tauri.conf.json",
+      "3. Replace placeholder values (YOUR_PUBLIC_KEY_HERE, your-username, etc.)",
+      "4. Test with: npm run tauri build"
+    ]
+  },
+  "platform_specific_notes": {
+    "windows": {
+      "installer_types": {
+        "nsis": "Recommended - supports cross-compilation, smaller size",
+        "msi": "Enterprise-friendly, requires Windows to build"
+      },
+      "webview_modes": {
+        "downloadBootstrapper": "Smallest installer, requires internet",
+        "embedBootstrapper": "+1.8MB, requires internet, faster install",
+        "offlineInstaller": "+127MB, works offline",
+        "fixedVersion": "+180MB, specific WebView2 version"
+      },
+      "code_signing": "Recommended to avoid SmartScreen warnings. Requires certificate purchase."
+    },
+    "macos": {
+      "bundle_types": {
+        "app": "Application bundle",
+        "dmg": "Disk image for distribution (recommended)"
+      },
+      "signing": "REQUIRED for macOS Catalina+. Free accounts cannot notarize.",
+      "architectures": {
+        "aarch64-apple-darwin": "Apple Silicon (M1/M2/M3)",
+        "x86_64-apple-darwin": "Intel Macs",
+        "universal-apple-darwin": "Universal binary (both architectures)"
+      }
+    },
+    "linux": {
+      "bundle_types": {
+        "appimage": "Self-contained, works everywhere (recommended)",
+        "deb": "Debian/Ubuntu, smaller size",
+        "rpm": "Fedora/RHEL/CentOS"
+      },
+      "compatibility": "Build on Ubuntu 20.04 for maximum compatibility (older glibc)",
+      "dependencies": "AppImage bundles dependencies; deb/rpm use system libraries"
+    }
+  }
+}
