@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection } from '@dnd-kit/core';
 import { FileText, Folder, FolderOpen, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLibraryStore, type SortOption } from '../../stores/library';
@@ -8,6 +8,7 @@ import { buildTree, isFolderDescendant, getNodeById } from '../../lib/tree-utils
 import { cn } from '../../lib/utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
+import { RootDropZone } from './RootDropZone';
 import type { Text } from '../../lib/types/article';
 import type { TreeNode } from '../../lib/types/folder';
 
@@ -90,24 +91,27 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const rootDroppable = useDroppable({
-    id: 'root-drop-zone',
-    data: {
-      type: 'root',
-      accepts: ['folder', 'text']
-    },
-  });
-
-  console.log('[LibraryTree] Root droppable state:', {
-    isOver: rootDroppable.isOver,
-    nodeRef: rootDroppable.setNodeRef,
-  });
-
-  const { isOver, setNodeRef } = rootDroppable;
-
   useEffect(() => {
     loadLibrary();
   }, [loadLibrary]);
+
+  // Combined collision detection for better drop zone detection
+  const customCollisionDetection: CollisionDetection = (args) => {
+    // First try pointer-based detection
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    // Fallback to closest center for more forgiving detection
+    return closestCenter(args);
+  };
+
+  // Measuring configuration for conditionally rendered droppables
+  const measuringConfig = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -327,43 +331,32 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={customCollisionDetection}
+      measuring={measuringConfig}
       onDragStart={(e) => setActiveId(String(e.active.id))}
       onDragEnd={(e) => {
         handleDragEnd(e);
         setActiveId(null);
       }}
     >
-      <div
-        ref={treeContainerRef}
-        tabIndex={0}
-        className="space-y-1 px-2 outline-none focus:outline-none"
-        role="tree"
-        aria-label="Library navigation tree"
-      >
-        {context === 'library' && (
-          <div
-            ref={setNodeRef}
-            className={cn(
-              'px-4 py-2 mb-2 border-2 border-dashed rounded transition-colors',
-              isOver
-                ? 'border-sidebar-primary bg-sidebar-primary/10'
-                : 'border-border'
-            )}
-          >
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <FolderOpen className="h-4 w-4" />
-              <span>Root Directory</span>
-            </div>
-          </div>
-        )}
-        {filteredTree.map((node) => {
-          if (node.type === 'folder') {
-            return <FolderNode key={node.id} node={node} depth={0} highlightQuery={highlightQuery} selectedTextId={selectedTextId} context={context} />;
-          } else {
-            const text = node.data as Text;
-            return <TextNode key={node.id} text={text} depth={0} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} context={context} />;
-          }
-        })}
+      <div className="flex flex-col flex-1 min-h-0">
+        {context === 'library' && <RootDropZone />}
+        <div
+          ref={treeContainerRef}
+          tabIndex={0}
+          className="space-y-1 px-2 outline-none focus:outline-none overflow-y-auto flex-1 min-h-0"
+          role="tree"
+          aria-label="Library navigation tree"
+        >
+          {filteredTree.map((node) => {
+            if (node.type === 'folder') {
+              return <FolderNode key={node.id} node={node} depth={0} highlightQuery={highlightQuery} selectedTextId={selectedTextId} context={context} />;
+            } else {
+              const text = node.data as Text;
+              return <TextNode key={node.id} text={text} depth={0} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} context={context} />;
+            }
+          })}
+        </div>
       </div>
       <DragOverlay>
         {activeId ? (

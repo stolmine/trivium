@@ -1092,6 +1092,92 @@ setViewMode: (mode: 'tree' | 'icon' | 'list') => void;  // NEW
 
 ---
 
-**Documentation Version**: 2.0
+---
+
+## Post-Phase 2 Bug Fix: Drag-to-Root Zone Collision Detection
+
+**Date**: 2025-11-09
+**Status**: Fixed ✅
+
+### Problem
+
+The root drop zone in the Library page couldn't detect drops - `overId` was always `undefined` and `isOver` was always `false`. Items couldn't be moved to the root level despite the drop zone being visible.
+
+### Root Cause
+
+Three compounding issues:
+
+1. **Component Structure Anti-Pattern**: The `useDroppable` hook was called in the same component as `DndContext`, which @dnd-kit documentation explicitly warns against. This prevented proper collision detection registration.
+
+2. **Missing Measuring Strategy**: The root drop zone was conditionally rendered (only shown in library context), but @dnd-kit wasn't configured to measure conditionally rendered droppables. This resulted in zero-sized collision boundaries.
+
+3. **Weak Collision Detection**: Using only `rectIntersection` collision detection was too strict and didn't account for pointer position, making drops difficult even when measurements were correct.
+
+### Solution Implemented
+
+1. **Extracted RootDropZone Component** (`src/components/library/RootDropZone.tsx`, 37 lines):
+   - Moved `useDroppable` hook to separate component
+   - Follows @dnd-kit best practices for component hierarchy
+   - Eliminates anti-pattern of hook in same component as context
+
+2. **Added Measuring Strategy** (in `LibraryTree.tsx`):
+   ```typescript
+   const measuringConfig = {
+     droppable: {
+       strategy: MeasuringStrategy.Always,
+     },
+   };
+   ```
+   - Ensures conditionally rendered droppables are measured correctly
+   - Provides accurate collision boundaries for drop detection
+
+3. **Implemented Combined Collision Detection** (in `LibraryTree.tsx`):
+   ```typescript
+   const customCollisionDetection: CollisionDetection = (args) => {
+     const pointerCollisions = pointerWithin(args);
+     if (pointerCollisions.length > 0) {
+       return pointerCollisions;
+     }
+     return closestCenter(args);
+   };
+   ```
+   - Primary: `pointerWithin` for precise pointer-based detection
+   - Fallback: `closestCenter` for more forgiving behavior
+   - Provides reliable drop zone activation
+
+### Files Changed
+
+**Created**:
+- `/Users/why/repos/trivium/src/components/library/RootDropZone.tsx` (37 lines)
+  - Standalone component with `useDroppable` hook
+  - Visual feedback with border highlight on hover
+  - FolderOpen icon and descriptive text
+
+**Modified**:
+- `/Users/why/repos/trivium/src/components/library/LibraryTree.tsx` (~50 lines changed)
+  - Removed `useDroppable` hook (moved to RootDropZone)
+  - Added `MeasuringStrategy.Always` configuration
+  - Added combined collision detection function
+  - Integrated RootDropZone component
+  - Improved layout with flex container for proper sizing
+
+### Impact
+
+- Root drop zone now reliably detects hover and drops
+- Items can be moved to top level (null parent) as intended
+- Follows @dnd-kit best practices and architecture patterns
+- No breaking changes to existing drag-and-drop functionality
+
+### Lessons Learned
+
+1. **Component Hierarchy Matters**: @dnd-kit requires proper component structure - hooks must be in child components of `DndContext`, not the same component.
+
+2. **Conditional Rendering Needs Configuration**: When droppables are conditionally rendered, `MeasuringStrategy.Always` is essential for correct collision detection.
+
+3. **Collision Detection Strategy**: Using multiple collision detection strategies (pointer + center) provides better UX than single-strategy approaches.
+
+---
+
+**Documentation Version**: 2.1
 **Last Updated**: 2025-11-09
-**Author**: Claude Code (Phase 29 Implementation - Parts 1-2)
+**Author**: Claude Code (Phase 29 Implementation - Parts 1-2 + Drag-to-Root Bug Fix)

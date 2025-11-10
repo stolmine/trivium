@@ -1,6 +1,6 @@
 # Trivium - Development Progress
 
-## Current Status: Library Page - Multi-Selection (Phase 2 of 7) Complete ✅
+## Current Status: Library Page - Multi-Selection (Phase 2 of 7) Complete ✅ + Drag-to-Root Bug Fix
 
 **Branch**: `29_libraryPage`
 **Last Updated**: 2025-11-09
@@ -207,6 +207,24 @@ interface LibraryState {
 - Range selection (100 items): < 5ms
 - Set membership test: O(1)
 - SelectionToolbar render: < 1ms
+
+### Post-Phase 2 Bug Fix: Drag-to-Root Zone Collision Detection
+
+**Date**: 2025-11-09
+**Status**: Fixed ✅
+
+Fixed critical bug where root drop zone couldn't detect drops (overId undefined, isOver always false). Root cause: three compounding issues.
+
+**Solution**:
+1. Extracted RootDropZone to separate component (fixes @dnd-kit anti-pattern - useDroppable must be in child component)
+2. Added MeasuringStrategy.Always for conditionally rendered droppables
+3. Implemented combined collision detection (pointerWithin + closestCenter fallback)
+
+**Files**:
+- Created: RootDropZone.tsx (37 lines)
+- Modified: LibraryTree.tsx (~50 lines changed)
+
+**Impact**: Root drop zone now reliably detects hover and drops. Items can be moved to top level as intended.
 
 ### Next Phases (3-7)
 
