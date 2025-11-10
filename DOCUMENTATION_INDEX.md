@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-11-10 (Phase 29: Library Page Polish Improvements Complete)
+Last Updated: 2025-11-10 (Phase 29: Library Page Housekeeping Improvements Complete)
 
 ---
 

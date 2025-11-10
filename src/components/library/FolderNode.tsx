@@ -3,7 +3,6 @@ import { Folder, FolderOpen, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
 import { useLibraryStore } from '../../stores/library';
-import { shouldReduceMotion } from '../../lib/animations';
 import { FolderContextMenu } from './FolderContextMenu';
 import { TextNode } from './TextNode';
 import { useFolderProgress } from '../../lib/hooks/useTextProgress';
@@ -164,8 +163,7 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
               : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
             isOver && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
-            draggable.isDragging && 'opacity-50',
-            !shouldReduceMotion() && 'transition-colors duration-150'
+            draggable.isDragging && 'opacity-50'
           )}
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}

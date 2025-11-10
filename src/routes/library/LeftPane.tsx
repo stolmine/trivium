@@ -4,7 +4,7 @@ import { useLibraryStore } from '../../stores/library';
 import { LibraryTree } from '../../components/library/LibraryTree';
 import { LibrarySearchBar } from '../../components/library/LibrarySearchBar';
 import { SelectionToolbar } from '../../components/library/SelectionToolbar';
-import { ViewModeToggle } from '../../components/library/ViewModeToggle';
+import { LibraryHeader } from '../../components/library/LibraryHeader';
 import { BreadcrumbNav } from '../../components/library/BreadcrumbNav';
 import { IconGridView } from '../../components/library/IconGridView';
 import { ListView } from '../../components/library/ListView';
@@ -48,13 +48,9 @@ export function LeftPane({ width }: LeftPaneProps) {
       )}
       style={{ width: `${width}%` }}
     >
-      <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
-        <h2 className="text-lg font-semibold">Library</h2>
-      </div>
+      <LibraryHeader />
 
       {isSearchOpen && <LibrarySearchBar context="library" />}
-
-      <ViewModeToggle />
 
       {(viewMode === 'icon' || viewMode === 'list') && <BreadcrumbNav />}
 

@@ -1,7 +1,8 @@
-import { ChevronRight, Home } from 'lucide-react';
+import { ChevronRight, Home, ArrowUp } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useLibraryStore } from '../../stores/library';
 import { cn } from '../../lib/utils';
+import { getModifierKey } from '../../lib/utils/platform';
 
 export function BreadcrumbNav() {
   const [, setSearchParams] = useSearchParams();
@@ -37,6 +38,10 @@ export function BreadcrumbNav() {
   };
 
   const breadcrumbs = buildBreadcrumbPath();
+  const mod = getModifierKey();
+
+  const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
+  const parentFolderId = currentFolder?.parentId ?? null;
 
   return (
     <div className="flex items-center gap-1 px-4 py-2 border-b border-sidebar-border overflow-x-auto">
@@ -62,6 +67,17 @@ export function BreadcrumbNav() {
           </button>
         </div>
       ))}
+      {currentFolderId !== null && (
+        <button
+          onClick={() => navigateToFolder(parentFolderId)}
+          className="flex items-center gap-1.5 px-2 py-1 ml-2 rounded text-xs font-medium transition-colors text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+          aria-label="Navigate to parent folder"
+          title={`Up one level (${mod}+↑)`}
+        >
+          <ArrowUp className="h-3.5 w-3.5" />
+          <span>Up</span>
+        </button>
+      )}
     </div>
   );
 }

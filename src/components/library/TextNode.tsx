@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useDraggable } from '@dnd-kit/core';
 import { cn } from '../../lib/utils';
 import { useLibraryStore } from '../../stores/library';
-import { shouldReduceMotion } from '../../lib/animations';
 import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
 import { useTextProgress } from '../../lib/hooks/useTextProgress';
@@ -134,8 +133,7 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
           : isSelected
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
           : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
-        isDragging && 'opacity-50',
-        !shouldReduceMotion() && 'transition-colors duration-150'
+        isDragging && 'opacity-50'
       )}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}

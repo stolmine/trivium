@@ -358,6 +358,39 @@ Transform the Library page from a simple tree view into a **powerful, Mac Finder
    - Added Cmd/Ctrl+↑ to KEYBOARD_SHORTCUTS.md
    - Comprehensive post-phase documentation
 
+#### Additional Housekeeping Improvements (Complete ✅)
+
+**Date**: 2025-11-10
+
+1. **Header Button Visibility Logic**
+   - Sort button hidden on list view (list has column sorting)
+   - Collapse/expand all only shows on tree view
+   - Context-appropriate controls reduce clutter
+
+2. **Right-Click Context Menus**
+   - Added context menus to IconGridView and ListView
+   - Folders: Create Subfolder, Rename, Delete
+   - Texts: Rename, Delete
+   - Faster access to common operations
+
+3. **Up Button Moved to Breadcrumb**
+   - Moved from standalone button to breadcrumb bar
+   - Appears to right of directory path
+   - Keyboard shortcut Cmd/Ctrl+↑ still works
+   - More intuitive location
+
+4. **List View Stats Loading Fixed**
+   - Added statistics cache with parallel loading
+   - Size, progress, and flashcard counts now display correctly
+   - Parallel API calls (max 100ms for all items)
+   - Smooth scrolling with visible items prioritized
+
+5. **Selection Animation Easing Removed**
+   - Removed transition-colors from all views
+   - Selection changes now instant
+   - Better keyboard navigation feedback
+   - Matches Finder/Explorer behavior
+
 #### Implementation Plan
 
 **Step 1: ViewModeToggle UI (1 hour)**

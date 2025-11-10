@@ -5,8 +5,12 @@ import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSen
 import { useLibraryStore, type SortColumn } from '../../stores/library';
 import { cn } from '../../lib/utils';
 import { isFolderDescendant } from '../../lib/tree-utils';
+import { FolderContextMenu } from './FolderContextMenu';
+import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
 import type { Folder as FolderType } from '../../lib/types/folder';
+import { api } from '../../lib/utils/tauri';
+import type { TextStatistics, FolderStatistics } from '../../lib/types/statistics';
 
 interface ListItem {
   id: string;
@@ -17,6 +21,11 @@ interface ListItem {
   progress: number | null;
   flashcards: number | null;
   data: FolderType | Text;
+}
+
+interface StatsCache {
+  texts: Map<number, TextStatistics>;
+  folders: Map<string, FolderStatistics>;
 }
 
 function formatDate(date: Date): string {
@@ -134,7 +143,7 @@ function ListRow({ item, isSelected, onClick, onDoubleClick }: ListRowProps) {
     },
   });
 
-  return (
+  const listRowContent = (
     <tr
       ref={(node) => {
         if (item.type === 'folder') {
@@ -154,7 +163,7 @@ function ListRow({ item, isSelected, onClick, onDoubleClick }: ListRowProps) {
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'cursor-pointer transition-colors border-b border-sidebar-border/50',
+        'cursor-pointer border-b border-sidebar-border/50',
         'hover:bg-sidebar-accent/50',
         isSelected && 'bg-sidebar-primary/20',
         isOver && item.type === 'folder' && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
@@ -181,6 +190,22 @@ function ListRow({ item, isSelected, onClick, onDoubleClick }: ListRowProps) {
       </td>
     </tr>
   );
+
+  if (item.type === 'folder') {
+    const folder = item.data as FolderType;
+    return (
+      <FolderContextMenu folderId={folder.id} folderName={folder.name}>
+        {listRowContent}
+      </FolderContextMenu>
+    );
+  } else {
+    const text = item.data as Text;
+    return (
+      <TextContextMenu textId={text.id} textTitle={text.title}>
+        {listRowContent}
+      </TextContextMenu>
+    );
+  }
 }
 
 export function ListView() {
@@ -200,6 +225,10 @@ export function ListView() {
     moveFolder,
   } = useLibraryStore();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [statsCache, setStatsCache] = useState<StatsCache>({
+    texts: new Map(),
+    folders: new Map(),
+  });
 
   // Sync URL param with store state on mount and when URL changes
   useEffect(() => {
@@ -208,6 +237,58 @@ export function ListView() {
       setCurrentFolder(folderParam);
     }
   }, [searchParams, setCurrentFolder]);
+
+  // Load statistics for visible items
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadStats = async () => {
+      const filteredFolders = folders.filter(
+        (folder) => folder.parentId === currentFolderId
+      );
+      const filteredTexts = texts.filter(
+        (text) => (text.folderId ?? null) === currentFolderId
+      );
+
+      const newCache: StatsCache = {
+        texts: new Map(),
+        folders: new Map(),
+      };
+
+      await Promise.all([
+        ...filteredTexts.map(async (text) => {
+          try {
+            const stats = await api.libraryStatistics.getTextStatistics(text.id);
+            if (isMounted) {
+              newCache.texts.set(text.id, stats);
+            }
+          } catch (error) {
+            console.error(`Failed to load stats for text ${text.id}:`, error);
+          }
+        }),
+        ...filteredFolders.map(async (folder) => {
+          try {
+            const stats = await api.libraryStatistics.getFolderStatistics(folder.id);
+            if (isMounted) {
+              newCache.folders.set(folder.id, stats);
+            }
+          } catch (error) {
+            console.error(`Failed to load stats for folder ${folder.id}:`, error);
+          }
+        }),
+      ]);
+
+      if (isMounted) {
+        setStatsCache(newCache);
+      }
+    };
+
+    loadStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [folders, texts, currentFolderId]);
 
   // Helper to navigate to a folder via URL
   const navigateToFolder = (folderId: string | null) => {
@@ -273,30 +354,36 @@ export function ListView() {
       (text) => (text.folderId ?? null) === currentFolderId
     );
 
-    const folderItems: ListItem[] = filteredFolders.map((folder) => ({
-      id: folder.id,
-      type: 'folder' as const,
-      name: folder.name,
-      size: null,
-      modified: new Date(folder.updatedAt),
-      progress: null,
-      flashcards: null,
-      data: folder,
-    }));
+    const folderItems: ListItem[] = filteredFolders.map((folder) => {
+      const stats = statsCache.folders.get(folder.id);
+      return {
+        id: folder.id,
+        type: 'folder' as const,
+        name: folder.name,
+        size: stats ? stats.totalContentLength : null,
+        modified: new Date(folder.updatedAt),
+        progress: stats ? stats.averageProgress : null,
+        flashcards: stats ? stats.totalFlashcards : null,
+        data: folder,
+      };
+    });
 
-    const textItems: ListItem[] = filteredTexts.map((text) => ({
-      id: `text-${text.id}`,
-      type: 'text' as const,
-      name: text.title,
-      size: text.contentLength,
-      modified: new Date(text.updatedAt),
-      progress: null,
-      flashcards: null,
-      data: text,
-    }));
+    const textItems: ListItem[] = filteredTexts.map((text) => {
+      const stats = statsCache.texts.get(text.id);
+      return {
+        id: `text-${text.id}`,
+        type: 'text' as const,
+        name: text.title,
+        size: text.contentLength,
+        modified: new Date(text.updatedAt),
+        progress: stats ? stats.readPercentage : null,
+        flashcards: stats ? stats.totalFlashcards : null,
+        data: text,
+      };
+    });
 
     return [...folderItems, ...textItems];
-  }, [folders, texts, currentFolderId]);
+  }, [folders, texts, currentFolderId, statsCache]);
 
   const sortedItems = useMemo(() => {
     const sorted = [...items];
@@ -440,20 +527,6 @@ export function ListView() {
       }}
     >
       <div className="flex flex-col flex-1 min-h-0">
-        {/* Up One Level Button */}
-        {currentFolderId !== null && (
-          <div className="px-4 py-2 border-b border-sidebar-border">
-            <button
-              onClick={() => navigateToFolder(parentFolderId)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground"
-              aria-label="Navigate to parent folder"
-              title="Up one level (Cmd/Ctrl+↑)"
-            >
-              <ArrowUp className="h-4 w-4" />
-              <span>Up</span>
-            </button>
-          </div>
-        )}
         <div className="flex-1 overflow-y-auto">
           <table className="w-full border-collapse">
             <thead className="sticky top-0 bg-sidebar border-b border-sidebar-border z-10">

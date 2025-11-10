@@ -1,11 +1,13 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Folder, FileText, ArrowUp } from 'lucide-react';
+import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection, useDraggable, useDroppable } from '@dnd-kit/core';
 import { useLibraryStore } from '../../stores/library';
 import { cn } from '../../lib/utils';
 import { isFolderDescendant } from '../../lib/tree-utils';
 import { RootDropZone } from './RootDropZone';
+import { FolderContextMenu } from './FolderContextMenu';
+import { TextContextMenu } from './TextContextMenu';
 import type { Text } from '../../lib/types/article';
 import type { Folder as FolderType } from '../../lib/types/folder';
 
@@ -39,7 +41,7 @@ function GridItem({ id, type, name, isSelected, onSelect, onDoubleClick, data }:
     },
   });
 
-  return (
+  const gridItemContent = (
     <div
       ref={(node) => {
         if (type === 'folder') {
@@ -59,7 +61,7 @@ function GridItem({ id, type, name, isSelected, onSelect, onDoubleClick, data }:
       onClick={onSelect}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-colors',
+        'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer',
         'hover:bg-sidebar-accent/50',
         isSelected && 'bg-sidebar-primary/20 ring-2 ring-sidebar-primary/50',
         isOver && type === 'folder' && 'bg-sidebar-primary/10 ring-2 ring-sidebar-primary',
@@ -73,6 +75,22 @@ function GridItem({ id, type, name, isSelected, onSelect, onDoubleClick, data }:
       </span>
     </div>
   );
+
+  if (type === 'folder') {
+    const folder = data as FolderType;
+    return (
+      <FolderContextMenu folderId={folder.id} folderName={folder.name}>
+        {gridItemContent}
+      </FolderContextMenu>
+    );
+  } else {
+    const text = data as Text;
+    return (
+      <TextContextMenu textId={text.id} textTitle={text.title}>
+        {gridItemContent}
+      </TextContextMenu>
+    );
+  }
 }
 
 export function IconGridView() {
@@ -291,21 +309,6 @@ export function IconGridView() {
         >
           {/* Root Drop Zone - shown when in a subfolder */}
           {currentFolderId !== null && <RootDropZone />}
-          {/* Up One Level Button */}
-          {currentFolderId !== null && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigateToFolder(parentFolderId);
-              }}
-              className="flex items-center gap-2 px-3 py-2 mb-3 rounded-lg text-sm font-medium transition-colors hover:bg-sidebar-accent/50 text-muted-foreground hover:text-sidebar-foreground"
-              aria-label="Navigate to parent folder"
-              title="Up one level (Cmd/Ctrl+↑)"
-            >
-              <ArrowUp className="h-4 w-4" />
-              <span>Up</span>
-            </button>
-          )}
           <div
             className="grid gap-3"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}

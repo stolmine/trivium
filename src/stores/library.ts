@@ -30,6 +30,7 @@ interface LibraryState {
   sortColumn: SortColumn;
   sortDirection: SortDirection;
   syncSidebarSelection: boolean;
+  isInfoViewCollapsed: boolean;
 
   loadLibrary: () => Promise<void>;
   toggleFolder: (folderId: string) => void;
@@ -65,6 +66,7 @@ interface LibraryState {
   setViewMode: (mode: ViewMode) => void;
   setCurrentFolder: (folderId: string | null) => void;
   setSortColumn: (column: SortColumn, direction?: SortDirection) => void;
+  toggleInfoViewCollapsed: () => void;
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -89,6 +91,7 @@ export const useLibraryStore = create<LibraryState>()(
       sortColumn: 'name',
       sortDirection: 'asc',
       syncSidebarSelection: false,
+      isInfoViewCollapsed: false,
 
   loadLibrary: async () => {
     set({ isLoading: true, error: null });
@@ -578,6 +581,10 @@ export const useLibraryStore = create<LibraryState>()(
       return { sortColumn: column, sortDirection: 'asc' };
     });
   },
+
+  toggleInfoViewCollapsed: () => {
+    set((state) => ({ isInfoViewCollapsed: !state.isInfoViewCollapsed }));
+  },
     }),
     {
       name: 'trivium-library-storage',
@@ -588,7 +595,8 @@ export const useLibraryStore = create<LibraryState>()(
         sortColumn: state.sortColumn,
         sortDirection: state.sortDirection,
         syncSidebarSelection: state.syncSidebarSelection,
-        libraryExpandedFolderIds: state.libraryExpandedFolderIds
+        libraryExpandedFolderIds: state.libraryExpandedFolderIds,
+        isInfoViewCollapsed: state.isInfoViewCollapsed
       }),
       storage: {
         getItem: (name) => {

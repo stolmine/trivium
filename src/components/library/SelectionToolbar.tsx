@@ -9,7 +9,7 @@ export function SelectionToolbar() {
   if (selectedItemIds.size === 0) return null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-accent border-b border-border">
+    <div className="flex items-center justify-between px-4 py-2 bg-accent border-t border-border">
       <span className="text-sm font-medium">
         {selectedItemIds.size} item{selectedItemIds.size !== 1 ? 's' : ''} selected
       </span>

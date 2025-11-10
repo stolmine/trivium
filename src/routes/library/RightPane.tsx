@@ -1,7 +1,5 @@
 import { useLibraryStore } from '../../stores/library';
-import { useFocusContextStore, shouldTrackFocus } from '../../stores/focusContext';
 import { MousePointerClick } from 'lucide-react';
-import { cn } from '../../lib/utils';
 import { TextInfoView } from '../../components/library/TextInfoView';
 import { FolderInfoView } from '../../components/library/FolderInfoView';
 import { MultiSelectInfoView } from '../../components/library/MultiSelectInfoView';
@@ -12,19 +10,6 @@ interface RightPaneProps {
 
 export function RightPane({ width }: RightPaneProps) {
   const librarySelectedItemIds = useLibraryStore(state => state.librarySelectedItemIds);
-  const { setActiveContext, isContextActive } = useFocusContextStore();
-  const isFocused = isContextActive('library-right');
-
-  // Only show focus tracking UI when on library page
-  const trackingEnabled = shouldTrackFocus();
-  const showFocusUI = trackingEnabled && isFocused;
-
-  const handleClick = () => {
-    // Only set active context if focus tracking is enabled
-    if (trackingEnabled) {
-      setActiveContext('library-right');
-    }
-  };
 
   // Determine what to render based on selection
   const selectedCount = librarySelectedItemIds.size;
@@ -32,14 +17,8 @@ export function RightPane({ width }: RightPaneProps) {
 
   return (
     <div
-      className={cn(
-        'flex flex-col bg-background overflow-y-auto',
-        // Only apply focus-related classes when focus tracking is enabled
-        trackingEnabled && 'focusable-pane library-right-pane',
-        trackingEnabled && (showFocusUI ? 'focusable-pane--focused' : 'focusable-pane--unfocused')
-      )}
+      className="flex flex-col bg-background overflow-y-auto"
       style={{ width: `${width}%` }}
-      onClick={handleClick}
     >
       {selectedCount === 0 && (
         <div className="flex flex-col items-center justify-center h-full p-8 text-center">
