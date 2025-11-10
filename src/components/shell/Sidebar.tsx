@@ -373,7 +373,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
         )}
         <div className="flex-1 overflow-y-auto min-h-0">
           {isSearchOpen && !sidebarCollapsed && <LibrarySearchBar />}
-          <LibraryTree collapsed={sidebarCollapsed} />
+          <LibraryTree collapsed={sidebarCollapsed} context="sidebar" />
         </div>
       </nav>
 

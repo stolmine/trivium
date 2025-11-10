@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { FileText, Folder, Search } from 'lucide-react';
+import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core';
+import { FileText, Folder, FolderOpen, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLibraryStore, type SortOption } from '../../stores/library';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { buildTree, isFolderDescendant, getNodeById } from '../../lib/tree-utils';
+import { cn } from '../../lib/utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
 import type { Text } from '../../lib/types/article';
@@ -12,6 +13,7 @@ import type { TreeNode } from '../../lib/types/folder';
 
 interface LibraryTreeProps {
   collapsed?: boolean;
+  context?: 'sidebar' | 'library';
 }
 
 const sortTexts = (texts: Text[], sortBy: SortOption): Text[] => {
@@ -73,12 +75,35 @@ const filterTreeByMatches = (
     .filter((node): node is TreeNode => node !== null);
 };
 
-export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
-  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, expandedFolderIds, toggleFolder, selectedItemId, selectNextItem, selectPreviousItem, expandSelectedFolder, collapseSelectedFolder } = useLibraryStore();
+export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryTreeProps) {
+  console.log('[LibraryTree] Rendering with context:', context);
+
+  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, selectedItemId, selectNextItem, selectPreviousItem, expandSelectedFolder, collapseSelectedFolder } = useLibraryStore();
+  const expandedFolderIds = useLibraryStore((state) =>
+    context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds
+  );
+  const toggleFolder = useLibraryStore((state) =>
+    context === 'library' ? state.toggleLibraryFolder : state.toggleFolder
+  );
   const { isOpen, query, matchedTextIds, matchedFolderIds, currentMatchIndex } = useLibrarySearchStore();
   const [activeId, setActiveId] = useState<string | null>(null);
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const rootDroppable = useDroppable({
+    id: 'root-drop-zone',
+    data: {
+      type: 'root',
+      accepts: ['folder', 'text']
+    },
+  });
+
+  console.log('[LibraryTree] Root droppable state:', {
+    isOver: rootDroppable.isOver,
+    nodeRef: rootDroppable.setNodeRef,
+  });
+
+  const { isOver, setNodeRef } = rootDroppable;
 
   useEffect(() => {
     loadLibrary();
@@ -191,6 +216,13 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
+    console.log('[DragEnd] Event:', {
+      activeId: active.id,
+      overId: over?.id,
+      activeData: active.data.current,
+      overData: over?.data.current,
+    });
+
     if (!over) return;
 
     const draggedData = active.data.current;
@@ -198,28 +230,36 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
 
     if (!draggedData) return;
 
-    if (draggedData.type === 'text') {
-      if (droppedData && droppedData.type === 'folder') {
+    if (over.id === 'root-drop-zone') {
+      console.log('[DragEnd] Root drop zone detected!', {
+        draggedType: draggedData.type,
+        draggedData,
+      });
+
+      if (draggedData.type === 'text') {
         const text = draggedData.text as Text;
-        const folderId = droppedData.folder.id;
-        moveTextToFolder(text.id, folderId);
-      } else if (over.id === 'root-drop-zone') {
-        const text = draggedData.text as Text;
+        console.log('[DragEnd] Moving text to root:', text.id);
         moveTextToFolder(text.id, null);
+      } else if (draggedData.type === 'folder') {
+        const folder = draggedData.folder;
+        console.log('[DragEnd] Moving folder to root:', folder.id);
+        moveFolder(folder.id, null);
       }
+      return;
     }
 
-    if (draggedData.type === 'folder') {
+    if (draggedData.type === 'text' && droppedData && droppedData.type === 'folder') {
+      const text = draggedData.text as Text;
+      const folderId = droppedData.folder.id;
+      moveTextToFolder(text.id, folderId);
+    }
+
+    if (draggedData.type === 'folder' && droppedData && droppedData.type === 'folder') {
       const folder = draggedData.folder;
+      const parentId = droppedData.folder.id;
 
-      if (droppedData && droppedData.type === 'folder') {
-        const parentId = droppedData.folder.id;
-
-        if (!isFolderDescendant(folders, parentId, folder.id)) {
-          moveFolder(folder.id, parentId);
-        }
-      } else if (over.id === 'root-drop-zone') {
-        moveFolder(folder.id, null);
+      if (!isFolderDescendant(folders, parentId, folder.id)) {
+        moveFolder(folder.id, parentId);
       }
     }
   };
@@ -274,10 +314,10 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
       <div className="space-y-1 px-2">
         {filteredTree.map((node) => {
           if (node.type === 'folder') {
-            return <FolderNode key={node.id} node={node} depth={0} collapsed={true} highlightQuery={highlightQuery} />;
+            return <FolderNode key={node.id} node={node} depth={0} collapsed={true} highlightQuery={highlightQuery} context={context} />;
           } else {
             const text = node.data as Text;
-            return <TextNode key={node.id} text={text} depth={0} collapsed={true} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />;
+            return <TextNode key={node.id} text={text} depth={0} collapsed={true} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} context={context} />;
           }
         })}
       </div>
@@ -300,12 +340,28 @@ export function LibraryTree({ collapsed = false }: LibraryTreeProps) {
         role="tree"
         aria-label="Library navigation tree"
       >
+        {context === 'library' && (
+          <div
+            ref={setNodeRef}
+            className={cn(
+              'px-4 py-2 mb-2 border-2 border-dashed rounded transition-colors',
+              isOver
+                ? 'border-sidebar-primary bg-sidebar-primary/10'
+                : 'border-border'
+            )}
+          >
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FolderOpen className="h-4 w-4" />
+              <span>Root Directory</span>
+            </div>
+          </div>
+        )}
         {filteredTree.map((node) => {
           if (node.type === 'folder') {
-            return <FolderNode key={node.id} node={node} depth={0} highlightQuery={highlightQuery} selectedTextId={selectedTextId} />;
+            return <FolderNode key={node.id} node={node} depth={0} highlightQuery={highlightQuery} selectedTextId={selectedTextId} context={context} />;
           } else {
             const text = node.data as Text;
-            return <TextNode key={node.id} text={text} depth={0} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />;
+            return <TextNode key={node.id} text={text} depth={0} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} context={context} />;
           }
         })}
       </div>

@@ -46,14 +46,25 @@ interface FolderNodeProps {
   collapsed?: boolean;
   highlightQuery?: string | null;
   selectedTextId?: number | null;
+  context?: 'sidebar' | 'library';
 }
 
-export function FolderNode({ node, depth, collapsed = false, highlightQuery = null, selectedTextId = null }: FolderNodeProps) {
-  const { expandedFolderIds, selectedItemId, toggleFolder, selectItem } = useLibraryStore();
+export function FolderNode({ node, depth, collapsed = false, highlightQuery = null, selectedTextId = null, context = 'sidebar' }: FolderNodeProps) {
+  const expandedFolderIds = useLibraryStore((state) =>
+    context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds
+  );
+  const selectedItemId = useLibraryStore((state) => state.selectedItemId);
+  const selectedItemIds = useLibraryStore((state) => state.selectedItemIds);
+  const toggleFolder = useLibraryStore((state) =>
+    context === 'library' ? state.toggleLibraryFolder : state.toggleFolder
+  );
+  const selectItem = useLibraryStore((state) => state.selectItem);
+  const selectItemMulti = useLibraryStore((state) => state.selectItemMulti);
 
   const folder = node.data as FolderType;
   const isExpanded = expandedFolderIds.has(folder.id);
   const isSelected = selectedItemId === folder.id;
+  const isMultiSelected = selectedItemIds.has(folder.id);
   const { progress } = useFolderProgress(folder.id);
   const nodeRef = useRef<HTMLDivElement>(null);
 
@@ -85,11 +96,31 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
 
   const hasChildren = node.children.length > 0;
 
-  const handleClick = () => {
-    selectItem(folder.id);
+  const handleClick = (e: React.MouseEvent) => {
+    if (context === 'sidebar') {
+      selectItem(folder.id);
+      if (hasChildren) {
+        toggleFolder(folder.id);
+      }
+    } else {
+      if (e.ctrlKey || e.metaKey) {
+        selectItemMulti(folder.id, 'toggle');
+      } else if (e.shiftKey) {
+        selectItemMulti(folder.id, 'range');
+      } else {
+        selectItemMulti(folder.id, 'single');
+      }
+    }
   };
 
   const handleDoubleClick = () => {
+    if (context === 'library' && hasChildren) {
+      toggleFolder(folder.id);
+    }
+  };
+
+  const handleChevronClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (hasChildren) {
       toggleFolder(folder.id);
     }
@@ -119,7 +150,9 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
           className={cn(
             'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
-            isSelected
+            context === 'library' && isMultiSelected
+              ? 'bg-sidebar-primary/20'
+              : isSelected
               ? 'bg-sidebar-accent text-sidebar-accent-foreground'
               : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
             isOver && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
@@ -131,13 +164,13 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
           title={collapsed ? folder.name : undefined}
         >
           {!collapsed && hasChildren && (
-            <div className="p-0.5">
+            <button onClick={handleChevronClick} className="p-0.5">
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
               ) : (
                 <ChevronRight className="h-4 w-4" />
               )}
-            </div>
+            </button>
           )}
 
           {!collapsed && !hasChildren && <div className="w-5" />}
@@ -167,11 +200,11 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
         <div>
           {node.children.map((child) => {
             if (child.type === 'folder') {
-              return <FolderNode key={child.id} node={child} depth={depth + 1} highlightQuery={highlightQuery} selectedTextId={selectedTextId} />;
+              return <FolderNode key={child.id} node={child} depth={depth + 1} highlightQuery={highlightQuery} selectedTextId={selectedTextId} context={context} />;
             } else {
               const text = child.data as Text;
               return (
-                <TextNode key={child.id} text={text} depth={depth + 1} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} />
+                <TextNode key={child.id} text={text} depth={depth + 1} highlightQuery={highlightQuery} isSearchSelected={selectedTextId === text.id} context={context} />
               );
             }
           })}

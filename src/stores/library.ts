@@ -11,18 +11,27 @@ interface LibraryState {
   folders: Folder[];
   texts: Text[];
   expandedFolderIds: Set<string>;
+  libraryExpandedFolderIds: Set<string>;
   selectedItemId: string | null;
+  selectedItemIds: Set<string>;
+  anchorItemId: string | null;
   sortBy: SortOption;
   isLoading: boolean;
   error: string | null;
   paneSizes: { left: number; right: number };
   viewMode: 'tree' | 'icon' | 'list';
+  syncSidebarSelection: boolean;
 
   loadLibrary: () => Promise<void>;
   toggleFolder: (folderId: string) => void;
+  toggleLibraryFolder: (folderId: string) => void;
   expandAllFolders: () => void;
   collapseAllFolders: () => void;
   selectItem: (itemId: string | null) => void;
+  selectItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => void;
+  selectAll: () => void;
+  clearSelection: () => void;
+  getSelectedItems: () => { folders: Folder[], texts: Text[] };
   setSortBy: (sortBy: SortOption) => void;
   selectNextItem: () => void;
   selectPreviousItem: () => void;
@@ -36,20 +45,25 @@ interface LibraryState {
   renameText: (id: number, title: string) => Promise<void>;
   deleteText: (id: number) => Promise<void>;
   setPaneSize: (left: number, right: number) => void;
+  toggleSyncSidebarSelection: () => void;
 }
 
 export const useLibraryStore = create<LibraryState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       folders: [],
       texts: [],
       expandedFolderIds: new Set<string>(),
+      libraryExpandedFolderIds: new Set<string>(),
       selectedItemId: null,
+      selectedItemIds: new Set<string>(),
+      anchorItemId: null,
       sortBy: 'date-newest',
       isLoading: false,
       error: null,
       paneSizes: { left: 40, right: 60 },
       viewMode: 'tree',
+      syncSidebarSelection: false,
 
   loadLibrary: async () => {
     set({ isLoading: true, error: null });
@@ -81,6 +95,20 @@ export const useLibraryStore = create<LibraryState>()(
     });
   },
 
+  toggleLibraryFolder: (folderId: string) => {
+    set((state) => {
+      const newExpandedIds = new Set(state.libraryExpandedFolderIds);
+
+      if (newExpandedIds.has(folderId)) {
+        newExpandedIds.delete(folderId);
+      } else {
+        newExpandedIds.add(folderId);
+      }
+
+      return { libraryExpandedFolderIds: newExpandedIds };
+    });
+  },
+
   expandAllFolders: () => {
     set((state) => {
       const allFolderIds = new Set(state.folders.map(f => f.id));
@@ -93,7 +121,108 @@ export const useLibraryStore = create<LibraryState>()(
   },
 
   selectItem: (itemId: string | null) => {
-    set({ selectedItemId: itemId });
+    set({
+      selectedItemId: itemId,
+      selectedItemIds: itemId ? new Set([itemId]) : new Set(),
+      anchorItemId: itemId,
+    });
+  },
+
+  selectItemMulti: (id: string, mode: 'single' | 'toggle' | 'range') => {
+    set((state) => {
+      const newSelectedIds = new Set(state.selectedItemIds);
+      let newAnchorId = state.anchorItemId;
+      let newSelectedItemId: string | null = id;
+
+      if (mode === 'single') {
+        newSelectedIds.clear();
+        newSelectedIds.add(id);
+        newAnchorId = id;
+      } else if (mode === 'toggle') {
+        if (newSelectedIds.has(id)) {
+          newSelectedIds.delete(id);
+          if (newSelectedIds.size === 0) {
+            newAnchorId = null;
+            newSelectedItemId = null;
+          } else {
+            newSelectedItemId = Array.from(newSelectedIds)[0];
+          }
+        } else {
+          newSelectedIds.add(id);
+          newAnchorId = id;
+        }
+      } else if (mode === 'range') {
+        if (!newAnchorId) {
+          newSelectedIds.clear();
+          newSelectedIds.add(id);
+          newAnchorId = id;
+        } else {
+          const tree = buildTree(state.folders, state.texts);
+          const flatNodes = getFlattenedVisibleNodes(tree, state.expandedFolderIds);
+
+          const anchorIndex = flatNodes.findIndex(n => n.id === newAnchorId);
+          const targetIndex = flatNodes.findIndex(n => n.id === id);
+
+          if (anchorIndex !== -1 && targetIndex !== -1) {
+            const startIndex = Math.min(anchorIndex, targetIndex);
+            const endIndex = Math.max(anchorIndex, targetIndex);
+
+            newSelectedIds.clear();
+            for (let i = startIndex; i <= endIndex; i++) {
+              newSelectedIds.add(flatNodes[i].id);
+            }
+          }
+        }
+      }
+
+      if (state.syncSidebarSelection) {
+        return {
+          selectedItemIds: newSelectedIds,
+          anchorItemId: newAnchorId,
+          selectedItemId: newSelectedItemId,
+        };
+      } else {
+        return {
+          selectedItemIds: newSelectedIds,
+          anchorItemId: newAnchorId,
+        };
+      }
+    });
+  },
+
+  selectAll: () => {
+    set((state) => {
+      const tree = buildTree(state.folders, state.texts);
+      const flatNodes = getFlattenedVisibleNodes(tree, state.expandedFolderIds);
+      const allIds = new Set(flatNodes.map(n => n.id));
+
+      return {
+        selectedItemIds: allIds,
+        selectedItemId: flatNodes.length > 0 ? flatNodes[0].id : null,
+        anchorItemId: flatNodes.length > 0 ? flatNodes[0].id : null,
+      };
+    });
+  },
+
+  clearSelection: () => {
+    set({
+      selectedItemIds: new Set(),
+      selectedItemId: null,
+      anchorItemId: null,
+    });
+  },
+
+  getSelectedItems: () => {
+    const state = get();
+    const selectedIds = state.selectedItemIds;
+
+    const selectedFolders = state.folders.filter(folder => selectedIds.has(folder.id));
+    const selectedTexts = state.texts.filter(text => selectedIds.has(`text-${text.id}`));
+
+    return {
+      folders: selectedFolders,
+      texts: selectedTexts,
+    };
   },
 
   setSortBy: (sortBy: SortOption) => {
@@ -217,6 +346,9 @@ export const useLibraryStore = create<LibraryState>()(
         expandedFolderIds: new Set(
           Array.from(state.expandedFolderIds).filter((fid) => fid !== id)
         ),
+        libraryExpandedFolderIds: new Set(
+          Array.from(state.libraryExpandedFolderIds).filter((fid) => fid !== id)
+        ),
       }));
     } catch (error) {
       console.error('Failed to delete folder:', error);
@@ -280,12 +412,18 @@ export const useLibraryStore = create<LibraryState>()(
     const clampedRight = 100 - clampedLeft;
     set({ paneSizes: { left: clampedLeft, right: clampedRight } });
   },
+
+  toggleSyncSidebarSelection: () => {
+    set((state) => ({ syncSidebarSelection: !state.syncSidebarSelection }));
+  },
     }),
     {
       name: 'trivium-library-storage',
       partialize: (state) => ({
         paneSizes: state.paneSizes,
-        viewMode: state.viewMode
+        viewMode: state.viewMode,
+        syncSidebarSelection: state.syncSidebarSelection,
+        libraryExpandedFolderIds: state.libraryExpandedFolderIds
       }),
     }
   )

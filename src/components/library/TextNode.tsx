@@ -44,16 +44,18 @@ interface TextNodeProps {
   collapsed?: boolean;
   highlightQuery?: string | null;
   isSearchSelected?: boolean;
+  context?: 'sidebar' | 'library';
 }
 
-export function TextNode({ text, depth, collapsed = false, highlightQuery = null, isSearchSelected = false }: TextNodeProps) {
+export function TextNode({ text, depth, collapsed = false, highlightQuery = null, isSearchSelected = false, context = 'sidebar' }: TextNodeProps) {
   const navigate = useNavigate();
-  const { selectedItemId, selectItem } = useLibraryStore();
+  const { selectedItemId, selectedItemIds, selectItem, selectItemMulti } = useLibraryStore();
   const { progress } = useTextProgress(text.id);
   const nodeRef = useRef<HTMLDivElement>(null);
 
   const nodeId = `text-${text.id}`;
   const isSelected = selectedItemId === nodeId;
+  const isMultiSelected = selectedItemIds.has(nodeId);
 
   useEffect(() => {
     if ((isSearchSelected || isSelected) && nodeRef.current) {
@@ -79,12 +81,25 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
       }
     : undefined;
 
-  const handleClick = () => {
-    selectItem(nodeId);
+  const handleClick = (e: React.MouseEvent) => {
+    if (context === 'sidebar') {
+      selectItem(nodeId);
+      navigate(`/read/${text.id}`);
+    } else {
+      if (e.ctrlKey || e.metaKey) {
+        selectItemMulti(nodeId, 'toggle');
+      } else if (e.shiftKey) {
+        selectItemMulti(nodeId, 'range');
+      } else {
+        selectItemMulti(nodeId, 'single');
+      }
+    }
   };
 
   const handleDoubleClick = () => {
-    navigate(`/read/${text.id}`);
+    if (context === 'library') {
+      navigate(`/read/${text.id}`);
+    }
   };
 
   const indentStyle = collapsed ? {} : { paddingLeft: `${depth * 16 + 8}px` };
@@ -103,6 +118,8 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
         isSearchSelected
           ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-900 border border-blue-300'
+          : context === 'library' && isMultiSelected
+          ? 'bg-sidebar-primary/20'
           : isSelected
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
           : 'text-sidebar-foreground hover:bg-sidebar-accent/50',

@@ -1,6 +1,7 @@
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { LibraryTree } from '../../components/library/LibraryTree';
 import { LibrarySearchBar } from '../../components/library/LibrarySearchBar';
+import { SelectionToolbar } from '../../components/library/SelectionToolbar';
 import { cn } from '../../lib/utils';
 
 interface LeftPaneProps {
@@ -23,8 +24,10 @@ export function LeftPane({ width }: LeftPaneProps) {
 
       {isSearchOpen && <LibrarySearchBar />}
 
+      <SelectionToolbar />
+
       <div className="flex-1 overflow-y-auto min-h-0">
-        <LibraryTree />
+        <LibraryTree context="library" />
       </div>
     </div>
   );
