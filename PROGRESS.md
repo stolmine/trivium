@@ -57,6 +57,17 @@ First phase of a major library page overhaul, establishing core dual-pane layout
 
 **Impact**: Platform detection now works correctly for cross-platform hotkey tooltips (Cmd vs Ctrl).
 
+### UX Improvement: Standard File Browser Click Behavior
+
+**Problem**: Initial implementation used single-click for both selection and action, deviating from standard file browser conventions.
+
+**Solution**: Separated single-click (selection) from double-click (action):
+- **Single-click**: Only calls `selectItem()` - shows info in right pane without side effects
+- **Double-click folders**: Calls `toggleFolder()` - expands/collapses folder
+- **Double-click text**: Calls `navigate()` - opens in reading view
+
+**Impact**: Matches UX conventions from Finder, Explorer, VS Code. Right pane now usable for browsing info without triggering navigation/folder changes. Sidebar navigation unchanged (still single-click).
+
 ### Files Changed
 
 **Created (5 files)**:
@@ -66,11 +77,13 @@ First phase of a major library page overhaul, establishing core dual-pane layout
 4. `/Users/why/repos/trivium/src/routes/library/LibraryDualPane.tsx` (50 lines)
 5. `/Users/why/repos/trivium/PHASE_29_LIBRARY_PAGE.md` (documentation)
 
-**Modified (2 files)**:
+**Modified (4 files)**:
 1. `/Users/why/repos/trivium/src/stores/library.ts` - Added paneSizes, viewMode, setPaneSize (~10 lines)
 2. `/Users/why/repos/trivium/src/routes/library/index.tsx` - Replaced LibraryTree with LibraryDualPane (~3 lines)
+3. `/Users/why/repos/trivium/src/components/library/FolderNode.tsx` - Added double-click handler for folder toggle (~5 lines)
+4. `/Users/why/repos/trivium/src/components/library/TextNode.tsx` - Added double-click handler for navigation (~5 lines)
 
-**Total**: 7 files (5 created + 2 modified)
+**Total**: 9 files (5 created + 4 modified)
 
 ### Technical Details
 

@@ -81,6 +81,9 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
 
   const handleClick = () => {
     selectItem(nodeId);
+  };
+
+  const handleDoubleClick = () => {
     navigate(`/read/${text.id}`);
   };
 
@@ -107,6 +110,7 @@ export function TextNode({ text, depth, collapsed = false, highlightQuery = null
         !shouldReduceMotion() && 'transition-colors duration-150'
       )}
       onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       {...attributes}
       {...listeners}
       title={collapsed ? text.title : undefined}

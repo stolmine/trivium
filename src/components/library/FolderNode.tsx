@@ -86,10 +86,13 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
   const hasChildren = node.children.length > 0;
 
   const handleClick = () => {
+    selectItem(folder.id);
+  };
+
+  const handleDoubleClick = () => {
     if (hasChildren) {
       toggleFolder(folder.id);
     }
-    selectItem(folder.id);
   };
 
   const indentStyle = collapsed ? {} : { paddingLeft: `${depth * 16 + 8}px` };
@@ -124,6 +127,7 @@ export function FolderNode({ node, depth, collapsed = false, highlightQuery = nu
             !shouldReduceMotion() && 'transition-colors duration-150'
           )}
           onClick={handleClick}
+          onDoubleClick={handleDoubleClick}
           title={collapsed ? folder.name : undefined}
         >
           {!collapsed && hasChildren && (

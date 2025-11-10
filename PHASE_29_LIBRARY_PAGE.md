@@ -186,7 +186,7 @@ const { paneSizes } = useLibraryStore();
 5. **`/Users/why/repos/trivium/PHASE_29_LIBRARY_PAGE.md`**
    - This documentation file
 
-### Modified (2 files)
+### Modified (4 files)
 
 1. **`/Users/why/repos/trivium/src/stores/library.ts`**
    - Added `paneSizes` state (default: { left: 40, right: 60 })
@@ -199,7 +199,74 @@ const { paneSizes } = useLibraryStore();
    - 1 import, 1 component change
    - ~3 lines changed
 
-**Total:** 7 files (5 created + 2 modified)
+3. **`/Users/why/repos/trivium/src/components/library/FolderNode.tsx`**
+   - Added `handleDoubleClick` handler for folder expand/collapse
+   - Changed `onClick` to only call `selectItem()` (shows info in right pane)
+   - Single-click selects, double-click toggles folder state
+   - ~5 lines changed
+
+4. **`/Users/why/repos/trivium/src/components/library/TextNode.tsx`**
+   - Added `handleDoubleClick` handler for navigation
+   - Changed `onClick` to only call `selectItem()` (shows info in right pane)
+   - Single-click selects, double-click opens in reading view
+   - ~5 lines changed
+
+**Total:** 9 files (5 created + 4 modified)
+
+---
+
+## UX Improvement: Standard File Browser Click Behavior
+
+### Problem
+
+The initial implementation used single-click for both selection and action (opening files/toggling folders). This deviated from standard file browser conventions (Finder, Windows Explorer, VS Code) and made it difficult to preview items in the right pane without triggering navigation or folder state changes.
+
+### Solution
+
+Implemented separate single-click and double-click handlers to match standard file browser behavior:
+
+**Single-click** (selection only):
+- Calls `selectItem()` to show item details in right pane
+- No navigation or folder state changes
+- Allows users to preview item information
+
+**Double-click** (action):
+- Folders: Calls `toggleFolder()` to expand/collapse
+- Text files: Calls `navigate()` to open in reading view
+- Matches user expectations from other file browsers
+
+### Implementation Details
+
+**FolderNode.tsx**:
+```typescript
+const handleClick = () => {
+  selectItem(folder.id);  // Only select
+};
+
+const handleDoubleClick = () => {
+  if (hasChildren) {
+    toggleFolder(folder.id);  // Expand/collapse on double-click
+  }
+};
+```
+
+**TextNode.tsx**:
+```typescript
+const handleClick = () => {
+  selectItem(nodeId);  // Only select
+};
+
+const handleDoubleClick = () => {
+  navigate(`/read/${text.id}`);  // Open on double-click
+};
+```
+
+### Impact
+
+- **Improved UX**: Matches conventions from Finder, Explorer, VS Code
+- **Right pane usability**: Users can now browse item info without side effects
+- **Sidebar unchanged**: Sidebar navigation still uses single-click (intentional difference)
+- **No breaking changes**: All functionality preserved, just better organized
 
 ---
 
