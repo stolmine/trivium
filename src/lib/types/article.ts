@@ -64,3 +64,16 @@ export interface CreateTextRequest {
   isbn?: string;
   folderId?: string | null;
 }
+
+import type { ReadRange } from './reading';
+
+export interface SmartExcerpt {
+  textId: number;
+  excerpt: string;
+  startPos: number;
+  endPos: number;
+  currentPosition: number;
+  totalLength: number;
+  readRanges: ReadRange[];
+  excerptType: 'unread' | 'current' | 'beginning';
+}

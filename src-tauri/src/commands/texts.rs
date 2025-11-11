@@ -9,8 +9,11 @@
 // metadata for the frontend to display.
 
 use crate::db::Database;
+use crate::models::paragraph::Paragraph;
+use crate::models::read_range::ReadRange;
 use crate::models::text::{CreateTextRequest, Text};
 use crate::services::parser::{detect_paragraphs, store_paragraphs};
+use crate::services::range_calculator::RangeCalculator;
 use chrono::Utc;
 use serde::Serialize;
 use std::sync::Arc;
@@ -550,5 +553,189 @@ pub async fn delete_read_ranges(
 
     Ok(DeleteReadRangesResult {
         deleted_count,
+    })
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SmartExcerpt {
+    pub text_id: i64,
+    pub excerpt: String,
+    pub start_pos: i64,
+    pub end_pos: i64,
+    pub current_position: i64,
+    pub total_length: i64,
+    pub read_ranges: Vec<ReadRange>,
+    pub excerpt_type: String,
+}
+
+#[tauri::command]
+pub async fn get_smart_excerpt(
+    text_id: i64,
+    db: State<'_, Arc<Mutex<Database>>>,
+) -> Result<SmartExcerpt, String> {
+    let db = db.lock().await;
+    let pool = db.pool();
+    let user_id = 1;
+
+    let text = sqlx::query!(
+        r#"
+        SELECT id as "id!", content, content_length as "content_length!"
+        FROM texts
+        WHERE id = ?
+        "#,
+        text_id
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch text: {}", e))?;
+
+    let total_length = text.content_length;
+
+    if total_length == 0 {
+        return Ok(SmartExcerpt {
+            text_id,
+            excerpt: String::new(),
+            start_pos: 0,
+            end_pos: 0,
+            current_position: 0,
+            total_length: 0,
+            read_ranges: vec![],
+            excerpt_type: "beginning".to_string(),
+        });
+    }
+
+    let read_ranges = sqlx::query_as!(
+        ReadRange,
+        r#"
+        SELECT
+            id as "id!",
+            text_id as "text_id!",
+            user_id as "user_id!",
+            start_position as "start_position!",
+            end_position as "end_position!",
+            marked_at as "marked_at: _",
+            is_auto_completed as "is_auto_completed: bool"
+        FROM read_ranges
+        WHERE text_id = ? AND user_id = ?
+        ORDER BY start_position ASC
+        "#,
+        text_id,
+        user_id
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(|e| format!("Failed to fetch read ranges: {}", e))?;
+
+    let current_position = read_ranges
+        .iter()
+        .map(|r| r.end_position)
+        .max()
+        .unwrap_or(0);
+
+    let unread_ranges = RangeCalculator::get_unread_ranges(total_length, read_ranges.clone());
+
+    let (excerpt_start, excerpt_type) = if !unread_ranges.is_empty() {
+        let paragraphs = sqlx::query_as!(
+            Paragraph,
+            r#"
+            SELECT
+                id as "id!",
+                text_id as "text_id!",
+                paragraph_index as "paragraph_index!",
+                start_position as "start_position!",
+                end_position as "end_position!",
+                character_count as "character_count!",
+                created_at as "created_at: _"
+            FROM paragraphs
+            WHERE text_id = ?
+            ORDER BY paragraph_index ASC
+            "#,
+            text_id
+        )
+        .fetch_all(pool)
+        .await
+        .map_err(|e| format!("Failed to fetch paragraphs: {}", e))?;
+
+        let first_unread_para = paragraphs.iter().find(|p| {
+            unread_ranges
+                .iter()
+                .any(|(start, end)| p.start_position >= *start && p.start_position < *end)
+        });
+
+        match first_unread_para {
+            Some(para) => (para.start_position, "unread"),
+            None => {
+                if current_position > 0 {
+                    (current_position.saturating_sub(250).max(0), "current")
+                } else {
+                    (0, "beginning")
+                }
+            }
+        }
+    } else if current_position > 0 {
+        (current_position.saturating_sub(250).max(0), "current")
+    } else {
+        (0, "beginning")
+    };
+
+    let utf16_units: Vec<u16> = text.content.encode_utf16().collect();
+    let excerpt_start_usize = excerpt_start as usize;
+
+    if excerpt_start_usize >= utf16_units.len() {
+        return Ok(SmartExcerpt {
+            text_id,
+            excerpt: String::new(),
+            start_pos: total_length,
+            end_pos: total_length,
+            current_position,
+            total_length,
+            read_ranges,
+            excerpt_type: excerpt_type.to_string(),
+        });
+    }
+
+    let target_length = 500;
+    let mut excerpt_end_usize = (excerpt_start_usize + target_length).min(utf16_units.len());
+
+    if excerpt_end_usize < utf16_units.len() {
+        let search_start = (excerpt_end_usize.saturating_sub(50)).max(excerpt_start_usize);
+        let search_end = (excerpt_end_usize + 50).min(utf16_units.len());
+
+        let excerpt_slice: Vec<u16> = utf16_units[search_start..search_end].to_vec();
+        if let Ok(excerpt_str) = String::from_utf16(&excerpt_slice) {
+            let relative_pos = excerpt_end_usize - search_start;
+
+            if let Some(newline_pos) = excerpt_str[..relative_pos.min(excerpt_str.len())]
+                .rfind('\n')
+            {
+                let utf16_offset = excerpt_str[..newline_pos].encode_utf16().count();
+                excerpt_end_usize = search_start + utf16_offset;
+            } else if let Some(period_pos) = excerpt_str[..relative_pos.min(excerpt_str.len())]
+                .rfind(". ")
+            {
+                let utf16_offset = excerpt_str[..period_pos + 1].encode_utf16().count();
+                excerpt_end_usize = search_start + utf16_offset;
+            }
+        }
+    }
+
+    excerpt_end_usize = excerpt_end_usize
+        .max(excerpt_start_usize)
+        .min(utf16_units.len());
+
+    let excerpt_slice: Vec<u16> = utf16_units[excerpt_start_usize..excerpt_end_usize].to_vec();
+    let excerpt = String::from_utf16(&excerpt_slice)
+        .map_err(|e| format!("Failed to decode excerpt: {}", e))?;
+
+    Ok(SmartExcerpt {
+        text_id,
+        excerpt: excerpt.trim().to_string(),
+        start_pos: excerpt_start,
+        end_pos: excerpt_end_usize as i64,
+        current_position,
+        total_length,
+        read_ranges,
+        excerpt_type: excerpt_type.to_string(),
     })
 }

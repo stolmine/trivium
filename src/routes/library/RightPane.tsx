@@ -3,6 +3,7 @@ import { MousePointerClick } from 'lucide-react';
 import { TextInfoView } from '../../components/library/TextInfoView';
 import { FolderInfoView } from '../../components/library/FolderInfoView';
 import { MultiSelectInfoView } from '../../components/library/MultiSelectInfoView';
+import { TextPreviewView } from '../../components/library/TextPreviewView';
 
 interface RightPaneProps {
   width: number;
@@ -17,7 +18,7 @@ export function RightPane({ width }: RightPaneProps) {
 
   return (
     <div
-      className="flex flex-col bg-background overflow-y-auto"
+      className="flex flex-col bg-background"
       style={{ width: `${width}%` }}
     >
       {selectedCount === 0 && (
@@ -31,7 +32,10 @@ export function RightPane({ width }: RightPaneProps) {
       )}
 
       {selectedCount === 1 && firstItemId?.startsWith('text-') && (
-        <TextInfoView textId={parseInt(firstItemId.replace('text-', ''))} />
+        <div className="flex flex-col h-full overflow-y-auto">
+          <TextInfoView textId={parseInt(firstItemId.replace('text-', ''))} />
+          <TextPreviewView textId={parseInt(firstItemId.replace('text-', ''))} />
+        </div>
       )}
 
       {selectedCount === 1 && firstItemId && !firstItemId.startsWith('text-') && (

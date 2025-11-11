@@ -1,4 +1,4 @@
-export type { Article, ArticleMetadata, ReadingPosition, Text, CreateTextRequest } from './article';
+export type { Article, ArticleMetadata, ReadingPosition, Text, CreateTextRequest, SmartExcerpt } from './article';
 export type {
   Flashcard,
   ClozeNote,

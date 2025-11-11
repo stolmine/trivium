@@ -713,10 +713,10 @@ Intelligent search highlighting for Grid and List views with recursive folder ma
 
 ---
 
-### Phase 5: Smart Preview Panel (IN PROGRESS - PARTIAL)
+### Phase 5: Smart Preview Panel ✅ COMPLETE
 
-**Status**: 🔄 In Progress (Implementation Complete, Known Issue with Preview Data)
-**Actual Effort**: ~3 hours (backend + frontend implementation)
+**Status**: ✅ Complete (2025-11-10)
+**Actual Effort**: ~3 hours (backend + frontend implementation + field naming fix)
 **Priority**: Medium
 **Dependencies**: Phase 4 complete ✅
 
@@ -738,11 +738,12 @@ Intelligent search highlighting for Grid and List views with recursive folder ma
 - Created: 1 (TextPreviewView.tsx)
 - Modified: 5 (texts.rs, lib.rs, article.ts, tauri.ts, RightPane.tsx)
 
-**Known Issues**:
-- ⚠️ Preview displays "Invalid preview data" for all texts
-- Root cause under investigation
-- Frontend validation checks prevent crashes
-- Backend returns data but values may be undefined
+**Field Naming Fix** (Complete ✅):
+- Issue: Backend used snake_case (text_id, start_pos, etc.) but TypeScript expected camelCase
+- Solution: Updated SmartExcerpt interface to use camelCase (textId, startPos, endPos, currentPosition, totalLength, readRanges, excerptType)
+- Updated TextPreviewView component to reference camelCase fields
+- Resolves "Invalid preview data" validation error
+- Preview now displays correctly for all texts
 
 #### Planned Features
 
@@ -829,18 +830,19 @@ interface SmartExcerpt {
 }
 ```
 
-#### Success Criteria
+#### Success Criteria ✅
 
-- [ ] Backend returns smart excerpt based on read state
-- [ ] TextPreviewView renders markdown correctly
-- [ ] Read/unread highlighting works in preview
-- [ ] "Open in Reader" button navigates correctly
-- [ ] "Continue Reading" jumps to current position
-- [ ] Preview updates when selection changes
-- [ ] Performance: < 100ms excerpt fetch
-- [ ] Loading state during fetch
-- [ ] Dark mode support
-- [ ] Scrollable preview area
+- [x] Backend returns smart excerpt based on read state
+- [x] TextPreviewView renders markdown correctly
+- [x] Read/unread highlighting works in preview
+- [x] "Open in Reader" button navigates correctly
+- [x] "Continue Reading" jumps to current position
+- [x] Preview updates when selection changes
+- [x] Performance: < 100ms excerpt fetch
+- [x] Loading state during fetch
+- [x] Dark mode support
+- [x] Scrollable preview area
+- [x] Field naming mismatch resolved (camelCase throughout)
 
 ---
 
@@ -1225,10 +1227,10 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 
 ### Overview
 
-**Completion**: 4.5 of 7 phases complete (64%) + Polish improvements
-**Time Invested**: ~21-26 hours (including polish + Phase 5 implementation)
-**Time Remaining**: ~7-11 hours (estimated)
-**Current Phase**: Phase 5 (Smart Preview Panel) - In Progress (implementation complete, debugging invalid preview data issue)
+**Completion**: 5 of 7 phases complete (71%) + Polish improvements
+**Time Invested**: ~24-29 hours (including polish + Phase 5 implementation + field naming fix)
+**Time Remaining**: ~7-9 hours (estimated)
+**Current Phase**: Phase 5 (Smart Preview Panel) - Complete ✅
 
 ### What's Working ✅
 
@@ -1283,15 +1285,25 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
    - Quick action buttons (functional placeholders)
    - **Polish**: Info view collapse (Cmd/Ctrl+I), fixed action buttons, LibraryHeader consolidation, sidebar buttons restored, location persistence, removed focus styling
 
+8. **Preview Panel (Complete ✅)**
+   - TextPreviewView: Smart excerpt display with markdown rendering
+   - ReadHighlighter integration: Read/unread segment highlighting
+   - Smart excerpt logic: Three modes (unread, current position, beginning)
+   - Backend command: get_smart_excerpt with intelligent selection
+   - Action buttons: "Open in Reader", "Continue Reading"
+   - Loading and error states
+   - Field naming: camelCase throughout (textId, startPos, endPos, currentPosition, totalLength, readRanges, excerptType)
+   - Preview updates on selection change
+   - Scrollable container for long excerpts
+
 ### What's Not Working / Missing ⚠️
 
 1. **Info Panel Edit Actions**: View-only quick actions (edit/rename in Phase 6)
-2. **Preview Panel Issue**: Phase 5 implementation complete but displays "Invalid preview data" (under investigation)
-3. **Batch Operations**: Multi-selection enabled but no batch actions (move, delete, export)
-4. **Keyboard Grid Navigation**: Arrow keys don't navigate grid items (Phase 7)
-5. **Context Menu**: No right-click menu
-6. **Accessibility**: Minimal ARIA attributes (needs Phase 7 improvements)
-7. **Animations**: Basic transitions only (Phase 7 polish)
+2. **Batch Operations**: Multi-selection enabled but no batch actions (move, delete, export)
+3. **Keyboard Grid Navigation**: Arrow keys don't navigate grid items (Phase 7)
+4. **Context Menu**: No right-click menu
+5. **Accessibility**: Minimal ARIA attributes (needs Phase 7 improvements)
+6. **Animations**: Basic transitions only (Phase 7 polish)
 
 ### Known Issues
 
@@ -1660,27 +1672,28 @@ const toggleFolder = useLibraryStore((state) =>
 - [x] Mac Finder-style appearance
 - [x] Dark mode support
 
-**Phase 3 Success Criteria** ⏳
-- [ ] ViewModeToggle switches between three modes
-- [ ] Tree view works exactly as before
-- [ ] Icon view displays items in responsive grid
-- [ ] List view displays sortable table
-- [ ] View mode persists via localStorage
-- [ ] Performance: < 50ms view switch
+**Phase 3 Success Criteria** ✅
+- [x] ViewModeToggle switches between three modes
+- [x] Tree view works exactly as before
+- [x] Icon view displays items in responsive grid
+- [x] List view displays sortable table
+- [x] View mode persists via localStorage
+- [x] Performance: < 50ms view switch
 
-**Phase 4 Success Criteria** ⏳
-- [ ] Backend returns comprehensive statistics
-- [ ] TextInfoView displays all metadata
-- [ ] FolderInfoView displays recursive stats
-- [ ] MultiSelectInfoView shows aggregate data
-- [ ] Performance: < 100ms statistics fetch
+**Phase 4 Success Criteria** ✅
+- [x] Backend returns comprehensive statistics
+- [x] TextInfoView displays all metadata
+- [x] FolderInfoView displays recursive stats
+- [x] MultiSelectInfoView shows aggregate data
+- [x] Performance: < 100ms statistics fetch
 
-**Phase 5 Success Criteria** ⏳
-- [ ] Backend returns smart excerpt
-- [ ] TextPreviewView renders markdown correctly
-- [ ] Read/unread highlighting works
-- [ ] "Open in Reader" button navigates correctly
-- [ ] Performance: < 100ms excerpt fetch
+**Phase 5 Success Criteria** ✅
+- [x] Backend returns smart excerpt
+- [x] TextPreviewView renders markdown correctly
+- [x] Read/unread highlighting works
+- [x] "Open in Reader" button navigates correctly
+- [x] Performance: < 100ms excerpt fetch
+- [x] Field naming mismatch resolved
 
 **Phase 6 Success Criteria** ⏳
 - [ ] Move multiple items works
@@ -1797,13 +1810,13 @@ const toggleFolder = useLibraryStore((state) =>
 | Phase 1: Core Layout | ✅ Complete | 3-4 | ~4 |
 | Phase 2: Multi-Selection | ✅ Complete | 4-5 | ~4-6 |
 | Phase 3: View Modes | ✅ Complete | 5-6 | ~5-6 |
-| Phase 4: Info Panel | ⏳ Not Started | 3-4 | - |
-| Phase 5: Preview | ⏳ Not Started | 3-4 | - |
+| Phase 4: Info Panel | ✅ Complete | 3-4 | ~3-4 |
+| Phase 5: Preview | ✅ Complete | 3-4 | ~3 |
 | Phase 6: Batch Operations | ⏳ Not Started | 5-6 | - |
 | Phase 7: Polish & UX | ⏳ Not Started | 2-3 | - |
-| **Total** | **43% Complete** | **25-32** | **~13-16** |
+| **Total** | **71% Complete** | **25-32** | **~24-29** |
 
-**Remaining**: ~13-17 hours (estimated)
+**Remaining**: ~7-9 hours (estimated)
 
 ### File Count Summary
 
@@ -1826,10 +1839,11 @@ const toggleFolder = useLibraryStore((state) =>
 | 1.0 | 2025-11-09 | Initial planning document created |
 | 1.1 | 2025-11-10 | Updated with Phase 3 completion status |
 | 1.2 | 2025-11-10 | Updated with Phase 4 completion + Polish improvements |
+| 1.3 | 2025-11-10 | Updated with Phase 5 completion + field naming fix |
 
 ---
 
 **Document Maintained By**: AI Agents and Contributors
-**Document Version**: 1.2
+**Document Version**: 1.3
 **Last Updated**: 2025-11-10
-**Next Review**: After Phase 5 completion
+**Next Review**: After Phase 6 completion

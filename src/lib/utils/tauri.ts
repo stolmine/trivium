@@ -23,7 +23,8 @@ import type {
   ReadingStatistics,
   StudyTimeStats,
   TextStatistics,
-  FolderStatistics
+  FolderStatistics,
+  SmartExcerpt
 } from '../types';
 
 export async function loadArticle(id: string): Promise<Article> {
@@ -97,6 +98,9 @@ export const api = {
         editEnd,
         newContent,
       });
+    },
+    getSmartExcerpt: async (textId: number): Promise<SmartExcerpt> => {
+      return await invoke('get_smart_excerpt', { textId });
     },
   },
   reading: {

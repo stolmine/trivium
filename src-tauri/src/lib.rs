@@ -53,6 +53,7 @@ pub fn run() {
             commands::texts::update_text_with_smart_marks,
             commands::texts::delete_marks,
             commands::texts::delete_read_ranges,
+            commands::texts::get_smart_excerpt,
             commands::reading::mark_range_as_read,
             commands::reading::unmark_range_as_read,
             commands::reading::get_read_ranges,
