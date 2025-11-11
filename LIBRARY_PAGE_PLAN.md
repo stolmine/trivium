@@ -713,12 +713,36 @@ Intelligent search highlighting for Grid and List views with recursive folder ma
 
 ---
 
-### Phase 5: Smart Preview Panel (NOT STARTED)
+### Phase 5: Smart Preview Panel (IN PROGRESS - PARTIAL)
 
-**Status**: ⏳ Not Started
-**Estimated Effort**: 3-4 hours
+**Status**: 🔄 In Progress (Implementation Complete, Known Issue with Preview Data)
+**Actual Effort**: ~3 hours (backend + frontend implementation)
 **Priority**: Medium
-**Dependencies**: Phase 4 complete
+**Dependencies**: Phase 4 complete ✅
+
+#### Implementation Status
+
+**Backend (Complete ✅)**:
+- `get_smart_excerpt` command implemented in texts.rs
+- Smart excerpt logic with three modes: unread, current position, beginning
+- Read ranges fetched and included in response
+- Fixed SQL query annotation for content_length field
+
+**Frontend (Complete ✅)**:
+- TextPreviewView component created (103 lines)
+- SmartExcerpt type interface defined
+- API wrapper added to tauri.ts
+- RightPane integrated to show preview below TextInfoView
+
+**Files Changed**: 6 files total
+- Created: 1 (TextPreviewView.tsx)
+- Modified: 5 (texts.rs, lib.rs, article.ts, tauri.ts, RightPane.tsx)
+
+**Known Issues**:
+- ⚠️ Preview displays "Invalid preview data" for all texts
+- Root cause under investigation
+- Frontend validation checks prevent crashes
+- Backend returns data but values may be undefined
 
 #### Planned Features
 
@@ -1201,10 +1225,10 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 
 ### Overview
 
-**Completion**: 4 of 7 phases complete (57%) + Polish improvements
-**Time Invested**: ~18-23 hours (including polish)
-**Time Remaining**: ~10-14 hours (estimated)
-**Current Phase**: Phase 5 (Smart Preview Panel) - Not Started
+**Completion**: 4.5 of 7 phases complete (64%) + Polish improvements
+**Time Invested**: ~21-26 hours (including polish + Phase 5 implementation)
+**Time Remaining**: ~7-11 hours (estimated)
+**Current Phase**: Phase 5 (Smart Preview Panel) - In Progress (implementation complete, debugging invalid preview data issue)
 
 ### What's Working ✅
 
@@ -1262,7 +1286,7 @@ async fn delete_multiple_items(items: Vec<Item>) -> Result<DeleteResult> {
 ### What's Not Working / Missing ⚠️
 
 1. **Info Panel Edit Actions**: View-only quick actions (edit/rename in Phase 6)
-2. **Preview**: No text content preview (Phase 5)
+2. **Preview Panel Issue**: Phase 5 implementation complete but displays "Invalid preview data" (under investigation)
 3. **Batch Operations**: Multi-selection enabled but no batch actions (move, delete, export)
 4. **Keyboard Grid Navigation**: Arrow keys don't navigate grid items (Phase 7)
 5. **Context Menu**: No right-click menu

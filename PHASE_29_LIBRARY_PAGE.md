@@ -1,6 +1,6 @@
-# Phase 29: Library Page - Dual-Pane Layout (Parts 1-4 of 7)
+# Phase 29: Library Page - Dual-Pane Layout (Parts 1-5 of 7)
 
-**Status**: Phase 4 Complete - Info Panel ✅
+**Status**: Phase 5 In Progress - Smart Preview Panel (Partial) 🔄
 **Branch**: `29_libraryPage`
 **Date**: 2025-11-10
 
@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-Phase 29 marks the beginning of a major overhaul of the Library page, transforming it from a simple tree view into a powerful dual-pane file browser with modern features. **Phases 1-4 complete**, establishing the core dual-pane layout foundation, Mac-style multi-selection, three view modes (Tree, Icon/Grid, List), and comprehensive info panel with statistics that provide users with detailed metadata and quick actions.
+Phase 29 marks the beginning of a major overhaul of the Library page, transforming it from a simple tree view into a powerful dual-pane file browser with modern features. **Phases 1-4 complete, Phase 5 in progress**, establishing the core dual-pane layout foundation, Mac-style multi-selection, three view modes (Tree, Icon/Grid, List), comprehensive info panel with statistics, and smart preview panel (currently debugging invalid preview data issue).
 
 ### Phase 1 Deliverables (Complete ✅)
 
@@ -50,9 +50,17 @@ Phase 29 marks the beginning of a major overhaul of the Library page, transformi
 5. **RightPane conditional rendering** - Dynamic component switching based on selection state
 6. **Type system** - TextStatistics, FolderStatistics interfaces with full type safety
 
-### Upcoming Phases (5-7)
+### Phase 5 Deliverables (In Progress 🔄)
 
-- **Phase 5**: Preview pane for text content with markdown rendering
+1. **Backend get_smart_excerpt command** - Smart excerpt logic with three modes (unread, current, beginning)
+2. **TextPreviewView component** - Markdown rendering with ReadHighlighter for read/unread segments
+3. **SmartExcerpt type interface** - Complete type definitions for excerpt data
+4. **API wrapper** - Tauri IPC integration for getSmartExcerpt
+5. **RightPane preview integration** - Preview section below TextInfoView
+6. **Known Issue** - Invalid preview data error (under investigation)
+
+### Upcoming Phases (6-7)
+
 - **Phase 6**: Batch operations (delete, move, export)
 - **Phase 7**: Polish, keyboard navigation, accessibility
 
@@ -3255,6 +3263,255 @@ const loadStatistics = async (itemIds: string[]) => {
 ### Implementation Time
 
 ~3-4 hours (button visibility, context menus, up button relocation, stats caching, transition removal)
+
+---
+
+## Phase 5: Smart Preview Panel Implementation (Partial)
+
+**Date**: 2025-11-10
+**Status**: 🔄 In Progress (Implementation Complete, Known Issue with Preview Data)
+**Time Invested**: ~3 hours
+
+### Overview
+
+Phase 5 implements a smart preview panel that displays text excerpts in the library info pane. The system intelligently selects which part of the text to show based on reading progress: unread content, current reading position, or beginning of text.
+
+### Implementation Summary
+
+#### Backend Implementation (Complete ✅)
+
+**Command**: `get_smart_excerpt` in `texts.rs`
+
+**Smart Excerpt Logic**:
+1. **Unread Mode**: If text has read ranges, find first unread paragraph
+   - Searches through content for first paragraph not covered by read ranges
+   - Returns excerpt starting from first unread content
+   - Most useful for texts actively being read
+
+2. **Current Position Mode**: If text is partially read
+   - Uses current_position from read progress
+   - Returns excerpt around current reading position
+   - Helps users continue where they left off
+
+3. **Beginning Mode**: Fallback for unstarted texts
+   - Returns first ~500 characters
+   - Simple preview for texts not yet read
+
+**Database Query**:
+```rust
+let text = sqlx::query!(
+    r#"
+    SELECT id as "id!", content, content_length as "content_length!"
+    FROM texts
+    WHERE id = ? AND user_id = ?
+    "#,
+    text_id,
+    user_id
+)
+```
+
+**Read Ranges Fetch**:
+```rust
+let read_ranges = sqlx::query_as::<_, ReadRange>(
+    "SELECT * FROM read_ranges WHERE text_id = ? AND user_id = ?",
+)
+```
+
+**SQL Query Fix**:
+- Added `as "content_length!"` annotation to fix SQLx compile-time verification
+- Ensures content_length is treated as NOT NULL in Rust code
+
+#### Frontend Implementation (Complete ✅)
+
+**Component**: `TextPreviewView.tsx` (103 lines)
+
+**Features**:
+- Markdown rendering with ReadHighlighter
+- Read/unread segment highlighting
+- Excerpt type label ("Continue reading from here", "Current reading position", "From the beginning")
+- Action buttons:
+  - "Open in Reader" - Navigate to full reading view
+  - "Continue Reading" - Jump to current position (if available)
+- Loading and error states
+- Frontend validation to prevent crashes
+
+**Type Definition**: SmartExcerpt interface in `article.ts`
+```typescript
+export interface SmartExcerpt {
+  text_id: number;
+  excerpt: string;
+  start_pos: number;
+  end_pos: number;
+  current_position: number;
+  total_length: number;
+  read_ranges: ReadRange[];
+  excerpt_type: 'unread' | 'current' | 'beginning';
+}
+```
+
+**API Wrapper**: Added to `tauri.ts`
+```typescript
+texts: {
+  // ... existing methods
+  getSmartExcerpt: async (textId: number) =>
+    invoke<SmartExcerpt>('get_smart_excerpt', { textId }),
+}
+```
+
+**RightPane Integration**:
+- Preview section added below TextInfoView
+- Only renders for single text selections
+- Scrollable container for long excerpts
+
+### Files Changed
+
+**Created (1 file)**:
+1. `/Users/why/repos/trivium/src/components/library/TextPreviewView.tsx` - 103 lines
+   - React component with useEffect for excerpt fetching
+   - ReadHighlighter integration for read/unread rendering
+   - Action buttons for navigation
+   - Loading, error, and validation states
+
+**Modified (5 files)**:
+1. `/Users/why/repos/trivium/src-tauri/src/commands/texts.rs` - +187 lines
+   - SmartExcerpt struct definition
+   - get_smart_excerpt command implementation
+   - Smart excerpt logic with three modes
+   - SQL query fixes
+
+2. `/Users/why/repos/trivium/src-tauri/src/lib.rs` - +1 line
+   - Registered get_smart_excerpt command
+
+3. `/Users/why/repos/trivium/src/lib/types/article.ts` - +18 lines
+   - SmartExcerpt interface definition
+   - Re-exported from types/index.ts
+
+4. `/Users/why/repos/trivium/src/lib/utils/tauri.ts` - +6 lines
+   - Added getSmartExcerpt API wrapper
+
+5. `/Users/why/repos/trivium/src/routes/library/RightPane.tsx` - +8 lines
+   - Import TextPreviewView component
+   - Render preview below TextInfoView for text selections
+
+**Total**: 6 files (1 created, 5 modified)
+
+### Known Issues
+
+**Critical Issue**: Invalid Preview Data ⚠️
+
+**Symptom**:
+- Preview displays "Invalid preview data" for all texts
+- Frontend validation check failing: `typeof excerpt.start_pos !== 'number'`
+- No preview content visible to users
+
+**Validation Code** (TextPreviewView.tsx line 60):
+```typescript
+if (typeof excerpt.start_pos !== 'number' || typeof excerpt.total_length !== 'number') {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <div className="text-sm text-destructive">
+        Invalid preview data
+      </div>
+    </div>
+  );
+}
+```
+
+**Investigation Status**:
+- Backend command returns data (no error thrown)
+- Issue likely in data serialization or field mapping
+- Frontend receives response but values may be undefined
+- Validation prevents crashes but blocks feature functionality
+
+**Next Steps**:
+1. Add debug logging to backend command to verify returned values
+2. Check Tauri IPC serialization of SmartExcerpt struct
+3. Verify field names match between Rust and TypeScript
+4. Test with actual database records
+5. Consider nullable types if some fields legitimately can be null
+
+### Architecture
+
+**Data Flow**:
+```
+User selects text
+    ↓
+TextInfoView renders (shows metadata)
+    ↓
+TextPreviewView renders (below metadata)
+    ↓
+useEffect triggers on textId change
+    ↓
+api.texts.getSmartExcerpt(textId) called
+    ↓
+Tauri IPC invokes get_smart_excerpt command
+    ↓
+Backend fetches text + read_ranges
+    ↓
+Smart excerpt logic determines mode
+    ↓
+Returns SmartExcerpt struct
+    ↓
+Frontend validates data
+    ↓
+[ISSUE HERE: Validation fails]
+    ↓
+Error state displays "Invalid preview data"
+```
+
+### Success Criteria
+
+**Completed**:
+- [x] Backend command created and registered
+- [x] Smart excerpt logic implemented with three modes
+- [x] Read ranges fetched and included
+- [x] Frontend component created
+- [x] ReadHighlighter integration
+- [x] Loading and error states
+- [x] Action buttons for navigation
+- [x] RightPane integration
+- [x] Type definitions
+- [x] API wrapper
+
+**Blocked by Bug**:
+- [ ] Preview displays correctly for all texts
+- [ ] Read/unread highlighting works in preview
+- [ ] Excerpt type label shows appropriate message
+- [ ] "Continue Reading" button navigates to position
+
+**Not Yet Tested**:
+- [ ] Performance: < 100ms excerpt fetch
+- [ ] Dark mode support
+- [ ] Scrollable preview area for long excerpts
+- [ ] Preview updates when selection changes
+
+### Implementation Time
+
+~3 hours total:
+- Backend command: ~1 hour (smart excerpt logic, SQL queries)
+- Frontend component: ~1.5 hours (React component, ReadHighlighter integration)
+- Integration: ~0.5 hours (RightPane, types, API wrapper)
+
+### Next Steps
+
+1. **Debug Invalid Preview Data Issue**:
+   - Add console.log in frontend to inspect raw response
+   - Add debug output in backend command
+   - Verify field names and types match
+   - Test with actual database records
+
+2. **Once Bug Fixed**:
+   - Test all three excerpt modes (unread, current, beginning)
+   - Verify read/unread highlighting
+   - Test navigation buttons
+   - Performance testing
+   - Dark mode verification
+
+3. **Future Enhancements** (Post-Phase 5):
+   - Configurable excerpt length
+   - Mark as read/unread toggle
+   - Collapsible preview section
+   - Excerpt caching for performance
 
 ---
 
