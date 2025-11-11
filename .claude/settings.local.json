@@ -42,7 +42,8 @@
       "Bash(timeout 10 cat:*)",
       "Bash(ls:*)",
       "Bash(cargo build:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(sqlite3:*)"
     ],
     "deny": [],
     "ask": []

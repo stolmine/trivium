@@ -699,21 +699,12 @@ pub async fn get_smart_excerpt(
     let mut excerpt_end_usize = (excerpt_start_usize + target_length).min(utf16_units.len());
 
     if excerpt_end_usize < utf16_units.len() {
-        let search_start = (excerpt_end_usize.saturating_sub(50)).max(excerpt_start_usize);
-        let search_end = (excerpt_end_usize + 50).min(utf16_units.len());
+        let lookback_distance = 100;
+        let search_start = (excerpt_end_usize.saturating_sub(lookback_distance)).max(excerpt_start_usize);
 
-        let excerpt_slice: Vec<u16> = utf16_units[search_start..search_end].to_vec();
+        let excerpt_slice: Vec<u16> = utf16_units[search_start..excerpt_end_usize].to_vec();
         if let Ok(excerpt_str) = String::from_utf16(&excerpt_slice) {
-            let relative_pos = excerpt_end_usize - search_start;
-
-            if let Some(newline_pos) = excerpt_str[..relative_pos.min(excerpt_str.len())]
-                .rfind('\n')
-            {
-                let utf16_offset = excerpt_str[..newline_pos].encode_utf16().count();
-                excerpt_end_usize = search_start + utf16_offset;
-            } else if let Some(period_pos) = excerpt_str[..relative_pos.min(excerpt_str.len())]
-                .rfind(". ")
-            {
+            if let Some(period_pos) = excerpt_str.rfind(". ") {
                 let utf16_offset = excerpt_str[..period_pos + 1].encode_utf16().count();
                 excerpt_end_usize = search_start + utf16_offset;
             }

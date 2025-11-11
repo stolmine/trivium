@@ -26,7 +26,7 @@ const getSortLabel = (sortBy: SortOption): string => {
 
 export function LibraryHeader() {
   const navigate = useNavigate();
-  const { folders, sortBy, setSortBy, expandAllLibraryFolders, collapseAllLibraryFolders, createFolder, viewMode, setViewMode, isInfoViewCollapsed, toggleInfoViewCollapsed } = useLibraryStore();
+  const { folders, sortBy, setSortBy, expandAllLibraryFolders, collapseAllLibraryFolders, createFolder, viewMode, setViewMode, isInfoViewCollapsed, toggleInfoViewCollapsed, currentFolderId } = useLibraryStore();
   const openSearch = useLibrarySearchStore((state) => state.openSearch);
   const [showCreateFolderDialog, setShowCreateFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -44,7 +44,7 @@ export function LibraryHeader() {
     }
 
     const duplicateFolder = folders.find(
-      f => f.parentId === null &&
+      f => f.parentId === currentFolderId &&
       f.name.toLowerCase() === trimmedName.toLowerCase()
     );
 
@@ -53,7 +53,7 @@ export function LibraryHeader() {
     } else {
       setFolderError(null);
     }
-  }, [newFolderName, folders, showCreateFolderDialog]);
+  }, [newFolderName, folders, showCreateFolderDialog, currentFolderId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,7 +87,7 @@ export function LibraryHeader() {
     if (folderError) return;
 
     const duplicateFolder = folders.find(
-      f => f.parentId === null &&
+      f => f.parentId === currentFolderId &&
       f.name.toLowerCase() === trimmedName.toLowerCase()
     );
 
@@ -96,7 +96,7 @@ export function LibraryHeader() {
     }
 
     try {
-      await createFolder(trimmedName);
+      await createFolder(trimmedName, currentFolderId || undefined);
       setNewFolderName('');
       setShowCreateFolderDialog(false);
     } catch (error) {
@@ -265,7 +265,7 @@ export function LibraryHeader() {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Folder</DialogTitle>
+            <DialogTitle>{currentFolderId ? 'Create Subfolder' : 'Create Folder'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

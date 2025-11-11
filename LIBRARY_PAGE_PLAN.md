@@ -745,6 +745,13 @@ Intelligent search highlighting for Grid and List views with recursive folder ma
 - Resolves "Invalid preview data" validation error
 - Preview now displays correctly for all texts
 
+**Housekeeping Improvements** (Complete ✅):
+- Preview label simplified to consistent "Preview:" text (removed dynamic labels)
+- Smart sentence boundary detection with 100-char lookback and period-only breaks
+- InfoView background colors changed from bg-background to bg-sidebar for dark mode consistency
+- Context-aware folder creation with subfolder dialogs when navigating within folders
+- Files changed: 7 files (TextPreviewView.tsx, texts.rs, 3 InfoView components, LibraryHeader.tsx, Sidebar.tsx)
+
 #### Planned Features
 
 1. **Text Content Preview**

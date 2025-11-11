@@ -100,7 +100,7 @@ export function MultiSelectInfoView({ selectedItemIds }: MultiSelectInfoViewProp
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-sidebar">
       <div>
         <div className="flex items-center gap-3 mb-2">
           <Layers className="h-8 w-8 text-muted-foreground" />

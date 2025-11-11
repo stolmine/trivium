@@ -98,14 +98,14 @@ export function FolderInfoView({ folderId }: FolderInfoViewProps) {
 
   if (!stats) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="flex items-center justify-center p-12 bg-sidebar">
         <p className="text-sm text-muted-foreground">No data available</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-sidebar">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
           <Folder className="h-8 w-8 text-muted-foreground flex-shrink-0" />
@@ -117,7 +117,7 @@ export function FolderInfoView({ folderId }: FolderInfoViewProps) {
       </div>
 
       {stats.totalTexts === 0 ? (
-        <div className="rounded-lg border border-border bg-muted/50 p-6 text-center">
+        <div className="rounded-lg border border-border bg-background p-6 text-center">
           <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
           <p className="text-sm text-muted-foreground">
             This folder is empty. Add texts to get started.

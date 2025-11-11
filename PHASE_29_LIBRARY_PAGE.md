@@ -4087,6 +4087,197 @@ This investigation represents a thorough attempt to optimize Library Page select
 
 ---
 
-**Documentation Version**: 4.2
-**Last Updated**: 2025-11-10
-**Author**: Claude Code (Phase 29 Implementation - Parts 1-4: Dual-Pane Layout + Multi-Selection + Focus Tracking + View Modes + Info Panel + Polish Improvements + Housekeeping + Performance Investigation)
+## Phase 5 Housekeeping Improvements
+
+**Date**: 2025-11-11
+**Status**: Complete ✅
+
+After completing Phase 5 (Smart Preview Panel), several small housekeeping improvements were made to enhance consistency and user experience.
+
+### 1. Preview Label Changed to Consistent Text
+
+**Problem**: Preview section used dynamic labels that changed based on excerpt type ("Continue reading from here", "Current position", "Preview"), creating inconsistent UX.
+
+**Solution**: Simplified to always show "Preview:" regardless of excerpt type.
+
+**Implementation**:
+```tsx
+// Before: Dynamic labels based on excerpt type
+const getExcerptTypeLabel = () => {
+  switch (excerpt.excerptType) {
+    case 'unread':
+      return 'Continue reading from here';
+    case 'current':
+      return 'Current position';
+    case 'beginning':
+      return 'Preview';
+    default:
+      return 'Preview';
+  }
+};
+
+// After: Consistent label
+const getExcerptTypeLabel = () => {
+  return 'Preview:';
+};
+```
+
+**Impact**:
+- Cleaner, more predictable UI
+- Reduced cognitive load
+- Simpler component logic
+
+**Files Changed**: `/Users/why/repos/trivium/src/components/library/TextPreviewView.tsx`
+
+### 2. Smart Sentence Boundary Detection for Excerpts
+
+**Problem**: Backend excerpt extraction used simple character-based truncation with basic lookback (50 chars) that often cut mid-sentence. Also prioritized newline breaks over sentence boundaries, leading to awkward excerpts.
+
+**Solution**: Enhanced smart boundary detection with improved algorithm:
+- Increased lookback distance from 50 to 100 characters
+- Removed newline prioritization (newlines are paragraph breaks, not ideal excerpt boundaries)
+- Focus exclusively on period-space (". ") for sentence endings
+- Search backward from target position to find natural sentence boundary
+
+**Implementation**:
+```rust
+// Before: Short lookback with newline priority
+let search_start = (excerpt_end_usize.saturating_sub(50)).max(excerpt_start_usize);
+let search_end = (excerpt_end_usize + 50).min(utf16_units.len());
+
+// Check newlines first, then periods
+if let Some(newline_pos) = excerpt_str[..relative_pos].rfind('\n') {
+    // Break at newline
+} else if let Some(period_pos) = excerpt_str[..relative_pos].rfind(". ") {
+    // Break at period
+}
+
+// After: Longer lookback, period-only
+let lookback_distance = 100;
+let search_start = (excerpt_end_usize.saturating_sub(lookback_distance))
+    .max(excerpt_start_usize);
+
+// Only check for period-space boundaries
+if let Some(period_pos) = excerpt_str.rfind(". ") {
+    let utf16_offset = excerpt_str[..period_pos + 1].encode_utf16().count();
+    excerpt_end_usize = search_start + utf16_offset;
+}
+```
+
+**Benefits**:
+- Excerpts end at natural sentence boundaries
+- No mid-sentence cuts
+- More readable preview text
+- Better user experience when scanning content
+
+**Files Changed**: `/Users/why/repos/trivium/src-tauri/src/commands/texts.rs`
+
+### 3. InfoView Background Color Consistency for Dark Mode
+
+**Problem**: All InfoView components (TextInfoView, FolderInfoView, MultiSelectInfoView) used `bg-background` which didn't match the right pane's sidebar background color in dark mode, creating visual inconsistency.
+
+**Solution**: Changed all InfoView backgrounds from `bg-background` to `bg-sidebar` for consistent appearance with the right pane container.
+
+**Implementation**:
+```tsx
+// Before: bg-background (mismatched with pane)
+<div className="p-6 space-y-6 bg-background">
+
+// After: bg-sidebar (matches pane container)
+<div className="p-6 space-y-6 bg-sidebar">
+```
+
+**Applied To**:
+- TextInfoView main container
+- FolderInfoView main container
+- MultiSelectInfoView main container
+- TextPreviewView header section
+
+**Note**: Empty state cards within FolderInfoView kept `bg-background` intentionally to maintain visual hierarchy (card within panel).
+
+**Impact**:
+- Seamless visual flow in right pane
+- Better dark mode appearance
+- No visible seams between sections
+
+**Files Changed**:
+- `/Users/why/repos/trivium/src/components/library/TextInfoView.tsx`
+- `/Users/why/repos/trivium/src/components/library/FolderInfoView.tsx`
+- `/Users/why/repos/trivium/src/components/library/MultiSelectInfoView.tsx`
+- `/Users/why/repos/trivium/src/components/library/TextPreviewView.tsx`
+
+### 4. Context-Aware Folder Creation with Subfolder Dialogs
+
+**Problem**: "New Folder" action always created folders at root level, even when user was navigating within a subfolder. Dialog title always said "Create Folder" regardless of context.
+
+**Solution**: Made folder creation context-aware by:
+- Using `currentFolderId` from library store to determine parent folder
+- Passing parent folder ID to `createFolder()` method
+- Updating dialog title to show "Create Subfolder" when inside a folder
+- Validating uniqueness within the correct parent context
+
+**Implementation in LibraryHeader.tsx**:
+```tsx
+// Get current folder context
+const { currentFolderId } = useLibraryStore();
+
+// Validate uniqueness within current context (not just root)
+const duplicateFolder = folders.find(
+  f => f.parentId === currentFolderId &&  // Check current context
+  f.name.toLowerCase() === trimmedName.toLowerCase()
+);
+
+// Create folder with parent context
+await createFolder(trimmedName, currentFolderId || undefined);
+
+// Dynamic dialog title
+<DialogTitle>
+  {currentFolderId ? 'Create Subfolder' : 'Create Folder'}
+</DialogTitle>
+```
+
+**Same Changes Applied To**: Sidebar.tsx (for consistency when creating folders from sidebar)
+
+**Benefits**:
+- Folders created in the correct location
+- Clear dialog titles indicating subfolder creation
+- Better UX when organizing deep folder hierarchies
+- Duplicate validation scoped to current folder (allows same name in different folders)
+
+**Files Changed**:
+- `/Users/why/repos/trivium/src/components/library/LibraryHeader.tsx`
+- `/Users/why/repos/trivium/src/components/shell/Sidebar.tsx`
+
+### Summary of Phase 5 Housekeeping
+
+**Total Improvements**: 4 enhancements
+**Implementation Time**: ~1 hour
+**Files Changed**: 7 files (6 modified + 1 backend command)
+
+**Modified Files**:
+1. `/Users/why/repos/trivium/src/components/library/TextPreviewView.tsx` - Preview label consistency
+2. `/Users/why/repos/trivium/src-tauri/src/commands/texts.rs` - Smart sentence boundary detection
+3. `/Users/why/repos/trivium/src/components/library/TextInfoView.tsx` - Background color fix
+4. `/Users/why/repos/trivium/src/components/library/FolderInfoView.tsx` - Background color fix
+5. `/Users/why/repos/trivium/src/components/library/MultiSelectInfoView.tsx` - Background color fix
+6. `/Users/why/repos/trivium/src/components/library/LibraryHeader.tsx` - Context-aware folder creation
+7. `/Users/why/repos/trivium/src/components/shell/Sidebar.tsx` - Context-aware folder creation
+
+**Impact**:
+- More polished Phase 5 feature
+- Better dark mode consistency
+- Smarter excerpt generation
+- More intuitive folder creation workflow
+- Reduced UI inconsistencies
+
+**Technical Quality**:
+- No breaking changes
+- Backward compatible
+- Improved code clarity
+- Enhanced user experience
+
+---
+
+**Documentation Version**: 4.3
+**Last Updated**: 2025-11-11
+**Author**: Claude Code (Phase 29 Implementation - Parts 1-5: Dual-Pane Layout + Multi-Selection + Focus Tracking + View Modes + Info Panel + Smart Preview Panel + Polish Improvements + Housekeeping + Performance Investigation)

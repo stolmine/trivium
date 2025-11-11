@@ -51,7 +51,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
   const wholeWord = useLibrarySearchStore((state) => state.sidebar.wholeWord);
   const setMatches = useLibrarySearchStore((state) => state.setMatches);
   const openSearch = useLibrarySearchStore((state) => state.openSearch);
-  const { folders, texts, sortBy, setSortBy, expandAllLibraryFolders, collapseAllLibraryFolders, createFolder } = useLibraryStore();
+  const { folders, texts, sortBy, setSortBy, expandAllLibraryFolders, collapseAllLibraryFolders, createFolder, currentFolderId } = useLibraryStore();
   const showLibraryControlsInSidebar = useSettingsStore((state) => state.showLibraryControlsInSidebar);
   const [navCollapsed, setNavCollapsed] = useState(() => {
     const saved = localStorage.getItem('trivium-nav-collapsed');
@@ -90,7 +90,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     if (folderError) return;
 
     const duplicateFolder = folders.find(
-      f => f.parentId === null &&
+      f => f.parentId === currentFolderId &&
       f.name.toLowerCase() === trimmedName.toLowerCase()
     );
 
@@ -99,7 +99,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     }
 
     try {
-      await createFolder(trimmedName);
+      await createFolder(trimmedName, currentFolderId || undefined);
       setNewFolderName('');
       setShowCreateFolderDialog(false);
     } catch (error) {
@@ -134,7 +134,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     }
 
     const duplicateFolder = folders.find(
-      f => f.parentId === null &&
+      f => f.parentId === currentFolderId &&
       f.name.toLowerCase() === trimmedName.toLowerCase()
     );
 
@@ -143,7 +143,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
     } else {
       setFolderError(null);
     }
-  }, [newFolderName, folders, showCreateFolderDialog]);
+  }, [newFolderName, folders, showCreateFolderDialog, currentFolderId]);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -385,7 +385,7 @@ export function Sidebar({ onShowHelp }: SidebarProps) {
       }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Folder</DialogTitle>
+            <DialogTitle>{currentFolderId ? 'Create Subfolder' : 'Create Folder'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">

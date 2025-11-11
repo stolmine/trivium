@@ -18,7 +18,7 @@ export function RightPane({ width }: RightPaneProps) {
 
   return (
     <div
-      className="flex flex-col bg-background"
+      className="flex flex-col bg-sidebar"
       style={{ width: `${width}%` }}
     >
       {selectedCount === 0 && (

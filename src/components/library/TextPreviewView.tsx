@@ -68,21 +68,12 @@ export function TextPreviewView({ textId }: TextPreviewViewProps) {
   }
 
   const getExcerptTypeLabel = () => {
-    switch (excerpt.excerptType) {
-      case 'unread':
-        return 'Continue reading from here';
-      case 'current':
-        return 'Current position';
-      case 'beginning':
-        return 'Preview';
-      default:
-        return 'Preview';
-    }
+    return 'Preview:';
   };
 
   return (
-    <div className="border-t border-border">
-      <div className="flex items-center justify-between px-4 py-2 bg-muted/50">
+    <div className="border-t border-border bg-sidebar">
+      <div className="flex items-center justify-between px-4 py-2">
         <div className="text-xs text-muted-foreground">
           {getExcerptTypeLabel()}
         </div>

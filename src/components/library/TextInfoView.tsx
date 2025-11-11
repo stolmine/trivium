@@ -134,7 +134,7 @@ export function TextInfoView({ textId }: TextInfoViewProps) {
   const folder = text.folderId ? folders.find(f => f.id === text.folderId) : null;
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 bg-sidebar">
       <div>
         <div className="flex items-start gap-2 mb-2">
           <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
