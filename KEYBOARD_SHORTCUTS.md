@@ -2,7 +2,7 @@
 
 > **Platform Note**: On macOS, use ⌘ (Command) instead of Ctrl for all shortcuts listed with Ctrl.
 
-Last Updated: 2025-11-10 (Phase 29: Library Navigation - Up One Level Shortcut)
+Last Updated: 2025-11-11 (Phase 6: Batch Operations - Select All and Delete Shortcuts)
 
 ---
 
@@ -212,6 +212,13 @@ These shortcuts control the UI appearance and help system.
 | Open Selected Match | `Enter` | Open selected search result |
 | Close Search | `Esc` | Close search bar |
 
+### Batch Operations
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Select All | `Ctrl + A` | `⌘ + A` | Select all visible items in library |
+| Delete Selected | `Delete` or `Backspace` | `Delete` or `Backspace` | Delete selected items (opens confirmation) |
+
 ---
 
 ## Modal Dialogs
@@ -293,6 +300,15 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-11-11 (Phase 6 - Batch Operations Integration)
+- Added "Batch Operations" section to Library Navigation
+- New keyboard shortcuts:
+  - Ctrl+A / Cmd+A: Select all visible items in library
+  - Delete / Backspace: Delete selected items (opens confirmation dialog)
+- Keyboard shortcuts active on /library page
+- Platform-aware modifier keys (Cmd on macOS, Ctrl on Windows/Linux)
+- Prevents default browser behavior for these shortcuts
 
 ### 2025-11-10 (Phase 29 - Library Navigation & Polish Enhancements)
 - Added keyboard shortcut for "Navigate up one level" in grid/list views

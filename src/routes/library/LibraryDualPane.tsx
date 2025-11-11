@@ -1,18 +1,23 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useLibraryStore } from '../../stores/library';
 import { LeftPane } from './LeftPane';
 import { RightPane } from './RightPane';
 import { ResizableHandle } from '../../components/library/ResizableHandle';
+import { isMac } from '../../lib/utils/platform';
+import { BatchDeleteDialog } from '../../components/library/BatchDeleteDialog';
 
 export function LibraryDualPane() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const paneSizes = useLibraryStore((state) => state.paneSizes);
   const setPaneSize = useLibraryStore((state) => state.setPaneSize);
   const loadLibrary = useLibraryStore((state) => state.loadLibrary);
   const currentFolderId = useLibraryStore((state) => state.currentFolderId);
   const setCurrentFolder = useLibraryStore((state) => state.setCurrentFolder);
   const isInfoViewCollapsed = useLibraryStore((state) => state.isInfoViewCollapsed);
+  const selectAllLibrary = useLibraryStore((state) => state.selectAllLibrary);
+  const librarySelectedItemIds = useLibraryStore((state) => state.librarySelectedItemIds);
 
   // Load library data on mount
   useEffect(() => {
@@ -37,15 +42,48 @@ export function LibraryDualPane() {
     setPaneSize(leftWidth, 100 - leftWidth);
   };
 
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+      if (modKey && e.key === 'a') {
+        e.preventDefault();
+        selectAllLibrary();
+        return;
+      }
+
+      if ((e.key === 'Delete' || e.key === 'Backspace') && librarySelectedItemIds.size > 0) {
+        e.preventDefault();
+        setIsDeleteDialogOpen(true);
+        return;
+      }
+    },
+    [selectAllLibrary, librarySelectedItemIds]
+  );
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
+
   return (
-    <div className="h-full flex flex-row overflow-hidden">
-      <LeftPane width={isInfoViewCollapsed ? 100 : paneSizes.left} />
-      {!isInfoViewCollapsed && (
-        <>
-          <ResizableHandle onResize={handleResize} />
-          <RightPane width={paneSizes.right} />
-        </>
-      )}
-    </div>
+    <>
+      <div className="h-full flex flex-row overflow-hidden">
+        <LeftPane width={isInfoViewCollapsed ? 100 : paneSizes.left} />
+        {!isInfoViewCollapsed && (
+          <>
+            <ResizableHandle onResize={handleResize} />
+            <RightPane width={paneSizes.right} />
+          </>
+        )}
+      </div>
+
+      <BatchDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      />
+    </>
   );
 }

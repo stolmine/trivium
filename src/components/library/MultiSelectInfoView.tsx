@@ -3,6 +3,9 @@ import { Button } from '../../lib/components/ui/button';
 import { Layers, FileText, Activity, Brain } from 'lucide-react';
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '../../lib/utils/tauri';
+import BatchMoveDialog from './BatchMoveDialog';
+import { BatchDeleteDialog } from './BatchDeleteDialog';
+import { ExportDialog } from './ExportDialog';
 
 interface MultiSelectInfoViewProps {
   selectedItemIds: Set<string>;
@@ -18,6 +21,9 @@ export function MultiSelectInfoView({ selectedItemIds }: MultiSelectInfoViewProp
   const getSelectedLibraryItems = useLibraryStore((state) => state.getSelectedLibraryItems);
   const [textStats, setTextStats] = useState<Map<number, TextStats>>(new Map());
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
 
   const { folders: selectedFolders, texts: selectedTexts } = useMemo(
     () => getSelectedLibraryItems(),
@@ -160,17 +166,35 @@ export function MultiSelectInfoView({ selectedItemIds }: MultiSelectInfoViewProp
           Batch Actions
         </h3>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" disabled title="Coming in Phase 6">
+          <Button variant="outline" onClick={() => setIsMoveDialogOpen(true)}>
             Move
           </Button>
-          <Button variant="destructive" disabled title="Coming in Phase 6">
+          <Button variant="destructive" onClick={() => setIsDeleteDialogOpen(true)}>
             Delete
           </Button>
-          <Button variant="outline" disabled title="Coming in Phase 6">
-            Export
-          </Button>
+          {(selectedTexts.length > 0 || selectedFolders.length > 0) && (
+            <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
+              Export
+            </Button>
+          )}
         </div>
       </div>
+
+      <BatchMoveDialog
+        open={isMoveDialogOpen}
+        onClose={() => setIsMoveDialogOpen(false)}
+        selectedItems={{ folders: selectedFolders, texts: selectedTexts }}
+      />
+
+      <BatchDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      />
+
+      <ExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+      />
     </div>
   );
 }

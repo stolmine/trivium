@@ -373,4 +373,15 @@ export const api = {
       return await invoke('get_folder_statistics', { folderId });
     },
   },
+  batch: {
+    moveMultipleItems: async (items: { type: 'folder' | 'text'; id: string | number }[], targetFolderId: string | null): Promise<void> => {
+      return await invoke('move_multiple_items', { items, targetFolderId });
+    },
+    deleteMultipleItems: async (items: { type: 'folder' | 'text'; id: string | number }[]): Promise<{ deletedCount: number }> => {
+      return await invoke('delete_multiple_items', { items });
+    },
+    exportTexts: async (textIds: number[], format: string): Promise<void> => {
+      return await invoke('export_texts', { textIds, format });
+    },
+  },
 };

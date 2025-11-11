@@ -8,3 +8,4 @@ pub mod wikipedia;
 pub mod settings;
 pub mod statistics;
 pub mod library_statistics;
+pub mod batch_operations;

@@ -317,14 +317,30 @@ export const useLibraryStore = create<LibraryState>()(
 
   selectAllLibrary: () => {
     set((state) => {
-      const tree = buildTree(state.folders, state.texts);
-      const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
-      const allIds = new Set(flatNodes.map(n => n.id));
+      let allIds: Set<string>;
+
+      // In tree view: select all visible nodes
+      // In icon/list view: select only items in current folder
+      if (state.viewMode === 'tree') {
+        const tree = buildTree(state.folders, state.texts);
+        const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
+        allIds = new Set(flatNodes.map(n => n.id));
+      } else {
+        // Icon or list view: only select items in current folder
+        const currentFolderId = state.currentFolderId;
+        const foldersInView = state.folders
+          .filter(f => f.parentId === currentFolderId)
+          .map(f => f.id);
+        const textsInView = state.texts
+          .filter(t => (t.folderId ?? null) === currentFolderId)
+          .map(t => `text-${t.id}`); // Use text-{id} format to match IconGridView/ListView
+        allIds = new Set([...foldersInView, ...textsInView]);
+      }
 
       return {
         librarySelectedItemIds: allIds,
-        librarySelectedItemId: flatNodes.length > 0 ? flatNodes[0].id : null,
-        libraryAnchorItemId: flatNodes.length > 0 ? flatNodes[0].id : null,
+        librarySelectedItemId: allIds.size > 0 ? Array.from(allIds)[0] : null,
+        libraryAnchorItemId: allIds.size > 0 ? Array.from(allIds)[0] : null,
       };
     });
   },

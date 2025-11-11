@@ -112,7 +112,10 @@ pub fn run() {
             commands::statistics::get_reading_stats,
             commands::statistics::get_study_time_stats,
             commands::library_statistics::get_text_statistics,
-            commands::library_statistics::get_folder_statistics
+            commands::library_statistics::get_folder_statistics,
+            commands::batch_operations::move_multiple_items,
+            commands::batch_operations::delete_multiple_items,
+            commands::batch_operations::export_texts
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
