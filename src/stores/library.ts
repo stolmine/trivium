@@ -33,6 +33,10 @@ interface LibraryState {
   syncSidebarSelection: boolean;
   isInfoViewCollapsed: boolean;
 
+  // Keyboard navigation state (separate from selection)
+  focusedItemId: string | null;
+  gridColumns: number;
+
   loadLibrary: () => Promise<void>;
   toggleFolder: (folderId: string) => void;
   toggleLibraryFolder: (folderId: string) => void;
@@ -68,6 +72,14 @@ interface LibraryState {
   setCurrentFolder: (folderId: string | null) => void;
   setSortColumn: (column: SortColumn, direction?: SortDirection) => void;
   toggleInfoViewCollapsed: () => void;
+
+  // Keyboard navigation actions
+  setFocusedItem: (itemId: string | null) => void;
+  focusNextItem: (direction: 'up' | 'down' | 'left' | 'right') => void;
+  focusFirstItem: () => void;
+  focusLastItem: () => void;
+  setGridColumns: (columns: number) => void;
+  getFlattenedItems: () => string[];
 }
 
 export const useLibraryStore = create<LibraryState>()(
@@ -93,6 +105,8 @@ export const useLibraryStore = create<LibraryState>()(
       sortDirection: 'asc',
       syncSidebarSelection: false,
       isInfoViewCollapsed: false,
+      focusedItemId: null,
+      gridColumns: 6,
 
   loadLibrary: async () => {
     set({ isLoading: true, error: null });
@@ -626,6 +640,121 @@ export const useLibraryStore = create<LibraryState>()(
 
   toggleInfoViewCollapsed: () => {
     set((state) => ({ isInfoViewCollapsed: !state.isInfoViewCollapsed }));
+  },
+
+  setFocusedItem: (itemId: string | null) => {
+    set({ focusedItemId: itemId });
+  },
+
+  focusNextItem: (direction: 'up' | 'down' | 'left' | 'right') => {
+    set((state) => {
+      const items = state.getFlattenedItems();
+      if (items.length === 0) return {};
+
+      // If no focused item, focus first item
+      if (!state.focusedItemId) {
+        return { focusedItemId: items[0] };
+      }
+
+      const currentIndex = items.findIndex(id => id === state.focusedItemId);
+      if (currentIndex === -1) {
+        return { focusedItemId: items[0] };
+      }
+
+      let newIndex = currentIndex;
+
+      // Handle navigation based on view mode
+      if (state.viewMode === 'tree' || state.viewMode === 'list') {
+        // 1D navigation
+        if (direction === 'up') {
+          newIndex = Math.max(0, currentIndex - 1);
+        } else if (direction === 'down') {
+          newIndex = Math.min(items.length - 1, currentIndex + 1);
+        }
+        // Left/Right handled separately for tree view (expand/collapse)
+      } else if (state.viewMode === 'icon') {
+        // 2D grid navigation
+        const cols = state.gridColumns;
+
+        switch (direction) {
+          case 'left':
+            newIndex = currentIndex - 1;
+            // Wrap to previous row end
+            if (newIndex < 0) {
+              newIndex = items.length - 1;
+            }
+            break;
+          case 'right':
+            newIndex = currentIndex + 1;
+            // Wrap to next row start
+            if (newIndex >= items.length) {
+              newIndex = 0;
+            }
+            break;
+          case 'up':
+            newIndex = currentIndex - cols;
+            if (newIndex < 0) {
+              // Wrap to bottom, same column
+              const col = currentIndex % cols;
+              const lastFullRow = Math.floor((items.length - 1) / cols) * cols;
+              newIndex = lastFullRow + col;
+              if (newIndex >= items.length) {
+                newIndex = items.length - 1;
+              }
+            }
+            break;
+          case 'down':
+            newIndex = currentIndex + cols;
+            if (newIndex >= items.length) {
+              // Wrap to top, same column
+              const col = currentIndex % cols;
+              newIndex = col;
+            }
+            break;
+        }
+      }
+
+      return { focusedItemId: items[newIndex] };
+    });
+  },
+
+  focusFirstItem: () => {
+    set((state) => {
+      const items = state.getFlattenedItems();
+      return { focusedItemId: items.length > 0 ? items[0] : null };
+    });
+  },
+
+  focusLastItem: () => {
+    set((state) => {
+      const items = state.getFlattenedItems();
+      return { focusedItemId: items.length > 0 ? items[items.length - 1] : null };
+    });
+  },
+
+  setGridColumns: (columns: number) => {
+    set({ gridColumns: columns });
+  },
+
+  getFlattenedItems: () => {
+    const state = get();
+
+    if (state.viewMode === 'tree') {
+      // Tree view: use flattened visible nodes
+      const tree = buildTree(state.folders, state.texts);
+      const flatNodes = getFlattenedVisibleNodes(tree, state.libraryExpandedFolderIds);
+      return flatNodes.map(n => n.id);
+    } else {
+      // Icon/List view: items in current folder only
+      const currentFolderId = state.currentFolderId;
+      const foldersInView = state.folders
+        .filter(f => f.parentId === currentFolderId)
+        .map(f => f.id);
+      const textsInView = state.texts
+        .filter(t => (t.folderId ?? null) === currentFolderId)
+        .map(t => `text-${t.id}`);
+      return [...foldersInView, ...textsInView];
+    }
   },
     }),
     {

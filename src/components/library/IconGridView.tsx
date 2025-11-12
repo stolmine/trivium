@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Folder, FileText } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors, pointerWithin, closestCenter, MeasuringStrategy, type CollisionDetection, useDraggable, useDroppable } from '@dnd-kit/core';
@@ -25,6 +25,7 @@ interface GridItemProps {
 const GridItem = React.memo(function GridItem({ id, type, name, onSelect, onDoubleClick, data, isHighlighted = false }: GridItemProps) {
   // Optimized selector - only re-render when THIS item's selection state changes
   const isSelected = useLibraryStore((state) => state.librarySelectedItemIds.has(id));
+  const isFocused = useLibraryStore((state) => state.focusedItemId === id);
   const Icon = type === 'folder' ? Folder : FileText;
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
@@ -67,16 +68,22 @@ const GridItem = React.memo(function GridItem({ id, type, name, onSelect, onDoub
       onClick={onSelect}
       onDoubleClick={onDoubleClick}
       className={cn(
-        'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-none',
+        'flex flex-col items-center gap-2 p-4 rounded-lg cursor-pointer transition-none outline-none',
         'hover:bg-sidebar-accent/50',
         'will-change-[background-color,border-color]',
-        isSelected && !isHighlighted && 'bg-sidebar-primary/20 border-2 border-sidebar-primary',
+        isFocused && 'ring-2 ring-blue-500',
+        isSelected && !isHighlighted && !isFocused && 'bg-sidebar-primary/20 border-2 border-sidebar-primary',
+        isSelected && isFocused && 'bg-sidebar-primary/20',
         isHighlighted && !isSelected && 'bg-yellow-100 dark:bg-yellow-900/20 ring-2 ring-yellow-400',
         isHighlighted && isSelected && 'bg-yellow-100 dark:bg-yellow-900/20 border-2 border-sidebar-primary ring-2 ring-yellow-400',
         isOver && type === 'folder' && 'bg-sidebar-primary/10 border-2 border-sidebar-primary',
         draggable.isDragging && 'opacity-50'
       )}
       title={name}
+      role="gridcell"
+      aria-selected={isSelected}
+      tabIndex={isFocused ? 0 : -1}
+      aria-label={name}
     >
       <Icon className="h-12 w-12" />
       <span className="text-xs text-center truncate w-full px-1">
@@ -115,9 +122,16 @@ export function IconGridView() {
     moveTextToFolder,
     moveFolder,
   } = useLibraryStore();
+  const focusedItemId = useLibraryStore((state) => state.focusedItemId);
+  const setFocusedItem = useLibraryStore((state) => state.setFocusedItem);
+  const focusNextItem = useLibraryStore((state) => state.focusNextItem);
+  const focusFirstItem = useLibraryStore((state) => state.focusFirstItem);
+  const setGridColumns = useLibraryStore((state) => state.setGridColumns);
   const searchState = useLibrarySearchStore((state) => state.library);
   const { query, matchedTextIds, matchedFolderIds } = searchState;
   const [activeId, setActiveId] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   // Sync URL param with store state on mount and when URL changes
   useEffect(() => {
@@ -140,22 +154,23 @@ export function IconGridView() {
   const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
   const parentFolderId = currentFolder?.parentId ?? null;
 
-  // Keyboard shortcut: Cmd/Ctrl+Up to navigate up one level
+  // Calculate grid columns with ResizeObserver
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for Cmd+Up (Mac) or Ctrl+Up (Windows/Linux)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'ArrowUp') {
-        e.preventDefault();
-        // Navigate up if not at root
-        if (currentFolderId !== null) {
-          navigateToFolder(parentFolderId);
-        }
-      }
+    if (!gridRef.current) return;
+
+    const updateColumns = () => {
+      if (!gridRef.current) return;
+      const width = gridRef.current.offsetWidth;
+      const itemWidth = 120 + 12; // minmax(120px, 1fr) + gap
+      const cols = Math.floor(width / itemWidth);
+      setGridColumns(Math.max(1, cols));
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentFolderId, parentFolderId]);
+    updateColumns();
+    const observer = new ResizeObserver(updateColumns);
+    observer.observe(gridRef.current);
+    return () => observer.disconnect();
+  }, [setGridColumns]);
 
   // Combined collision detection for better drop zone detection
   const customCollisionDetection: CollisionDetection = (args) => {
@@ -236,6 +251,110 @@ export function IconGridView() {
 
     return [...folderItems, ...textItems];
   }, [folders, texts, currentFolderId, isSearchActive, matchedTextIds, matchedFolderIds]);
+
+  // Focus persistence: maintain focus across view switches and filters
+  useEffect(() => {
+    // Clear focus if no items
+    if (items.length === 0) {
+      if (focusedItemId) {
+        setFocusedItem(null);
+      }
+      return;
+    }
+
+    // Get visible item IDs
+    const visibleIds = items.map(item => item.id);
+
+    // If no focus or focused item not visible, focus first item
+    if (!focusedItemId || !visibleIds.includes(focusedItemId)) {
+      focusFirstItem();
+    }
+  }, [items, focusedItemId, setFocusedItem, focusFirstItem]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const modKey = e.metaKey || e.ctrlKey;
+
+      // Special case: Alt+Up to navigate up one level
+      if (e.altKey && e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentFolderId !== null) {
+          navigateToFolder(parentFolderId);
+        }
+        return;
+      }
+
+      // Standard navigation
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'ArrowDown':
+        case 'ArrowLeft':
+        case 'ArrowRight': {
+          e.preventDefault();
+          const direction = e.key.replace('Arrow', '').toLowerCase() as 'up' | 'down' | 'left' | 'right';
+
+          if (e.shiftKey) {
+            // Shift+Arrow: Extend selection (range select)
+            focusNextItem(direction);
+            const newFocusedId = useLibraryStore.getState().focusedItemId;
+            if (newFocusedId) {
+              selectLibraryItemMulti(newFocusedId, 'range', items.map(i => i.id));
+            }
+          } else if (modKey) {
+            // Cmd/Ctrl+Arrow: Move focus without changing selection
+            focusNextItem(direction);
+          } else {
+            // Plain arrow: Move focus and select single item
+            focusNextItem(direction);
+            const newFocusedId = useLibraryStore.getState().focusedItemId;
+            if (newFocusedId) {
+              selectLibraryItemMulti(newFocusedId, 'single');
+            }
+          }
+          break;
+        }
+
+        case 'Enter': {
+          e.preventDefault();
+          if (focusedItemId) {
+            const focusedItem = items.find(i => i.id === focusedItemId);
+            if (focusedItem) {
+              if (focusedItem.type === 'folder') {
+                navigateToFolder(focusedItem.id);
+              } else {
+                const text = focusedItem.data as Text;
+                navigate(`/read/${text.id}`);
+              }
+            }
+          }
+          break;
+        }
+
+        case 'Escape': {
+          e.preventDefault();
+          clearLibrarySelection();
+          break;
+        }
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+    return () => container.removeEventListener('keydown', handleKeyDown);
+  }, [
+    focusedItemId,
+    items,
+    focusNextItem,
+    selectLibraryItemMulti,
+    clearLibrarySelection,
+    navigate,
+    navigateToFolder,
+    currentFolderId,
+    parentFolderId,
+  ]);
 
   const handleItemClick = (id: string, e: React.MouseEvent) => {
     const visibleItemIds = items.map(item => item.id);
@@ -347,14 +466,20 @@ export function IconGridView() {
     >
       <div className="flex flex-col flex-1 min-h-0">
         <div
-          className="p-4 overflow-y-auto flex-1"
+          ref={containerRef}
+          tabIndex={0}
+          className="p-4 overflow-y-auto flex-1 outline-none focus:outline-none"
           onClick={handleContainerClick}
         >
           {/* Root Drop Zone - shown when in a subfolder */}
           {currentFolderId !== null && <RootDropZone />}
           <div
+            ref={gridRef}
             className="grid gap-3"
             style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}
+            role="grid"
+            aria-label="Library items"
+            aria-multiselectable="true"
           >
             {items.map((item) => (
               <GridItem

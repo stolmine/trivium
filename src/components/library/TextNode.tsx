@@ -61,6 +61,8 @@ export const TextNode = React.memo(function TextNode({ text, depth, collapsed = 
     return selectedIds.has(nodeId);
   });
 
+  const isFocused = useLibraryStore((state) => state.focusedItemId === nodeId);
+
   const selectItem = useLibraryStore((state) =>
     context === 'library' ? state.selectLibraryItem : state.selectItem
   );
@@ -127,10 +129,12 @@ export const TextNode = React.memo(function TextNode({ text, depth, collapsed = 
       }}
       style={{ ...style, ...indentStyle }}
       className={cn(
-        'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+        'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer outline-none',
         isSearchSelected
           ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-900 border border-blue-300'
+          : isFocused && context === 'library'
+          ? 'ring-2 ring-blue-500' +
+            (isMultiSelected ? ' bg-sidebar-primary/20' : '')
           : context === 'library' && isMultiSelected
           ? 'bg-sidebar-primary/20'
           : isSelected
@@ -143,6 +147,10 @@ export const TextNode = React.memo(function TextNode({ text, depth, collapsed = 
       {...attributes}
       {...listeners}
       title={collapsed ? text.title : undefined}
+      role="treeitem"
+      aria-selected={context === 'library' ? isMultiSelected : undefined}
+      aria-label={collapsed ? text.title : undefined}
+      tabIndex={context === 'library' && isFocused ? 0 : -1}
     >
       <FileText className="h-4 w-4 flex-shrink-0" />
       {!collapsed && (

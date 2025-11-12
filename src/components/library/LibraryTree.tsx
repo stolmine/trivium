@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLibraryStore, type SortOption } from '../../stores/library';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { useFocusContextStore, shouldTrackFocus } from '../../stores/focusContext';
-import { buildTree, isFolderDescendant, getNodeById } from '../../lib/tree-utils';
+import { buildTree, isFolderDescendant, getNodeById, getFlattenedVisibleNodes } from '../../lib/tree-utils';
 import { cn } from '../../lib/utils';
 import { FolderNode } from './FolderNode';
 import { TextNode } from './TextNode';
@@ -78,7 +78,13 @@ const filterTreeByMatches = (
 };
 
 export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryTreeProps) {
-  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder, selectedItemId, selectNextItem, selectPreviousItem, expandSelectedFolder, collapseSelectedFolder } = useLibraryStore();
+  const { folders, texts, isLoading, error, sortBy, loadLibrary, moveTextToFolder, moveFolder } = useLibraryStore();
+  const focusedItemId = useLibraryStore((state) => state.focusedItemId);
+  const setFocusedItem = useLibraryStore((state) => state.setFocusedItem);
+  const focusNextItem = useLibraryStore((state) => state.focusNextItem);
+  const focusFirstItem = useLibraryStore((state) => state.focusFirstItem);
+  const selectLibraryItemMulti = useLibraryStore((state) => state.selectLibraryItemMulti);
+  const clearLibrarySelection = useLibraryStore((state) => state.clearLibrarySelection);
   const expandedFolderIds = useLibraryStore((state) =>
     context === 'library' ? state.libraryExpandedFolderIds : state.expandedFolderIds
   );
@@ -176,49 +182,158 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
     }
   }, [isSearchActive, filteredTree, expandedFolderIds, toggleFolder]);
 
+  // Focus persistence: maintain focus across view switches and filters
+  useEffect(() => {
+    if (context !== 'library') return;
+
+    const flatNodes = getFlattenedVisibleNodes(filteredTree, expandedFolderIds);
+    const visibleIds = flatNodes.map(n => n.id);
+
+    // Clear focus if no items
+    if (visibleIds.length === 0) {
+      if (focusedItemId) {
+        setFocusedItem(null);
+      }
+      return;
+    }
+
+    // If no focus or focused item not visible, focus first item
+    if (!focusedItemId || !visibleIds.includes(focusedItemId)) {
+      focusFirstItem();
+    }
+  }, [context, filteredTree, expandedFolderIds, focusedItemId, setFocusedItem, focusFirstItem]);
+
   useEffect(() => {
     const container = treeContainerRef.current;
     if (!container || collapsed) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (document.activeElement !== container) return;
-
       if (isSearchActive) return;
+
+      const modKey = e.metaKey || e.ctrlKey;
+      const isLibraryContext = context === 'library';
+
+      // Special case: Alt+Up to navigate up one level (to parent folder)
+      if (e.altKey && e.key === 'ArrowUp' && isLibraryContext) {
+        e.preventDefault();
+        if (focusedItemId) {
+          const focusedNode = getNodeById(filteredTree, focusedItemId);
+          if (focusedNode) {
+            // Find parent folder in the tree
+            const findParent = (nodes: TreeNode[], targetId: string): TreeNode | null => {
+              for (const node of nodes) {
+                if (node.type === 'folder') {
+                  // Check if targetId is a direct child
+                  if (node.children.some(child => child.id === targetId)) {
+                    return node;
+                  }
+                  // Recursively check children
+                  const parentInChildren = findParent(node.children, targetId);
+                  if (parentInChildren) return parentInChildren;
+                }
+              }
+              return null;
+            };
+
+            const parent = findParent(filteredTree, focusedItemId);
+            if (parent) {
+              setFocusedItem(parent.id);
+              if (isLibraryContext) {
+                selectLibraryItemMulti(parent.id, 'single');
+              }
+            }
+          }
+        }
+        return;
+      }
 
       switch (e.key) {
         case 'ArrowDown':
+        case 'ArrowUp': {
           e.preventDefault();
-          selectNextItem();
-          break;
+          const direction = e.key === 'ArrowDown' ? 'down' : 'up';
 
-        case 'ArrowUp':
-          e.preventDefault();
-          selectPreviousItem();
-          break;
-
-        case 'ArrowRight':
-          e.preventDefault();
-          expandSelectedFolder();
-          break;
-
-        case 'ArrowLeft':
-          e.preventDefault();
-          collapseSelectedFolder();
-          break;
-
-        case 'Enter':
-          e.preventDefault();
-          if (selectedItemId) {
-            const selectedNode = getNodeById(filteredTree, selectedItemId);
-
-            if (selectedNode?.type === 'text') {
-              const text = selectedNode.data as Text;
-              navigate(`/read/${text.id}`);
-            } else if (selectedNode?.type === 'folder') {
-              toggleFolder(selectedItemId);
+          if (isLibraryContext) {
+            // Library context: Enhanced navigation with multi-select
+            if (e.shiftKey) {
+              // Shift+Arrow: Extend selection (range select)
+              focusNextItem(direction);
+              const newFocusedId = useLibraryStore.getState().focusedItemId;
+              if (newFocusedId) {
+                selectLibraryItemMulti(newFocusedId, 'range');
+              }
+            } else if (modKey) {
+              // Cmd/Ctrl+Arrow: Move focus without changing selection
+              focusNextItem(direction);
+            } else {
+              // Plain arrow: Move focus and select single item
+              focusNextItem(direction);
+              const newFocusedId = useLibraryStore.getState().focusedItemId;
+              if (newFocusedId) {
+                selectLibraryItemMulti(newFocusedId, 'single');
+              }
+            }
+          } else {
+            // Sidebar context: Simple navigation (existing behavior)
+            if (direction === 'down') {
+              focusNextItem('down');
+            } else {
+              focusNextItem('up');
             }
           }
           break;
+        }
+
+        case 'ArrowRight': {
+          e.preventDefault();
+          if (focusedItemId) {
+            const focusedNode = getNodeById(filteredTree, focusedItemId);
+            if (focusedNode?.type === 'folder') {
+              if (!expandedFolderIds.has(focusedItemId)) {
+                toggleFolder(focusedItemId);
+              } else if (focusedNode.children.length > 0) {
+                // If already expanded, move to first child
+                setFocusedItem(focusedNode.children[0].id);
+              }
+            }
+          }
+          break;
+        }
+
+        case 'ArrowLeft': {
+          e.preventDefault();
+          if (focusedItemId) {
+            const focusedNode = getNodeById(filteredTree, focusedItemId);
+            if (focusedNode?.type === 'folder' && expandedFolderIds.has(focusedItemId)) {
+              toggleFolder(focusedItemId);
+            }
+          }
+          break;
+        }
+
+        case 'Enter': {
+          e.preventDefault();
+          if (focusedItemId) {
+            const focusedNode = getNodeById(filteredTree, focusedItemId);
+
+            if (focusedNode?.type === 'text') {
+              const text = focusedNode.data as Text;
+              navigate(`/read/${text.id}`);
+            } else if (focusedNode?.type === 'folder') {
+              toggleFolder(focusedItemId);
+            }
+          }
+          break;
+        }
+
+        case 'Escape': {
+          e.preventDefault();
+          if (isLibraryContext) {
+            clearLibrarySelection();
+          }
+          break;
+        }
       }
     };
 
@@ -226,12 +341,15 @@ export function LibraryTree({ collapsed = false, context = 'sidebar' }: LibraryT
     return () => container.removeEventListener('keydown', handleKeyDown);
   }, [
     collapsed,
+    context,
     isSearchActive,
-    selectedItemId,
-    selectNextItem,
-    selectPreviousItem,
-    expandSelectedFolder,
-    collapseSelectedFolder,
+    focusedItemId,
+    focusNextItem,
+    focusFirstItem,
+    setFocusedItem,
+    selectLibraryItemMulti,
+    clearLibrarySelection,
+    expandedFolderIds,
     toggleFolder,
     navigate,
     filteredTree,

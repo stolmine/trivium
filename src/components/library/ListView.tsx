@@ -121,6 +121,7 @@ interface ListRowProps {
 const ListRow = React.memo(function ListRow({ item, onClick, onDoubleClick }: ListRowProps) {
   // Optimized selector - only re-render when THIS item's selection state changes
   const isSelected = useLibraryStore((state) => state.librarySelectedItemIds.has(item.id));
+  const isFocused = useLibraryStore((state) => state.focusedItemId === item.id);
   const isHighlighted = item.isHighlighted ?? false;
   const Icon = item.type === 'folder' ? Folder : FileText;
 
@@ -167,11 +168,19 @@ const ListRow = React.memo(function ListRow({ item, onClick, onDoubleClick }: Li
         'cursor-pointer border-b border-sidebar-border/50 transition-none',
         'hover:bg-sidebar-accent/50',
         'will-change-[background-color]',
-        isSelected && !isHighlighted && 'bg-sidebar-primary/20',
+        // Focus indicator (blue ring on first cell)
+        isFocused && 'ring-2 ring-inset ring-blue-500',
+        // Selection and highlighting
+        isSelected && !isHighlighted && !isFocused && 'bg-sidebar-primary/20',
+        isSelected && isFocused && 'bg-sidebar-primary/20',
         isHighlighted && 'bg-yellow-100 dark:bg-yellow-900/20',
         isOver && item.type === 'folder' && 'bg-sidebar-primary/10 border-l-4 border-sidebar-primary',
         draggable.isDragging && 'opacity-50'
       )}
+      role="row"
+      aria-selected={isSelected}
+      tabIndex={isFocused ? 0 : -1}
+      aria-label={item.name}
     >
       <td className="px-4 py-2 text-sm">
         <div className="flex items-center gap-2">
@@ -226,6 +235,11 @@ export function ListView() {
     moveTextToFolder,
     moveFolder,
   } = useLibraryStore();
+  const focusedItemId = useLibraryStore((state) => state.focusedItemId);
+  const setFocusedItem = useLibraryStore((state) => state.setFocusedItem);
+  const focusNextItem = useLibraryStore((state) => state.focusNextItem);
+  const focusFirstItem = useLibraryStore((state) => state.focusFirstItem);
+  const clearLibrarySelection = useLibraryStore((state) => state.clearLibrarySelection);
   const {
     getTextStats,
     getFolderStats,
@@ -237,6 +251,7 @@ export function ListView() {
   const searchState = useLibrarySearchStore((state) => state.library);
   const { query, matchedTextIds, matchedFolderIds } = searchState;
   const [activeId, setActiveId] = useState<string | null>(null);
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Sync URL param with store state on mount and when URL changes
   useEffect(() => {
@@ -279,23 +294,6 @@ export function ListView() {
   // Get parent folder for "Up" button
   const currentFolder = currentFolderId ? folders.find(f => f.id === currentFolderId) : null;
   const parentFolderId = currentFolder?.parentId ?? null;
-
-  // Keyboard shortcut: Cmd/Ctrl+Up to navigate up one level
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Check for Cmd+Up (Mac) or Ctrl+Up (Windows/Linux)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'ArrowUp') {
-        e.preventDefault();
-        // Navigate up if not at root
-        if (currentFolderId !== null) {
-          navigateToFolder(parentFolderId);
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentFolderId, parentFolderId]);
 
   // Combined collision detection for better drop zone detection
   const customCollisionDetection: CollisionDetection = (args) => {
@@ -429,6 +427,108 @@ export function ListView() {
     return sorted;
   }, [items, sortColumn, sortDirection]);
 
+  // Focus persistence: maintain focus across view switches and filters
+  useEffect(() => {
+    // Clear focus if no items
+    if (sortedItems.length === 0) {
+      if (focusedItemId) {
+        setFocusedItem(null);
+      }
+      return;
+    }
+
+    // Get visible item IDs
+    const visibleIds = sortedItems.map(item => item.id);
+
+    // If no focus or focused item not visible, focus first item
+    if (!focusedItemId || !visibleIds.includes(focusedItemId)) {
+      focusFirstItem();
+    }
+  }, [sortedItems, focusedItemId, setFocusedItem, focusFirstItem]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const container = tableContainerRef.current;
+    if (!container) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const modKey = e.metaKey || e.ctrlKey;
+
+      // Special case: Alt+Up to navigate up one level
+      if (e.altKey && e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentFolderId !== null) {
+          navigateToFolder(parentFolderId);
+        }
+        return;
+      }
+
+      // Standard navigation
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'ArrowUp': {
+          e.preventDefault();
+          const direction = e.key === 'ArrowDown' ? 'down' : 'up';
+
+          if (e.shiftKey) {
+            // Shift+Arrow: Extend selection (range select)
+            focusNextItem(direction);
+            const newFocusedId = useLibraryStore.getState().focusedItemId;
+            if (newFocusedId) {
+              selectLibraryItemMulti(newFocusedId, 'range', sortedItems.map(i => i.id));
+            }
+          } else if (modKey) {
+            // Cmd/Ctrl+Arrow: Move focus without changing selection
+            focusNextItem(direction);
+          } else {
+            // Plain arrow: Move focus and select single item
+            focusNextItem(direction);
+            const newFocusedId = useLibraryStore.getState().focusedItemId;
+            if (newFocusedId) {
+              selectLibraryItemMulti(newFocusedId, 'single');
+            }
+          }
+          break;
+        }
+
+        case 'Enter': {
+          e.preventDefault();
+          if (focusedItemId) {
+            const focusedItem = sortedItems.find(item => item.id === focusedItemId);
+            if (focusedItem) {
+              if (focusedItem.type === 'folder') {
+                navigateToFolder(focusedItem.id);
+              } else {
+                const text = focusedItem.data as Text;
+                navigate(`/read/${text.id}`);
+              }
+            }
+          }
+          break;
+        }
+
+        case 'Escape': {
+          e.preventDefault();
+          clearLibrarySelection();
+          break;
+        }
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+    return () => container.removeEventListener('keydown', handleKeyDown);
+  }, [
+    focusedItemId,
+    sortedItems,
+    focusNextItem,
+    selectLibraryItemMulti,
+    clearLibrarySelection,
+    navigate,
+    navigateToFolder,
+    currentFolderId,
+    parentFolderId,
+  ]);
+
   const handleRowClick = (id: string, e: React.MouseEvent) => {
     const visibleItemIds = sortedItems.map(item => item.id);
 
@@ -536,8 +636,22 @@ export function ListView() {
       }}
     >
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex-1 overflow-y-auto">
-          <table className="w-full border-collapse">
+        <div
+          ref={tableContainerRef}
+          tabIndex={0}
+          className="flex-1 overflow-y-auto outline-none focus:outline-none"
+          onClick={() => {
+            if (tableContainerRef.current) {
+              tableContainerRef.current.focus();
+            }
+          }}
+        >
+          <table
+            className="w-full border-collapse"
+            role="grid"
+            aria-label="Library items"
+            aria-multiselectable="true"
+          >
             <thead className="sticky top-0 bg-sidebar border-b border-sidebar-border z-10">
               <tr>
                 <ColumnHeader

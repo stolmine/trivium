@@ -67,6 +67,8 @@ export const FolderNode = React.memo(function FolderNode({ node, depth, collapse
     return selectedIds.has(folder.id);
   });
 
+  const isFocused = useLibraryStore((state) => state.focusedItemId === folder.id);
+
   const toggleFolder = useLibraryStore((state) =>
     context === 'library' ? state.toggleLibraryFolder : state.toggleFolder
   );
@@ -159,8 +161,10 @@ export const FolderNode = React.memo(function FolderNode({ node, depth, collapse
             } : undefined)
           }}
           className={cn(
-            'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring',
+            'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer outline-none',
+            // Focus indicator (blue ring) - custom only
+            isFocused && context === 'library' && 'ring-2 ring-blue-500',
+            // Selection background
             context === 'library' && isMultiSelected
               ? 'bg-sidebar-primary/20'
               : isSelected
@@ -172,6 +176,11 @@ export const FolderNode = React.memo(function FolderNode({ node, depth, collapse
           onClick={handleClick}
           onDoubleClick={handleDoubleClick}
           title={collapsed ? folder.name : undefined}
+          role="treeitem"
+          aria-selected={context === 'library' ? isMultiSelected : undefined}
+          aria-expanded={hasChildren ? isExpanded : undefined}
+          aria-label={collapsed ? folder.name : undefined}
+          tabIndex={context === 'library' && isFocused ? 0 : -1}
         >
           {!collapsed && hasChildren && (
             <button onClick={handleChevronClick} className="p-0.5">
