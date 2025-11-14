@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { ReadHighlighter } from '../../lib/components/reading/ReadHighlighter';
-import { Button } from '../../lib/components/ui/button';
 import { api } from '../../lib/utils/tauri';
 import type { SmartExcerpt } from '../../lib/types';
 
@@ -13,7 +11,6 @@ export function TextPreviewView({ textId }: TextPreviewViewProps) {
   const [excerpt, setExcerpt] = useState<SmartExcerpt | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     setIsLoading(true);
@@ -27,16 +24,6 @@ export function TextPreviewView({ textId }: TextPreviewViewProps) {
       })
       .finally(() => setIsLoading(false));
   }, [textId]);
-
-  const handleOpenReader = () => {
-    navigate(`/read/${textId}`);
-  };
-
-  const handleContinueReading = () => {
-    if (excerpt && excerpt.currentPosition > 0) {
-      navigate(`/read/${textId}`, { state: { scrollToPosition: excerpt.currentPosition } });
-    }
-  };
 
   if (isLoading) {
     return (
@@ -87,17 +74,6 @@ export function TextPreviewView({ textId }: TextPreviewViewProps) {
           content={excerpt.excerpt}
           readRanges={excerpt.readRanges}
         />
-      </div>
-
-      <div className="flex gap-2 px-4 pb-4">
-        <Button onClick={handleOpenReader}>
-          Open in Reader
-        </Button>
-        {excerpt.currentPosition > 0 && (
-          <Button variant="outline" onClick={handleContinueReading}>
-            Continue Reading
-          </Button>
-        )}
       </div>
     </div>
   );

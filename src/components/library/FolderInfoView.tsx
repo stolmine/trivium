@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Folder, FileText, BookOpen, Activity, Brain, Calendar, AlertCircle, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../lib/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../../lib/components/ui/dialog';
+import { Input, Label } from '../../lib/components/ui';
 import { useLibraryStatsCacheStore } from '../../stores/libraryStatsCache';
+import { useLibraryStore } from '../../stores/library';
 import type { FolderStatistics } from '../../lib/types/statistics';
 
 interface FolderInfoViewProps {
@@ -15,10 +25,49 @@ function formatDate(dateStr: string): string {
 }
 
 export function FolderInfoView({ folderId }: FolderInfoViewProps) {
+  const navigate = useNavigate();
   const { getFolderStats, loadFolderStats } = useLibraryStatsCacheStore();
+  const renameFolder = useLibraryStore((state) => state.renameFolder);
+  const deleteFolder = useLibraryStore((state) => state.deleteFolder);
+  const folders = useLibraryStore((state) => state.folders);
   const [stats, setStats] = useState<FolderStatistics | null>(() => getFolderStats(folderId));
   const [isLoading, setIsLoading] = useState(() => !getFolderStats(folderId));
   const [error, setError] = useState<string | null>(null);
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [renameFolderName, setRenameFolderName] = useState('');
+  const [renameError, setRenameError] = useState<string | null>(null);
+
+  const handleRename = async () => {
+    if (!stats) return;
+    const trimmedName = renameFolderName.trim();
+    if (!trimmedName || trimmedName === stats.name || renameError) return;
+
+    try {
+      await renameFolder(folderId, trimmedName);
+      setRenameError(null);
+      setShowRenameDialog(false);
+    } catch (error) {
+      console.error('Error renaming folder:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteFolder(folderId);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+    }
+  };
+
+  const handleNewText = () => {
+    navigate('/ingest', {
+      state: {
+        selectedFolderId: folderId,
+      },
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -68,6 +117,54 @@ export function FolderInfoView({ folderId }: FolderInfoViewProps) {
       isMounted = false;
     };
   }, [folderId, getFolderStats, loadFolderStats]);
+
+  useEffect(() => {
+    if (!showRenameDialog || !stats) {
+      return;
+    }
+
+    const trimmedName = renameFolderName.trim();
+    if (!trimmedName || trimmedName === stats.name) {
+      setRenameError(null);
+      return;
+    }
+
+    const currentFolder = folders.find(f => f.id === folderId);
+    if (!currentFolder) {
+      setRenameError(null);
+      return;
+    }
+
+    const duplicateFolder = folders.find(
+      f => f.id !== folderId &&
+      f.parentId === currentFolder.parentId &&
+      f.name.toLowerCase() === trimmedName.toLowerCase()
+    );
+
+    if (duplicateFolder) {
+      setRenameError('A folder with this name already exists');
+    } else {
+      setRenameError(null);
+    }
+  }, [renameFolderName, folderId, stats, showRenameDialog, folders]);
+
+  useEffect(() => {
+    if (!showDeleteDialog) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        deleteFolder(folderId).then(() => {
+          setShowDeleteDialog(false);
+        }).catch((error) => {
+          console.error('Error deleting folder:', error);
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteDialog, folderId, deleteFolder]);
 
   if (isLoading) {
     return (
@@ -182,17 +279,105 @@ export function FolderInfoView({ folderId }: FolderInfoViewProps) {
       <div className="pt-4 border-t border-border">
         <h3 className="text-sm font-semibold text-foreground mb-3">Quick Actions</h3>
         <div className="flex flex-col gap-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (stats) {
+                setRenameFolderName(stats.name);
+                setShowRenameDialog(true);
+              }
+            }}
+          >
             Rename
           </Button>
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNewText();
+            }}
+          >
             New Text
           </Button>
-          <Button variant="destructive" size="sm" disabled>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteDialog(true);
+            }}
+          >
             Delete
           </Button>
         </div>
       </div>
+
+      <Dialog open={showRenameDialog} onOpenChange={(open) => {
+        setShowRenameDialog(open);
+        if (!open) {
+          setRenameFolderName('');
+          setRenameError(null);
+        }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rename-folder">Name</Label>
+              <Input
+                id="rename-folder"
+                value={renameFolderName}
+                onChange={(e) => setRenameFolderName(e.target.value)}
+                placeholder="Enter folder name"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRename();
+                  }
+                }}
+                autoFocus
+              />
+              {renameError && (
+                <p className="text-sm text-red-600 dark:text-red-400 font-medium">{renameError}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowRenameDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleRename} disabled={!renameFolderName.trim() || !!renameError}>
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Folder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete "{stats?.name}"? This action cannot be undone. All
+              subfolders and texts within will be moved to the root level.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

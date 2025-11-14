@@ -4,6 +4,7 @@ import { FilePlus, Search, ArrowUpDown, ChevronsDown, ChevronsUp, FolderPlus, Ne
 import { useLibraryStore, type SortOption, type ViewMode } from '../../stores/library';
 import { useLibrarySearchStore } from '../../lib/stores/librarySearch';
 import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, Input, Label, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../../lib/components/ui';
+import { BackToReadingButton } from '../../lib/components/shared/BackToReadingButton';
 import { getModifierKey } from '../../lib/utils/platform';
 import { cn } from '../../lib/utils';
 
@@ -111,7 +112,10 @@ export function LibraryHeader() {
   return (
     <>
       <div className="h-14 flex items-center justify-between px-4 border-b border-sidebar-border">
-        <h2 className="text-lg font-semibold">Library</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-3xl font-bold">Library</h2>
+          <BackToReadingButton />
+        </div>
 
         <div className="flex items-center gap-2">
           <Button

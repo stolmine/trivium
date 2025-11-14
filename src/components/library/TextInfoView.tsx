@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText } from 'lucide-react';
+import { FileText, Trash2 } from 'lucide-react';
 import { api } from '../../lib/utils/tauri';
 import { Button } from '../../lib/components/ui/button';
 import { Skeleton } from '../../components/shared/SkeletonLoader';
 import { formatDueDate } from '../../lib/utils/date';
 import { useLibraryStore } from '../../stores/library';
+import { useReadingStore } from '../../lib/stores/reading';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '../../lib/components/ui/dialog';
 import type { Text } from '../../lib/types/article';
 import type { Flashcard } from '../../lib/types/flashcard';
 
@@ -62,9 +70,12 @@ function SkeletonTextInfo() {
 export function TextInfoView({ textId }: TextInfoViewProps) {
   const navigate = useNavigate();
   const folders = useLibraryStore((state) => state.folders);
+  const { deleteText } = useLibraryStore();
+  const { loadTexts } = useReadingStore();
   const [statistics, setStatistics] = useState<TextStatistics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     async function loadStatistics() {
@@ -100,15 +111,25 @@ export function TextInfoView({ textId }: TextInfoViewProps) {
     loadStatistics();
   }, [textId]);
 
-  const handleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate(`/read/${textId}`);
+  const handleDelete = async () => {
+    await deleteText(textId);
+    await loadTexts();
+    setShowDeleteDialog(false);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('Delete action not yet implemented');
-  };
+  useEffect(() => {
+    if (!showDeleteDialog) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleDelete();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteDialog]);
 
   if (isLoading) {
     return <SkeletonTextInfo />;
@@ -216,18 +237,43 @@ export function TextInfoView({ textId }: TextInfoViewProps) {
         </dl>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <Button onClick={handleOpen}>
-          Open
+      <div className="pt-2 flex gap-2">
+        <Button
+          onClick={() => navigate(`/read/${textId}`)}
+          className="flex-1"
+        >
+          {progress > 0 ? 'Continue Reading' : 'Read'}
         </Button>
         <Button
           variant="destructive"
-          onClick={handleDelete}
-          disabled={true}
+          size="icon"
+          onClick={() => setShowDeleteDialog(true)}
         >
-          Delete
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
+
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Text</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete "{text.title}"? This action cannot be undone. All
+              flashcards associated with this text will also be deleted.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -129,7 +129,8 @@ export const TextNode = React.memo(function TextNode({ text, depth, collapsed = 
       }}
       style={{ ...style, ...indentStyle }}
       className={cn(
-        'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer outline-none',
+        'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer outline-none transition-none',
+        'will-change-[background-color]',
         isSearchSelected
           ? 'ring-2 ring-blue-500 bg-blue-50 text-blue-900 border border-blue-300'
           : isFocused && context === 'library'

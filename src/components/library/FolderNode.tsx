@@ -161,7 +161,8 @@ export const FolderNode = React.memo(function FolderNode({ node, depth, collapse
             } : undefined)
           }}
           className={cn(
-            'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer outline-none',
+            'flex items-center gap-2 h-8 px-2 rounded-md text-sm cursor-pointer outline-none transition-none',
+            'will-change-[background-color]',
             // Focus indicator (blue ring) - custom only
             isFocused && context === 'library' && 'ring-2 ring-blue-500',
             // Selection background

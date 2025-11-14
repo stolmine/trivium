@@ -20,7 +20,7 @@ export function RootDropZone({ className }: RootDropZoneProps) {
       ref={setNodeRef}
       onClick={(e) => e.stopPropagation()}
       className={cn(
-        'sticky top-0 z-10 px-4 py-6 mx-2 mb-2 border-2 border-dashed rounded transition-colors min-h-[64px] flex-shrink-0',
+        'sticky top-0 z-10 px-4 py-4 mx-2 mb-2 border-2 border-dashed rounded transition-colors flex-shrink-0',
         'bg-background dark:bg-background',
         isOver
           ? 'border-sidebar-primary bg-sidebar-primary/10'
