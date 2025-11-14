@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE texts\n                    SET folder_id = NULL\n                    WHERE folder_id = ? OR folder_id IN (\n                        WITH RECURSIVE folder_tree AS (\n                            SELECT id FROM folders WHERE parent_id = ?\n                            UNION ALL\n                            SELECT f.id FROM folders f\n                            INNER JOIN folder_tree ft ON f.parent_id = ft.id\n                        )\n                        SELECT id FROM folder_tree\n                    )\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "49e3a27414e6fcde4a9a5c089e912659decd2e3ce18d59c7459e07688686e9a7"
+}

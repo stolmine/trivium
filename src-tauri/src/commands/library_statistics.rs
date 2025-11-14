@@ -112,8 +112,8 @@ pub async fn get_text_statistics(
     .await
     .map_err(|e| format!("Failed to fetch text: {}", e))?;
 
-    let folder_path = if let Some(ref folder_id) = text.folder_id {
-        Some(build_folder_path(pool, folder_id).await?)
+    let folder_path = if let Some(folder_id) = text.folder_id {
+        Some(build_folder_path(pool, &folder_id.to_string()).await?)
     } else {
         None
     };

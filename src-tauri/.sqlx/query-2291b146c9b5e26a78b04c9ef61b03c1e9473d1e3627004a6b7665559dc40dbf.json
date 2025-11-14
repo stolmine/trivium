@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                    UPDATE texts\n                    SET folder_id = ?\n                    WHERE id = ?\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "2291b146c9b5e26a78b04c9ef61b03c1e9473d1e3627004a6b7665559dc40dbf"
+}

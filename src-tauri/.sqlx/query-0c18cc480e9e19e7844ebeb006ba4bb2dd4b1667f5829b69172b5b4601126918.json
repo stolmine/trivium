@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            SELECT\n                COALESCE(\n                    CAST(SUM(CASE WHEN stability > 0 THEN 1 ELSE 0 END) AS REAL) /\n                    NULLIF(CAST(COUNT(*) AS REAL), 0.0) * 100.0,\n                    0.0\n                ) as \"rate!: f64\"\n            FROM flashcards\n            WHERE text_id = ?\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "rate!: f64",
+        "ordinal": 0,
+        "type_info": "Float"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0c18cc480e9e19e7844ebeb006ba4bb2dd4b1667f5829b69172b5b4601126918"
+}

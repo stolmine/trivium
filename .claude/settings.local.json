@@ -43,7 +43,10 @@
       "Bash(ls:*)",
       "Bash(cargo build:*)",
       "Bash(git log:*)",
-      "Bash(sqlite3:*)"
+      "Bash(sqlite3:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(cargo sqlx prepare:*)"
     ],
     "deny": [],
     "ask": []
