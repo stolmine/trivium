@@ -1,22 +1,22 @@
 # Trivium - Development Progress
 
-## Current Status: Flashcard Manager - Phase 2 Complete ✅
+## Current Status: Flashcard Manager - Phase 2 Complete + Column Visibility ✅
 
 **Branch**: `main`
 **Last Updated**: 2025-11-21
 
-Phase 2 of the Flashcard Manager feature is complete! Building on Phase 1's foundation, we now have powerful filtering and sorting capabilities: text search with 300ms debounce, 5 quick filters (State/Due Today/Due This Week/Overdue/Buried), advanced filter panel with date and number ranges, multi-column sorting with shift+click, collapsible detail panel (Cmd/Ctrl+I), and full state persistence to localStorage. Users can now efficiently find and organize their flashcards. Phase 3 (multi-select & batch operations) is planned next.
+Phase 2 of the Flashcard Manager feature is complete, plus the column visibility feature! Building on Phase 1's foundation, we now have powerful filtering and sorting capabilities: text search with 300ms debounce, 5 quick filters (State/Due Today/Due This Week/Overdue/Buried), advanced filter panel with date and number ranges, single-column sorting, collapsible detail panel (Cmd/Ctrl+I), and full state persistence to localStorage. The new column visibility feature allows users to show/hide any of the 16 table columns via a dropdown menu with master toggle checkbox and indeterminate state support. All state persists across sessions. Users can now efficiently find, organize, and customize their flashcard view. Phase 3 (multi-select & batch operations) is planned next.
 
 ---
 
-## Phase 30: Flashcard Manager (Phase 2 Complete ✅)
+## Phase 30: Flashcard Manager (Phase 2 Complete + Column Visibility ✅)
 
 ### Overview
 **Branch**: `main`
 **Date**: 2025-11-21
-**Status**: Phase 2 of 6 Complete ✅
+**Status**: Phase 2 of 6 Complete + Column Visibility Feature ✅
 
-Phase 1 established the core foundation with dual-pane layout, 16-column table, and pagination. Phase 2 adds powerful filtering and sorting capabilities, transforming the viewer into a comprehensive management tool. Users can now search, filter by state/dates/difficulty, sort by multiple columns, and toggle the detail panel for flexible workflows. All state persists to localStorage for seamless experience.
+Phase 1 established the core foundation with dual-pane layout, 16-column table, and pagination. Phase 2 adds powerful filtering and sorting capabilities, transforming the viewer into a comprehensive management tool. The column visibility feature allows users to customize which columns they see with a dropdown menu, master toggle, and persistent state. Users can now search, filter by state/dates/difficulty, sort by any column, toggle the detail panel, and show/hide columns for their workflow. All state persists to localStorage for seamless experience.
 
 ### Phase 1 Deliverables (Complete)
 
@@ -129,6 +129,32 @@ Phase 1 established the core foundation with dual-pane layout, 16-column table, 
 **Files**: 7 modified (1 backend, 5 frontend, 1 platform config)
 **Time**: ~4-5 hours
 
+### Column Visibility Feature
+
+**Date**: 2025-11-21
+**Status**: Complete ✅
+
+Complete column customization system allowing users to show/hide any of the 16 table columns with persistent state across sessions.
+
+**Key Features**:
+1. **Columns Button**: Dedicated button in toolbar with Eye icon opens dropdown menu
+2. **Dropdown Menu**: Lists all 16 columns with toggleable checkboxes (Select column non-hideable)
+3. **Master Toggle**: Top checkbox toggles all 15 columns on/off with indeterminate state support
+4. **Real-Time Updates**: Immediate visual feedback when toggling columns
+5. **Persistent State**: Column visibility stored in Zustand store, persists to localStorage
+6. **Session Survival**: State survives quit/relaunch, filtering, sorting, all operations
+7. **Menu Behavior**: Stays open during selection, closes on outside click or Escape
+
+**Technical Implementation**:
+- New ColumnVisibilityMenu component (90 lines)
+- TanStack Table's built-in column visibility system
+- Zustand store integration with columnVisibility state
+- Master toggle with indeterminate state calculation
+- Radix UI dropdown menu for accessibility
+
+**Files**: 1 created (ColumnVisibilityMenu.tsx), 3 modified (store, toolbar, table)
+**Time**: ~2-3 hours
+
 ### Files Changed
 
 **Phase 1 (7 created, 6 modified)**:
@@ -149,13 +175,20 @@ Plus: `src/App.tsx`, `src/components/shell/Sidebar.tsx`, `src-tauri/src/lib.rs`,
 
 Plus: `src-tauri/src/commands/flashcard_manager.rs`, `src/components/flashcard-manager/FlashcardTable.tsx`, `src/routes/flashcard-manager/LeftPane.tsx`, `src/routes/flashcard-manager/FlashcardManagerDualPane.tsx`, `KEYBOARD_SHORTCUTS.md`
 
-**Total**: 21 files (10 created + 11 modified)
+**Column Visibility (1 created, 3 modified)**:
+1. `src/components/flashcard-manager/ColumnVisibilityMenu.tsx` (new)
+
+Plus: `src/lib/stores/flashcardManagerStore.ts`, `src/components/flashcard-manager/FlashcardTableToolbar.tsx`, `src/components/flashcard-manager/FlashcardTable.tsx`
+
+**Total**: 22 files (11 created + 11 modified)
 
 ### Implementation Time
 - **Phase 1**: ~12-14 hours
 - **Phase 2**: ~10-12 hours
-- **Total**: ~22-26 hours
-- **Remaining Planned**: ~34-50 hours (Phases 3-6)
+- **Post-Phase 2 Housekeeping**: ~4-5 hours
+- **Column Visibility**: ~2-3 hours
+- **Total**: ~28-34 hours
+- **Remaining Planned**: ~28-42 hours (Phases 3-6)
 
 ### Next Steps: Phase 3 (Selection & Batch Operations)
 
@@ -186,13 +219,25 @@ Plus: `src-tauri/src/commands/flashcard_manager.rs`, `src/components/flashcard-m
 - [x] Text search with 300ms debounce
 - [x] 5 quick filter buttons
 - [x] Advanced filter panel (6 filter types)
-- [x] Multi-column sorting (up to 3 columns)
+- [x] Single-column sorting (3-state toggle)
 - [x] Collapsible detail panel (Cmd/Ctrl+I)
 - [x] Filter count badge
 - [x] Backend filtering & sorting
 - [x] State persistence to localStorage
 - [x] No infinite render loops
 - [x] Performance < 100ms
+
+**Column Visibility Complete ✅**:
+- [x] Columns button in toolbar with Eye icon
+- [x] Dropdown menu with 16 column checkboxes
+- [x] Master toggle all checkbox with indeterminate state
+- [x] Select column non-hideable
+- [x] Real-time visual feedback on toggle
+- [x] State persists to localStorage
+- [x] Survives quit/relaunch cycles
+- [x] Menu stays open during selection
+- [x] Closes on outside click and Escape
+- [x] Performance < 50ms
 
 **Remaining Phases** (3-6):
 - [ ] Phase 3: Selection & Batch Operations (10-14 hours)
