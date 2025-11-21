@@ -2,7 +2,7 @@
 
 > **Note to AI Agents**: This index must be kept up to date. Whenever you create, modify, or delete .md files in this repository, please update this index accordingly. Include the file path, a brief description, and the last edit date.
 
-Last Updated: 2025-11-11 (Phase 7: Keyboard Navigation & Accessibility - Complete - ALL LIBRARY PAGE PHASES COMPLETE ✅)
+Last Updated: 2025-11-21 (Phase 30: Flashcard Manager - Phase 1 Complete ✅)
 
 ---
 
@@ -89,8 +89,12 @@ Last Updated: 2025-11-11 (Phase 7: Keyboard Navigation & Accessibility - Complet
 **Last Updated**: 2025-11-11
 
 ### `/Users/why/repos/trivium/FLASHCARD_MANAGER_PLAN.md`
-**Description**: Comprehensive planning document for advanced Flashcard Manager feature. Proposes Excel-like table interface for managing all flashcards with powerful filtering, sorting, editing, and batch operations. **Technical Approach**: Dedicated page at /flashcard-manager using TanStack Table v8 for data grid, dual-pane layout (table + detail view), 16 columns (ID, Source, Cloze Content, Original Text, Due Date, Reps, Difficulty, Stability, State, dates, etc.). **Key Features**: Multi-column sorting, advanced filtering (text search, date ranges, number ranges), multi-select with batch operations (delete, duplicate, bury, reset stats), inline editing for select fields, Excel-style modal editor for long content, column visibility toggle, export to JSON/CSV, full keyboard navigation. **Backend**: 7 new Tauri commands (paginated query, batch update/delete, duplicate, field update, export), no database migrations needed. **Frontend**: 21 new files (10 components, 3 routes, 3 state/hooks, 2 backend modules, 3 docs), 8 modified files. **Implementation**: 6 phases over 56-76 hours (2-3 weeks) - Core Table, Filtering/Sorting, Selection/Batch Ops, Editing, Detail View, Polish. **Status**: Planning phase, not yet implemented
+**Description**: Comprehensive planning document for advanced Flashcard Manager feature. Proposes Excel-like table interface for managing all flashcards with powerful filtering, sorting, editing, and batch operations. **Technical Approach**: Dedicated page at /flashcard-manager using TanStack Table v8 for data grid, dual-pane layout (table + detail view), 16 columns (ID, Source, Cloze Content, Original Text, Due Date, Reps, Difficulty, Stability, State, dates, etc.). **Key Features**: Multi-column sorting, advanced filtering (text search, date ranges, number ranges), multi-select with batch operations (delete, duplicate, bury, reset stats), inline editing for select fields, Excel-style modal editor for long content, column visibility toggle, export to JSON/CSV, full keyboard navigation. **Backend**: 7 new Tauri commands (paginated query, batch update/delete, duplicate, field update, export), no database migrations needed. **Frontend**: 21 new files (10 components, 3 routes, 3 state/hooks, 2 backend modules, 3 docs), 8 modified files. **Implementation**: 6 phases over 56-76 hours (2-3 weeks) - Core Table, Filtering/Sorting, Selection/Batch Ops, Editing, Detail View, Polish. **Status**: Phase 1 Complete (Core Table) ✅
 **Last Updated**: 2025-11-14
+
+### `/Users/why/repos/trivium/PHASE_30_FLASHCARD_MANAGER.md`
+**Description**: Complete implementation documentation for Phase 30 Flashcard Manager - Phase 1 (Core Table). Establishes foundation with dual-pane layout (left: 16-column table, right: detail view), TanStack Table v8 integration, pagination system (50 cards/page), and backend infrastructure. **Phase 1 Features**: Comprehensive table displaying all flashcard data (ID, Source, Cloze Content, Original Text, Due Date, Reps, Difficulty, Stability, State, timestamps, lapses, etc.), clickable source links, color-coded state badges, formatted dates, detail view for selected cards, keyboard shortcut (Cmd/Ctrl+8), navigation integration. **Backend**: New flashcard_manager.rs commands module with get_all_flashcards_paginated command returning FlashcardsPage with total count. **Files**: 7 created (1 backend, 4 routes, 1 component, 1 doc), 6 modified (routing, navigation, commands). **Status**: Phase 1 Complete ✅ - viewing and navigation working, Phase 2 (filtering/sorting) planned next
+**Last Updated**: 2025-11-21
 
 ### `/Users/why/repos/trivium/PHASE_29_LIBRARY_PAGE.md`
 **Description**: Complete implementation documentation for Phase 29 Library Page - ALL 7 PHASES COMPLETE ✅ + Post-Phase 7 UI Cleanup. Comprehensive dual-pane layout with Mac Finder-style multi-selection, three view modes (Tree, Icon Grid, List), info panel, smart preview, batch operations, keyboard navigation, and accessibility. **Post-Phase 7 UI Cleanup** (6 fixes): Removed redundant "Open in Reader" button, fixed unclickable folder/text action buttons, fixed mouse selection lag to match keyboard navigation, added BackToReadingButton to library header, fixed root drop zone height consistency across view modes. **Status**: ALL PHASES + UI CLEANUP COMPLETE. Total implementation: ~50-60 hours across 7 phases transforming library from simple tree view into fully-accessible dual-pane file browser with professional-grade UX matching Finder and VS Code. See full document for comprehensive feature lists, architecture details, and implementation timeline
@@ -390,12 +394,12 @@ Last Updated: 2025-11-11 (Phase 7: Keyboard Navigation & Accessibility - Complet
 
 ## Statistics
 
-**Total Documentation Files**: 66 markdown files
-**Total Lines of Documentation**: ~55,000+ lines
+**Total Documentation Files**: 67 markdown files
+**Total Lines of Documentation**: ~55,400+ lines
 **Documentation Categories**:
 - Core Specification: 3 files
 - Architecture & Design: 6 files
-- Project Planning: 13 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + Phase 20 statistics + Phase 29 library page + library page planning document + settings quick reference)
+- Project Planning: 14 files (includes Phase 9 text search + Phase 10 library search + Phase 11 sidebar UI + Phase 11.5 quick import + Phase 12 flashcard hub + Phase 18 UI overhaul + Phase 19 settings menu + Phase 20 statistics + Phase 29 library page + Phase 30 flashcard manager + library page planning document + flashcard manager planning document + settings quick reference)
 - Setup & Configuration: 5 files (includes SQLx guide + database migration)
 - Feature-Specific: 34 files (includes 4 flashcard hub docs + 11 Phase 13 inline editing files + 5 Phase 14 inline editing docs + 4 Phase 15 undo/redo docs + 5 Phase 16 mark deletion docs + 2 Phase 21 links sidebar docs + 3 blockquote formatting docs + 1 link parsing & search fixes doc + 1 history store implementation)
 - User Reference: 1 file
