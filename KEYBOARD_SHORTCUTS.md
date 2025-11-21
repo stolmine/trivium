@@ -30,9 +30,12 @@ These shortcuts work from anywhere in the application.
 | Go to Create Cards | `Ctrl + 3` | `⌘ + 3` | Navigate to flashcard creation hub |
 | Go to Review | `Ctrl + 4` | `⌘ + 4` | Navigate to review setup |
 | Go to Ingest | `Ctrl + 5` | `⌘ + 5` | Open text import/ingest page |
-| Go to Settings | `Ctrl + 6` | `⌘ + 6` | Navigate to settings page |
+| Go to Statistics | `Ctrl + 6` | `⌘ + 6` | Navigate to statistics page |
+| Go to Settings | `Ctrl + 7` | `⌘ + 7` | Navigate to settings page |
+| Go to Flashcard Manager | `Ctrl + 8` | `⌘ + 8` | Navigate to flashcard manager |
 | Go to Settings (Alt) | `Ctrl + ,` | `⌘ + ,` | macOS standard settings shortcut |
 | New Ingest (Alt) | `Ctrl + N` | `⌘ + N` | Alternative hotkey for ingest page |
+| Toggle Detail Panel | `Ctrl + I` | `⌘ + I` | Collapse/expand detail panel (Library, Flashcard Manager) |
 
 ---
 
@@ -300,6 +303,11 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-11-21 (Phase 30 - Flashcard Manager Phase 2)
+- Updated "Toggle Detail Panel" (Ctrl+I / Cmd+I) entry
+- Clarified shortcut works in both Library and Flashcard Manager pages
+- Part of Phase 30 Phase 2 filtering and sorting implementation
 
 ### 2025-11-11 (Phase 6 - Batch Operations Integration)
 - Added "Batch Operations" section to Library Navigation

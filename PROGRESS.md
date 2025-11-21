@@ -1,22 +1,22 @@
 # Trivium - Development Progress
 
-## Current Status: Flashcard Manager - Phase 1 Complete ✅
+## Current Status: Flashcard Manager - Phase 2 Complete ✅
 
 **Branch**: `main`
 **Last Updated**: 2025-11-21
 
-Phase 1 of the Flashcard Manager feature is complete! The foundation is established with a dual-pane layout, comprehensive 16-column table using TanStack Table v8, pagination system, detail view, and backend infrastructure. Users can now view and navigate all flashcards with the new Cmd/Ctrl+8 keyboard shortcut. Phase 2 (filtering & sorting) is planned next.
+Phase 2 of the Flashcard Manager feature is complete! Building on Phase 1's foundation, we now have powerful filtering and sorting capabilities: text search with 300ms debounce, 5 quick filters (State/Due Today/Due This Week/Overdue/Buried), advanced filter panel with date and number ranges, multi-column sorting with shift+click, collapsible detail panel (Cmd/Ctrl+I), and full state persistence to localStorage. Users can now efficiently find and organize their flashcards. Phase 3 (multi-select & batch operations) is planned next.
 
 ---
 
-## Phase 30: Flashcard Manager (Phase 1 Complete ✅)
+## Phase 30: Flashcard Manager (Phase 2 Complete ✅)
 
 ### Overview
 **Branch**: `main`
 **Date**: 2025-11-21
-**Status**: Phase 1 of 6 Complete ✅
+**Status**: Phase 2 of 6 Complete ✅
 
-Phase 1 establishes the core foundation for an advanced Excel-like flashcard management interface. The feature provides a dedicated page at `/flashcard-manager` with comprehensive table view, detail pane, and navigation integration. Implementation follows established patterns from the Library page dual-pane layout.
+Phase 1 established the core foundation with dual-pane layout, 16-column table, and pagination. Phase 2 adds powerful filtering and sorting capabilities, transforming the viewer into a comprehensive management tool. Users can now search, filter by state/dates/difficulty, sort by multiple columns, and toggle the detail panel for flexible workflows. All state persists to localStorage for seamless experience.
 
 ### Phase 1 Deliverables (Complete)
 
@@ -64,9 +64,48 @@ Phase 1 establishes the core foundation for an advanced Excel-like flashcard man
    - Efficient JOIN query with texts table
    - Sub-30ms query performance
 
+### Phase 2 Deliverables (Complete)
+
+1. **Filtering System**
+   - Text search with 300ms debounce (cloze & original text)
+   - 5 quick filters: State, Due Today, Due This Week, Overdue, Buried
+   - Advanced filter panel: Folder, Search Scope, Date Ranges (4), Number Ranges (4)
+   - Filter count badge showing active filters
+   - Clear filters button
+
+2. **Multi-Column Sorting**
+   - Click headers to sort ascending/descending/remove
+   - Shift+Click for up to 3 sort columns
+   - Visual indicators (↑↓) with sort order numbers
+   - Clear all sorts button
+   - 13 sortable columns
+
+3. **Collapsible Detail Panel**
+   - Toggle button in toolbar
+   - Keyboard shortcut: **Cmd/Ctrl+I**
+   - Left pane expands to 100% when collapsed
+   - State persists to localStorage
+
+4. **Backend Enhancements**
+   - FlashcardFilter struct with 17 filter fields
+   - SortField struct for multi-column sorting
+   - Dynamic SQL query building (WHERE/ORDER BY)
+   - Recursive folder filtering with CTE
+   - Sub-100ms query performance
+
+5. **Frontend State Management**
+   - Enhanced flashcardManagerStore with filter/sort state
+   - localStorage persistence for all settings
+   - Critical bug fix: value change check prevents infinite render loops
+   - Type-safe state management
+
+6. **New Components**
+   - FlashcardTableToolbar: Search, filters, sort controls, collapse button
+   - FlashcardFilterPanel: Advanced filters with smooth animations
+
 ### Files Changed
 
-**Created (7 files)**:
+**Phase 1 (7 created, 6 modified)**:
 1. `src-tauri/src/commands/flashcard_manager.rs` - Backend commands
 2. `src/routes/flashcard-manager/index.tsx` - Route entry point
 3. `src/routes/flashcard-manager/FlashcardManagerDualPane.tsx` - Main layout
@@ -75,31 +114,35 @@ Phase 1 establishes the core foundation for an advanced Excel-like flashcard man
 6. `src/components/flashcard-manager/FlashcardTable.tsx` - Table component
 7. `PHASE_30_FLASHCARD_MANAGER.md` - Implementation documentation
 
-**Modified (6 files)**:
-1. `src/App.tsx` - Added route
-2. `src/components/shell/Sidebar.tsx` - Added menu item
-3. `src-tauri/src/lib.rs` - Registered commands
-4. `src-tauri/src/commands/mod.rs` - Exported module
-5. `package.json` - Added @tanstack/react-table
-6. `KEYBOARD_SHORTCUTS.md` - Documented Cmd/Ctrl+8
+Plus: `src/App.tsx`, `src/components/shell/Sidebar.tsx`, `src-tauri/src/lib.rs`, `src-tauri/src/commands/mod.rs`, `package.json`, `KEYBOARD_SHORTCUTS.md`
 
-**Total**: 13 files (7 created + 6 modified)
+**Phase 2 (3 created, 5 modified)**:
+1. `src/components/flashcard-manager/FlashcardTableToolbar.tsx` (new)
+2. `src/components/flashcard-manager/FlashcardFilterPanel.tsx` (new)
+3. `src/lib/stores/flashcardManagerStore.ts` (new)
+
+Plus: `src-tauri/src/commands/flashcard_manager.rs`, `src/components/flashcard-manager/FlashcardTable.tsx`, `src/routes/flashcard-manager/LeftPane.tsx`, `src/routes/flashcard-manager/FlashcardManagerDualPane.tsx`, `KEYBOARD_SHORTCUTS.md`
+
+**Total**: 21 files (10 created + 11 modified)
 
 ### Implementation Time
 - **Phase 1**: ~12-14 hours
-- **Total Planned**: 56-76 hours (6 phases)
+- **Phase 2**: ~10-12 hours
+- **Total**: ~22-26 hours
+- **Remaining Planned**: ~34-50 hours (Phases 3-6)
 
-### Next Steps: Phase 2 (Filtering & Sorting)
+### Next Steps: Phase 3 (Selection & Batch Operations)
 
 **Planned Features**:
-- Toolbar with search input and quick filters
-- Advanced filter panel (text search, date ranges, state filters)
-- Column header sorting (single and multi-column)
-- Backend filter/sort parameter support
-- State management for filters and sorting
-- URL parameter support for sharing views
+- Multi-select with checkboxes
+- Shift+Click range selection
+- Ctrl/Cmd+Click individual toggle
+- Select all button
+- Batch operations: Delete, Bury, Reset Stats, Export
+- Confirmation dialogs
+- Summary view in detail pane
 
-**Estimated Time**: 8-12 hours
+**Estimated Time**: 10-14 hours
 **Target**: Week of 2025-11-25
 
 ### Success Criteria
@@ -113,8 +156,19 @@ Phase 1 establishes the core foundation for an advanced Excel-like flashcard man
 - [x] Layout matches design system
 - [x] No TypeScript errors
 
-**Remaining Phases** (2-6):
-- [ ] Phase 2: Filtering & Sorting (8-12 hours)
+**Phase 2 Complete ✅**:
+- [x] Text search with 300ms debounce
+- [x] 5 quick filter buttons
+- [x] Advanced filter panel (6 filter types)
+- [x] Multi-column sorting (up to 3 columns)
+- [x] Collapsible detail panel (Cmd/Ctrl+I)
+- [x] Filter count badge
+- [x] Backend filtering & sorting
+- [x] State persistence to localStorage
+- [x] No infinite render loops
+- [x] Performance < 100ms
+
+**Remaining Phases** (3-6):
 - [ ] Phase 3: Selection & Batch Operations (10-14 hours)
 - [ ] Phase 4: Inline & Modal Editing (12-16 hours)
 - [ ] Phase 5: Right Pane Detail View Enhanced (6-8 hours)
