@@ -639,6 +639,137 @@ pub struct SortField {
 - [x] All TypeScript type-safe
 - [x] Keyboard shortcuts documented
 
+## Post-Phase 2 Housekeeping Improvements
+
+**Date**: 2025-11-21
+**Status**: Complete ✅
+
+Six housekeeping fixes plus database path correction implemented to improve UX and resolve technical issues:
+
+### 1. Single-Column Sorting (Mutually Exclusive)
+
+**Problem**: Multiple columns could be sorted simultaneously, creating confusing sort states.
+
+**Solution**:
+- Changed to single-column sorting (click header to sort that column only)
+- First click: ascending
+- Second click: descending
+- Third click: removes sort (back to default)
+- Removed multi-column sorting UI complexity (shift+click no longer needed)
+- Updated backend to accept single optional SortField instead of array
+
+**Impact**: Clearer, more predictable sorting behavior matching standard table UX.
+
+### 2. Date Filter Defaults (Earliest Card to Today)
+
+**Problem**: Date range inputs had no default values, requiring manual input for basic queries.
+
+**Solution**:
+- Due Date From: Defaults to earliest flashcard's due date in the dataset
+- Due Date To: Defaults to today's date
+- Last Review From: Defaults to earliest flashcard's last review date
+- Last Review To: Defaults to today's date
+- Backend calculates min dates via SQL queries
+- Frontend populates inputs on advanced panel open
+
+**Impact**: "Show all overdue cards" workflow now works out-of-box without typing dates.
+
+### 3. Row Click Selection + Header Checkbox for Visible Cards
+
+**Problem**: No way to select flashcards for future batch operations.
+
+**Solution**:
+- Click any table row to select/deselect that card
+- Checkbox column header selects/deselects all visible cards on current page
+- Visual feedback: selected rows have blue background (`bg-blue-50` / `bg-blue-950`)
+- Selection counter: "N card(s) selected" in toolbar
+- Selection state managed via `selectedCardIds: Set<number>` in store
+
+**Impact**: Prepares foundation for Phase 3 batch operations, improves visual clarity.
+
+### 4. Clear Selection on Filter Change
+
+**Problem**: Selected cards persisted when filters changed, potentially selecting invisible cards.
+
+**Solution**:
+- Automatically clear selection whenever filters change
+- Prevents confusion where selected cards aren't visible on screen
+- Users must reselect after changing filters (intentional safety feature)
+
+**Impact**: Prevents accidental batch operations on hidden cards.
+
+### 5. Mutually Exclusive Quick Filters
+
+**Problem**: Multiple quick filters could be active simultaneously, creating illogical filter combinations (e.g., "Due Today" + "Overdue").
+
+**Solution**:
+- Quick filters now mutually exclusive (only one active at a time)
+- Clicking an active quick filter deselects it
+- Clicking a different quick filter replaces the current one
+- Advanced filters remain independent and can combine with quick filters
+
+**Impact**: More intuitive filtering UX, prevents impossible filter combinations.
+
+### 6. Cmd/Ctrl+A Fix for Search Field
+
+**Problem**: Cmd/Ctrl+A triggered "Select All Cards" instead of selecting text in search input.
+
+**Solution**:
+- Added `onKeyDown` handler to search input
+- Detects Cmd/Ctrl+A when input is focused
+- Calls `e.stopPropagation()` to prevent event bubbling
+- Allows native browser text selection behavior
+- Select All Cards still works when search input not focused
+
+**Impact**: Standard text editing shortcuts work correctly in search field.
+
+### 7. Database Path Fix (trivium_dev.db → trivium.db)
+
+**Problem**: Development database path (`trivium_dev.db`) was hardcoded in production code.
+
+**Solution**:
+- Changed database filename from `trivium_dev.db` to `trivium.db` in `platform.rs`
+- Ensures consistent database location across development and production
+- Users need to migrate data or rename existing database file
+
+**Impact**: Cleaner production deployment, consistent database naming.
+
+### 8. Sort Parameter Pipeline Fix
+
+**Problem**: Type mismatch between backend expecting `Option<SortField>` and frontend passing array.
+
+**Solution**:
+- Updated backend `get_all_flashcards_paginated` signature to accept `sort: Option<SortField>`
+- Frontend passes single sort field or `None`
+- Removed array handling from SQL query builder
+- Fixed TypeScript types to match
+
+**Impact**: Sorting now works correctly with single-column model, no TypeScript errors.
+
+### Files Changed (Housekeeping)
+
+**Backend (1 file)**:
+1. `src-tauri/src/commands/flashcard_manager.rs` - Single sort parameter, date defaults query, sort pipeline fix
+
+**Frontend (5 files)**:
+1. `src/lib/stores/flashcardManagerStore.ts` - Selection state, single sort, clear on filter
+2. `src/components/flashcard-manager/FlashcardTable.tsx` - Row click selection, header checkbox, single-column sort
+3. `src/components/flashcard-manager/FlashcardTableToolbar.tsx` - Search field Cmd/Ctrl+A fix, selection counter
+4. `src/components/flashcard-manager/FlashcardFilterPanel.tsx` - Date defaults, mutually exclusive quick filters
+5. `src/routes/flashcard-manager/LeftPane.tsx` - Date defaults fetching
+
+**Database Path Fix (1 file)**:
+1. `src-tauri/src/platform.rs` - Changed `trivium_dev.db` to `trivium.db`
+
+**Total**: 7 files modified
+
+### Implementation Time
+
+- Housekeeping fixes: ~3-4 hours
+- Database path fix: ~15 minutes
+- Sort parameter fix: ~30 minutes
+- **Total**: ~4-5 hours
+
 ## Next Steps: Phase 3 (Selection & Batch Operations)
 
 ### Planned Features

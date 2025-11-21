@@ -68,17 +68,18 @@ Phase 1 established the core foundation with dual-pane layout, 16-column table, 
 
 1. **Filtering System**
    - Text search with 300ms debounce (cloze & original text)
-   - 5 quick filters: State, Due Today, Due This Week, Overdue, Buried
+   - 5 quick filters: State, Due Today, Due This Week, Overdue, Buried (mutually exclusive)
    - Advanced filter panel: Folder, Search Scope, Date Ranges (4), Number Ranges (4)
    - Filter count badge showing active filters
    - Clear filters button
+   - Date range defaults: earliest card to today
 
-2. **Multi-Column Sorting**
-   - Click headers to sort ascending/descending/remove
-   - Shift+Click for up to 3 sort columns
-   - Visual indicators (↑↓) with sort order numbers
-   - Clear all sorts button
+2. **Single-Column Sorting**
+   - Click headers to sort ascending/descending/remove (3-state toggle)
+   - Visual indicators (↑↓) show sort direction
+   - Clear sort button
    - 13 sortable columns
+   - Simplified from multi-column for clearer UX
 
 3. **Collapsible Detail Panel**
    - Toggle button in toolbar
@@ -86,22 +87,47 @@ Phase 1 established the core foundation with dual-pane layout, 16-column table, 
    - Left pane expands to 100% when collapsed
    - State persists to localStorage
 
-4. **Backend Enhancements**
+4. **Row Selection**
+   - Click any row to select/deselect
+   - Header checkbox selects all visible cards on page
+   - Visual feedback: blue background on selected rows
+   - Selection counter in toolbar
+   - Clears automatically on filter change
+
+5. **Backend Enhancements**
    - FlashcardFilter struct with 17 filter fields
-   - SortField struct for multi-column sorting
+   - Single SortField parameter (simplified from array)
    - Dynamic SQL query building (WHERE/ORDER BY)
    - Recursive folder filtering with CTE
+   - Date defaults query for filter panel
    - Sub-100ms query performance
 
-5. **Frontend State Management**
-   - Enhanced flashcardManagerStore with filter/sort state
+6. **Frontend State Management**
+   - Enhanced flashcardManagerStore with filter/sort/selection state
    - localStorage persistence for all settings
    - Critical bug fix: value change check prevents infinite render loops
    - Type-safe state management
 
-6. **New Components**
-   - FlashcardTableToolbar: Search, filters, sort controls, collapse button
-   - FlashcardFilterPanel: Advanced filters with smooth animations
+7. **New Components**
+   - FlashcardTableToolbar: Search, filters, sort controls, collapse button, selection counter
+   - FlashcardFilterPanel: Advanced filters with date defaults and smooth animations
+
+### Post-Phase 2 Housekeeping
+
+**Date**: 2025-11-21
+**Status**: Complete ✅
+
+1. **Single-Column Sorting**: Changed from multi-column to single-column (3-state toggle: asc/desc/none)
+2. **Date Filter Defaults**: Due/Last Review ranges auto-populate (earliest card to today)
+3. **Row Click Selection**: Click rows to select, header checkbox for all visible cards
+4. **Clear Selection on Filter**: Prevents accidental operations on hidden cards
+5. **Mutually Exclusive Quick Filters**: Only one quick filter active at a time
+6. **Cmd/Ctrl+A Fix**: Search field now correctly selects text instead of all cards
+7. **Database Path Fix**: Changed `trivium_dev.db` to `trivium.db` in platform.rs
+8. **Sort Parameter Fix**: Fixed type mismatch between backend and frontend
+
+**Files**: 7 modified (1 backend, 5 frontend, 1 platform config)
+**Time**: ~4-5 hours
 
 ### Files Changed
 
