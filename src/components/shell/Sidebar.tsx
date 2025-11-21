@@ -1,4 +1,4 @@
-import { Home, ChevronLeft, ChevronRight, HelpCircle, GraduationCap, Search, Sparkles, FileInput, Settings, BarChart3, ChevronUp, ChevronDown, FilePlus, ArrowUpDown, ChevronsDown, ChevronsUp, FolderPlus } from 'lucide-react';
+import { Home, ChevronLeft, ChevronRight, HelpCircle, GraduationCap, Search, Sparkles, FileInput, Settings, BarChart3, ChevronUp, ChevronDown, FilePlus, ArrowUpDown, ChevronsDown, ChevronsUp, FolderPlus, Table } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../../stores/app';
@@ -38,6 +38,7 @@ const getNavItems = (): NavItem[] => {
     { id: 'ingest', label: 'Ingest', icon: FileInput, path: '/ingest', shortcut: `${mod}+5` },
     { id: 'stats', label: 'Statistics', icon: BarChart3, path: '/stats', shortcut: `${mod}+6` },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings', shortcut: `${mod}+7` },
+    { id: 'flashcard-manager', label: 'Flashcard Manager', icon: Table, path: '/flashcard-manager', shortcut: `${mod}+8` },
   ];
 };
 

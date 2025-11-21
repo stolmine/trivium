@@ -77,7 +77,7 @@ pub fn get_database_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, Strin
     let data_dir = get_data_dir(app_handle)?;
     ensure_dir_exists(&data_dir)?;
 
-    let db_path = join_path(&data_dir, &["trivium_dev.db"]);
+    let db_path = join_path(&data_dir, &["trivium.db"]);
     Ok(db_path)
 }
 

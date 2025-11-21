@@ -115,7 +115,12 @@ pub fn run() {
             commands::library_statistics::get_folder_statistics,
             commands::batch_operations::move_multiple_items,
             commands::batch_operations::delete_multiple_items,
-            commands::batch_operations::export_texts
+            commands::batch_operations::export_texts,
+            commands::flashcard_manager::get_all_flashcards_paginated,
+            commands::flashcard_manager::get_flashcard_date_range,
+            commands::flashcard_manager::batch_delete_flashcards,
+            commands::flashcard_manager::duplicate_flashcards,
+            commands::flashcard_manager::batch_update_flashcards
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -184,6 +184,13 @@ export function useGlobalShortcuts(onToggleSidebar: () => void, onToggleHelp: ()
       category: 'navigation',
     },
     {
+      key: '8',
+      ctrlKey: true,
+      action: handleNavigation('/flashcard-manager'),
+      description: 'Go to Flashcard Manager',
+      category: 'navigation',
+    },
+    {
       key: ',',
       ctrlKey: true,
       action: handleNavigation('/settings'),

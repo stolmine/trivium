@@ -224,6 +224,41 @@ These shortcuts control the UI appearance and help system.
 
 ---
 
+## Flashcard Manager
+
+### Navigation & View Controls
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Open Flashcard Manager | `Ctrl + 8` | `⌘ + 8` | Navigate to flashcard manager page |
+| Toggle Detail Panel | `Ctrl + I` | `⌘ + I` | Collapse/expand right detail pane |
+
+### Selection
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Select All Cards | `Ctrl + A` | `⌘ + A` | Select all visible cards on current page |
+| Toggle Row Selection | Click | Click | Click any row to select/deselect |
+| Select All Visible | Header Checkbox | Header Checkbox | Check header to select all on page |
+
+### Batch Operations
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Delete Selected | `Delete` or `Backspace` | `Delete` or `Backspace` | Delete selected cards (opens confirmation) |
+| Duplicate Selected | `Ctrl + D` | `⌘ + D` | Duplicate selected cards with reset FSRS data |
+
+### Search & Filter
+
+| Action | Windows/Linux | macOS | Description |
+|--------|---------------|-------|-------------|
+| Focus Search | `Ctrl + F` | `⌘ + F` | Focus text search input field |
+| Select All in Search | `Ctrl + A` | `⌘ + A` | Select all text in search field (when focused) |
+
+**Note**: When text is selected in search field, Ctrl/Cmd+A selects text instead of cards. This allows normal text editing behavior.
+
+---
+
 ## Modal Dialogs
 
 ### General Dialog Controls
@@ -303,6 +338,19 @@ If you need different shortcuts, please file an issue on GitHub with your use ca
 ---
 
 ## Version History
+
+### 2025-11-21 (Phase 30 - Flashcard Manager Phase 3)
+- Added complete "Flashcard Manager" section with all keyboard shortcuts
+- New shortcuts:
+  - Delete / Backspace: Delete selected cards with confirmation (Phase 3)
+  - Ctrl+D / Cmd+D: Duplicate selected cards with reset FSRS data (Phase 3)
+  - Ctrl+A / Cmd+A: Select all visible cards (Phase 2, documented in Phase 3)
+  - Ctrl+F / Cmd+F: Focus search input field (Phase 2, documented in Phase 3)
+  - Ctrl+I / Cmd+I: Toggle detail panel (Phase 2)
+  - Ctrl+8 / Cmd+8: Open flashcard manager (Phase 1)
+- Documented selection behavior: row click, header checkbox
+- Documented Ctrl/Cmd+A text selection behavior in search field (stops propagation when search focused)
+- Part of Phase 30 Phase 3 batch operations implementation
 
 ### 2025-11-21 (Phase 30 - Flashcard Manager Phase 2)
 - Updated "Toggle Detail Panel" (Ctrl+I / Cmd+I) entry

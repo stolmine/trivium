@@ -1,22 +1,22 @@
 # Trivium - Development Progress
 
-## Current Status: Flashcard Manager - Phase 2 Complete + Column Visibility ✅
+## Current Status: Flashcard Manager - Phase 3 Complete + Styled Checkboxes ✅
 
-**Branch**: `main`
+**Branch**: `30_cardManager`
 **Last Updated**: 2025-11-21
 
-Phase 2 of the Flashcard Manager feature is complete, plus the column visibility feature! Building on Phase 1's foundation, we now have powerful filtering and sorting capabilities: text search with 300ms debounce, 5 quick filters (State/Due Today/Due This Week/Overdue/Buried), advanced filter panel with date and number ranges, single-column sorting, collapsible detail panel (Cmd/Ctrl+I), and full state persistence to localStorage. The new column visibility feature allows users to show/hide any of the 16 table columns via a dropdown menu with master toggle checkbox and indeterminate state support. All state persists across sessions. Users can now efficiently find, organize, and customize their flashcard view. Phase 3 (multi-select & batch operations) is planned next.
+Phase 3 of the Flashcard Manager feature is complete! Building on Phases 1-2's foundation of viewing, filtering, and sorting, we now have comprehensive batch operations: delete multiple cards with confirmation, duplicate cards with reset FSRS data, bury cards (set buried_until date), reset FSRS statistics, and change card learning states. All operations include proper confirmation dialogs, keyboard shortcuts (Delete key, Cmd/Ctrl+D), platform-aware tooltips, and comprehensive error handling. The BulkActionToolbar appears when cards are selected, providing clear access to all batch operations. Users can now efficiently manage large numbers of flashcards with transaction-safe operations. Post-phase improvements include styled shadcn/ui checkboxes with theme support and a critical hiddenColumns Set serialization bug fix. Phase 4 (inline & modal editing) is planned next.
 
 ---
 
-## Phase 30: Flashcard Manager (Phase 2 Complete + Column Visibility ✅)
+## Phase 30: Flashcard Manager (Phase 3 Complete ✅)
 
 ### Overview
-**Branch**: `main`
+**Branch**: `30_cardManager`
 **Date**: 2025-11-21
-**Status**: Phase 2 of 6 Complete + Column Visibility Feature ✅
+**Status**: Phase 3 of 6 Complete ✅
 
-Phase 1 established the core foundation with dual-pane layout, 16-column table, and pagination. Phase 2 adds powerful filtering and sorting capabilities, transforming the viewer into a comprehensive management tool. The column visibility feature allows users to customize which columns they see with a dropdown menu, master toggle, and persistent state. Users can now search, filter by state/dates/difficulty, sort by any column, toggle the detail panel, and show/hide columns for their workflow. All state persists to localStorage for seamless experience.
+Phase 1 established the core foundation with dual-pane layout, 16-column table, and pagination. Phase 2 added powerful filtering and sorting capabilities plus column visibility control. Phase 3 implements comprehensive batch operations, enabling efficient management of multiple cards simultaneously. Users can now delete, duplicate, bury, reset stats, and change states for selected cards, all with proper confirmation dialogs, keyboard shortcuts (Delete, Cmd/Ctrl+D), and transaction-safe operations. The BulkActionToolbar provides clear access to all batch operations when cards are selected.
 
 ### Phase 1 Deliverables (Complete)
 
@@ -155,6 +155,81 @@ Complete column customization system allowing users to show/hide any of the 16 t
 **Files**: 1 created (ColumnVisibilityMenu.tsx), 3 modified (store, toolbar, table)
 **Time**: ~2-3 hours
 
+### Phase 3 Deliverables (Complete)
+
+**Date**: 2025-11-21
+**Status**: Complete ✅
+
+Comprehensive batch operations system enabling efficient management of multiple cards simultaneously with proper confirmation dialogs, keyboard shortcuts, and transaction-safe operations.
+
+**Key Features**:
+1. **Batch Delete**: Delete multiple cards with confirmation dialog showing count and review history warning
+2. **Batch Duplicate**: Create copies with reset FSRS data (all stats = 0, state = New)
+3. **Batch Bury**: Set buried_until date to temporarily suspend cards
+4. **Reset Stats**: Reset all FSRS statistics (difficulty, stability, reps, lapses) to initial values
+5. **Change State**: Batch change card learning state (New/Learning/Review/Relearning)
+6. **BulkActionToolbar**: Toolbar appears when cards selected with all batch operation buttons
+7. **Keyboard Shortcuts**: Delete/Backspace for batch delete, Cmd/Ctrl+D for duplicate
+8. **Platform-Aware UI**: Tooltips show appropriate Cmd/Ctrl designation per CLAUDE.md
+
+**Backend Implementation**:
+- `batch_delete_flashcards` command - Transaction-safe deletion with count return
+- `duplicate_flashcards` command - Creates copies preserving content, resetting FSRS data
+- `batch_update_flashcards` command - Handles bury, reset stats, and state change operations
+- All operations use proper error handling and transaction safety
+
+**Frontend Components**:
+- `BulkActionToolbar.tsx` - Appears when cards selected, provides access to all batch ops
+- `BatchDeleteDialog.tsx` - Confirmation dialog with destructive warning and loading state
+- `BatchOperationsDialog.tsx` - Multi-purpose dialog for bury/reset/state operations
+- Keyboard shortcut integration in FlashcardManagerDualPane
+- BulkActionToolbar integrated in FlashcardTable
+
+**User Experience**:
+- Clear selection counter in toolbar
+- Confirmation dialogs for destructive operations
+- Loading states during async operations
+- Success feedback via table refresh and selection clear
+- Platform-aware keyboard shortcuts and tooltips
+- Transaction-safe operations prevent data corruption
+
+**Files**: 3 created (BulkActionToolbar, BatchDeleteDialog, BatchOperationsDialog), 4 modified (flashcard_manager.rs, lib.rs, FlashcardManagerDualPane, FlashcardTable)
+**Time**: ~10-12 hours
+
+### Post-Phase 3 Improvements (Complete)
+
+**Date**: 2025-11-21
+**Status**: Complete ✅
+
+Visual and technical improvements to enhance the flashcard manager's polish and reliability.
+
+**Styled Checkbox Component**:
+- Replaced native HTML checkboxes with shadcn/ui Checkbox component
+- Theme-aware styling with proper dark mode support
+- Based on @radix-ui/react-checkbox primitive
+- Indeterminate state support for "Toggle All" functionality
+- Better visual feedback: focus rings, hover states, smooth transitions
+- Consistent appearance matching app design system
+- Professional look with shadow effects and border styling
+
+**Set Serialization Bug Fix**:
+- Fixed localStorage serialization of hiddenColumns Set
+- Problem: Sets cannot be directly serialized to JSON
+- Solution: Convert Set to Array when saving, Array back to Set when loading
+- Handles legacy formats gracefully (object format, missing field)
+- Prevents localStorage corruption and state loss
+- Ensures column visibility persists correctly across sessions
+
+**Technical Details**:
+- New UI component: `checkbox.tsx` (30 lines)
+- Updated FlashcardTable to use Checkbox component
+- Modified flashcardManager store with custom storage adapter
+- Added @radix-ui/react-checkbox dependency
+
+**Files**: 1 created (checkbox.tsx), 3 modified (FlashcardTable, ui/index, flashcardManager store)
+**Dependencies**: @radix-ui/react-checkbox ^1.1.2
+**Time**: ~1 hour
+
 ### Files Changed
 
 **Phase 1 (7 created, 6 modified)**:
@@ -180,28 +255,44 @@ Plus: `src-tauri/src/commands/flashcard_manager.rs`, `src/components/flashcard-m
 
 Plus: `src/lib/stores/flashcardManagerStore.ts`, `src/components/flashcard-manager/FlashcardTableToolbar.tsx`, `src/components/flashcard-manager/FlashcardTable.tsx`
 
-**Total**: 22 files (11 created + 11 modified)
+**Phase 3 (3 created, 4 modified)**:
+1. `src/components/flashcard-manager/BulkActionToolbar.tsx` (new)
+2. `src/components/flashcard-manager/BatchDeleteDialog.tsx` (new)
+3. `src/components/flashcard-manager/BatchOperationsDialog.tsx` (new)
+
+Plus: `src-tauri/src/commands/flashcard_manager.rs`, `src-tauri/src/lib.rs`, `src/routes/flashcard-manager/FlashcardManagerDualPane.tsx`, `src/components/flashcard-manager/FlashcardTable.tsx`
+
+**Post-Phase 3 (1 created, 3 modified)**:
+1. `src/lib/components/ui/checkbox.tsx` - Themed checkbox component
+2. `src/components/flashcard-manager/FlashcardTable.tsx` - Use Checkbox component
+3. `src/lib/components/ui/index.ts` - Export Checkbox
+4. `src/stores/flashcardManager.ts` - Fixed Set serialization
+
+**Total**: 33 files (15 created + 18 modified)
 
 ### Implementation Time
 - **Phase 1**: ~12-14 hours
 - **Phase 2**: ~10-12 hours
 - **Post-Phase 2 Housekeeping**: ~4-5 hours
 - **Column Visibility**: ~2-3 hours
-- **Total**: ~28-34 hours
-- **Remaining Planned**: ~28-42 hours (Phases 3-6)
+- **Phase 3**: ~10-12 hours
+- **Post-Phase 3**: ~1 hour
+- **Total**: ~39-47 hours
+- **Remaining Planned**: ~18-28 hours (Phases 4-6)
 
-### Next Steps: Phase 3 (Selection & Batch Operations)
+### Next Steps: Phase 4 (Inline & Modal Editing)
 
 **Planned Features**:
-- Multi-select with checkboxes
-- Shift+Click range selection
-- Ctrl/Cmd+Click individual toggle
-- Select all button
-- Batch operations: Delete, Bury, Reset Stats, Export
-- Confirmation dialogs
-- Summary view in detail pane
+- Inline editing for editable cells (click to edit)
+- Enter to save, Esc to cancel
+- Editable fields: due date, difficulty, buried_until
+- Modal editor for long content (cloze_text, original_text)
+- Live preview of rendered card
+- Syntax highlighting for cloze deletions
+- Field validation and error display
+- Debounced auto-save
 
-**Estimated Time**: 10-14 hours
+**Estimated Time**: 12-16 hours
 **Target**: Week of 2025-11-25
 
 ### Success Criteria
@@ -239,8 +330,21 @@ Plus: `src/lib/stores/flashcardManagerStore.ts`, `src/components/flashcard-manag
 - [x] Closes on outside click and Escape
 - [x] Performance < 50ms
 
-**Remaining Phases** (3-6):
-- [ ] Phase 3: Selection & Batch Operations (10-14 hours)
+**Phase 3 Complete ✅**:
+- [x] Multi-select working (Phase 2)
+- [x] Batch delete with confirmation dialog
+- [x] Batch duplicate creates copies with reset FSRS data
+- [x] Bury cards sets buried_until date
+- [x] Reset stats resets all FSRS statistics
+- [x] Change state modifies card learning state
+- [x] Keyboard shortcuts (Delete, Cmd/Ctrl+D)
+- [x] Tooltips show appropriate Cmd/Ctrl designation
+- [x] BulkActionToolbar appears when cards selected
+- [x] All operations refresh table and clear selection
+- [x] Transaction-safe operations
+- [x] No TypeScript/Rust errors
+
+**Remaining Phases** (4-6):
 - [ ] Phase 4: Inline & Modal Editing (12-16 hours)
 - [ ] Phase 5: Right Pane Detail View Enhanced (6-8 hours)
 - [ ] Phase 6: Polish & Keyboard Shortcuts (8-10 hours)

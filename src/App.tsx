@@ -14,6 +14,7 @@ const CreateCardsPage = lazy(() => import('./routes/create').then(module => ({ d
 const IngestPage = lazy(() => import('./routes/ingest').then(module => ({ default: module.IngestPage })))
 const SettingsPage = lazy(() => import('./routes/settings').then(module => ({ default: module.SettingsPage })))
 const StatsPage = lazy(() => import('./routes/stats').then(module => ({ default: module.StatsPage })))
+const FlashcardManagerPage = lazy(() => import('./routes/flashcard-manager').then(module => ({ default: module.FlashcardManagerPage })))
 
 function NavigationTracker() {
   const location = useLocation()
@@ -122,6 +123,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<SkeletonDashboard />}>
             <StatsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'flashcard-manager',
+        element: (
+          <Suspense fallback={<SkeletonDashboard />}>
+            <FlashcardManagerPage />
           </Suspense>
         ),
       },

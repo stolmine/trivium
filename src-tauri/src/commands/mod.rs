@@ -2,6 +2,7 @@ pub mod texts;
 pub mod reading;
 pub mod flashcards;
 pub mod flashcard_hub;
+pub mod flashcard_manager;
 pub mod review;
 pub mod folder;
 pub mod wikipedia;
